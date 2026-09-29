@@ -28,3 +28,8 @@ dist/
 build/
 coverage/
 *.log
+
+# Local verification artifacts
+test-results/
+playwright-report/
+work/
