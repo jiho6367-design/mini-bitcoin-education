@@ -32,7 +32,9 @@ export function NetworkDiagram({
   const recentRoute = recent
     ? messageRoute(recent.message.from, recent.message.to)
     : null;
-  const recentColor = recent?.validation.valid ? "#365c4b" : "#ab3832";
+  const recentColor = recent?.validation.valid
+    ? "var(--success)"
+    : "var(--danger)";
   const routeLabel = selectedMessage
     ? `선택 대기 메시지 ${messageLabel(selectedMessage)}`
     : recent
@@ -47,7 +49,7 @@ export function NetworkDiagram({
       >
         <defs>
           {[
-            ["pending", "#b8622c"],
+            ["pending", "var(--pending)"],
             ["recent", recentColor],
           ].map(([kind, color]) => (
             <marker
@@ -67,7 +69,7 @@ export function NetworkDiagram({
         <path
           d="M100 100 L300 100 L500 100 M100 100 Q300 236 500 100"
           fill="none"
-          stroke="#c5d7cb"
+          stroke="var(--diagram-edge)"
           strokeWidth="2"
           strokeDasharray="6 6"
         />
@@ -94,7 +96,7 @@ export function NetworkDiagram({
               data-kind={selectedMessage.kind}
               d={selectedRoute.path}
               fill="none"
-              stroke="#b8622c"
+              stroke="var(--pending)"
               strokeWidth="3"
               markerEnd={`url(#${arrowId}-pending)`}
             />
@@ -104,13 +106,13 @@ export function NetworkDiagram({
               width="46"
               height="22"
               rx="5"
-              fill="#fff3e7"
+              fill="var(--pending-bg)"
             />
             <text
               x={selectedRoute.labelX}
               y={selectedRoute.labelY + 5}
               textAnchor="middle"
-              fill="#8c4525"
+              fill="var(--pending-text)"
               fontSize="13"
             >
               {messageKind(selectedMessage.kind)}
@@ -123,14 +125,14 @@ export function NetworkDiagram({
               cx={nodePositions[id].x}
               cy="100"
               r="33"
-              fill="#eaf1e9"
-              stroke="#365c4b"
+              fill="var(--diagram-node-bg)"
+              stroke="var(--diagram-node-stroke)"
             />
             <text
               x={nodePositions[id].x}
               y="107"
               textAnchor="middle"
-              fill="#244638"
+              fill="var(--diagram-node-text)"
               fontSize="23"
               fontWeight="700"
             >
@@ -140,7 +142,7 @@ export function NetworkDiagram({
               x={nodePositions[id].x}
               y="155"
               textAnchor="middle"
-              fill="#53645d"
+              fill="var(--diagram-caption)"
               fontSize="13"
             >
               높이 {lab.nodes[id].chain.length - 1} · 대기{" "}

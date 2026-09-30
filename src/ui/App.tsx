@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { version } from "../../package.json";
+import { type ThemePreference } from "../theme";
+import { useTheme } from "./useTheme";
 import { NODE_IDS, type NodeId } from "../core/types";
 import { Differences, Notice, Panel } from "./shared";
 import { useLab } from "./useLab";
@@ -28,6 +31,7 @@ const flows = [
 ];
 
 export function App() {
+  const { preference, selectTheme } = useTheme();
   const controller = useLab();
   const {
     lab,
@@ -126,7 +130,8 @@ export function App() {
           <span className="tag">3 NODES · IN MEMORY</span>
         </div>
         <div className="sidebar-footer">
-          Mini Bitcoin v1.0<small>배우기 위한 작은 블록체인</small>
+          <span data-testid="app-version">Mini Bitcoin v{version}</span>
+          <small>학습용 블록체인</small>
         </div>
       </aside>
       <div className="workspace">
@@ -135,6 +140,20 @@ export function App() {
             실습실 <span>/</span> <strong>{pages[page].title}</strong>
           </div>
           <div className="topbar-actions">
+            <label className="theme-select">
+              화면 테마
+              <select
+                aria-label="화면 테마"
+                value={preference}
+                onChange={(event) =>
+                  selectTheme(event.target.value as ThemePreference)
+                }
+              >
+                <option value="system">시스템</option>
+                <option value="light">라이트</option>
+                <option value="dark">다크</option>
+              </select>
+            </label>
             <span className="local-status">
               <i /> {lab ? "실습 진행 중" : "실습 준비"}
             </span>
@@ -289,46 +308,78 @@ export function App() {
                         height="18"
                         patternUnits="userSpaceOnUse"
                       >
-                        <circle cx="2" cy="2" r="1" fill="#38594c" />
+                        <circle
+                          cx="2"
+                          cy="2"
+                          r="1"
+                          fill="var(--hero-svg-dot)"
+                        />
                       </pattern>
                     </defs>
                     <rect width="360" height="290" fill="url(#dot-grid)" />
                     <path
                       d="M73 148 L160 98 L267 155 L180 205 Z"
                       fill="none"
-                      stroke="#6e927d"
+                      stroke="var(--hero-svg-edge)"
                       strokeDasharray="5 6"
                       strokeWidth="2"
                     />
                     <g transform="translate(33 106)">
-                      <path d="M0 20 L40 0 L80 20 L40 41 Z" fill="#b9ccb6" />
-                      <path d="M0 20 L40 41 L40 89 L0 68 Z" fill="#658d73" />
-                      <path d="M40 41 L80 20 L80 68 L40 89 Z" fill="#8aaa8c" />
+                      <path
+                        d="M0 20 L40 0 L80 20 L40 41 Z"
+                        fill="var(--hero-svg-block-top)"
+                      />
+                      <path
+                        d="M0 20 L40 41 L40 89 L0 68 Z"
+                        fill="var(--hero-svg-block-left)"
+                      />
+                      <path
+                        d="M40 41 L80 20 L80 68 L40 89 Z"
+                        fill="var(--hero-svg-block-right)"
+                      />
                     </g>
                     <g transform="translate(124 35)">
-                      <path d="M0 25 L48 0 L96 25 L48 50 Z" fill="#f4c59e" />
-                      <path d="M0 25 L48 50 L48 111 L0 86 Z" fill="#cc804e" />
-                      <path d="M48 50 L96 25 L96 86 L48 111 Z" fill="#e8a36e" />
+                      <path
+                        d="M0 25 L48 0 L96 25 L48 50 Z"
+                        fill="var(--hero-svg-coin-top)"
+                      />
+                      <path
+                        d="M0 25 L48 50 L48 111 L0 86 Z"
+                        fill="var(--hero-svg-coin-left)"
+                      />
+                      <path
+                        d="M48 50 L96 25 L96 86 L48 111 Z"
+                        fill="var(--hero-svg-coin-right)"
+                      />
                       <text
                         x="47"
                         y="83"
                         textAnchor="middle"
-                        fill="#fff5e5"
+                        fill="var(--hero-svg-coin-text)"
                         fontSize="25"
                       >
                         ₿
                       </text>
                     </g>
                     <g transform="translate(228 137)">
-                      <path d="M0 20 L40 0 L80 20 L40 41 Z" fill="#b9ccb6" />
-                      <path d="M0 20 L40 41 L40 89 L0 68 Z" fill="#658d73" />
-                      <path d="M40 41 L80 20 L80 68 L40 89 Z" fill="#8aaa8c" />
+                      <path
+                        d="M0 20 L40 0 L80 20 L40 41 Z"
+                        fill="var(--hero-svg-block-top)"
+                      />
+                      <path
+                        d="M0 20 L40 41 L40 89 L0 68 Z"
+                        fill="var(--hero-svg-block-left)"
+                      />
+                      <path
+                        d="M40 41 L80 20 L80 68 L40 89 Z"
+                        fill="var(--hero-svg-block-right)"
+                      />
                     </g>
                     <text
                       x="182"
                       y="267"
                       textAnchor="middle"
-                      fill="#acbdb0"
+                      fill="var(--hero-svg-caption)"
                       fontSize="10"
                       letterSpacing="3"
                     >
@@ -453,8 +504,9 @@ export function App() {
               )}
               <Notice>
                 실제 Bitcoin 네트워크나 금전 거래와 연결되지 않는 교육용 축소
-                모델입니다. 모든 데이터는 이 브라우저의 메모리에만 있으며
-                새로고침하면 초기화됩니다.
+                모델입니다. 지갑·거래·블록체인 등 실습 데이터는 이 브라우저의
+                메모리에만 있으며 새로고침하면 초기화됩니다. 테마 설정만
+                브라우저에 저장합니다.
               </Notice>
             </>
           )}
