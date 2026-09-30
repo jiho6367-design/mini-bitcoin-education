@@ -31,6 +31,10 @@ export class Lab {
   queue: NetworkMessage[] = [];
   events: LabEvent[] = [];
   lastValidation: ValidationResult | null = null;
+  lastDelivery: {
+    message: NetworkMessage;
+    validation: ValidationResult;
+  } | null = null;
   private sequence = 0;
 
   constructor(
@@ -179,9 +183,12 @@ export class Lab {
       `${message.from} → ${message.to} · ${message.kind === "transaction" ? "거래" : "블록"} 수신 후 독립 검증`,
       true,
     );
-    return message.kind === "transaction"
-      ? this.receiveTransaction(message.to, message.payload as Transaction)
-      : this.receiveBlock(message.to, message.payload as Block);
+    const validation =
+      message.kind === "transaction"
+        ? this.receiveTransaction(message.to, message.payload as Transaction)
+        : this.receiveBlock(message.to, message.payload as Block);
+    this.lastDelivery = structuredClone({ message, validation });
+    return validation;
   }
   candidate(nodeId: NodeId): Block {
     if (this.queue.some((m) => m.kind === "block"))

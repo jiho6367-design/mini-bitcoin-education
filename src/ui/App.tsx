@@ -6,6 +6,8 @@ import { WalletView } from "./WalletView";
 import { MempoolView, NetworkDiagram, NetworkView } from "./NetworkView";
 import { MiningView } from "./MiningView";
 import { TamperView } from "./TamperView";
+import { learningFlow } from "./learning";
+import { short } from "./shared";
 
 const pages = [
   { title: "실습 안내", sub: "블록체인의 첫걸음", icon: "◈" },
@@ -41,6 +43,10 @@ export function App() {
     addWallet,
     beginMining,
     miningCommand,
+    lesson,
+    setLesson,
+    composer,
+    setComposer,
   } = controller;
   const [page, setPage] = useState(0);
   const [nodeId, setNodeId] = useState<NodeId>("A");
@@ -52,20 +58,11 @@ export function App() {
   const activeMining =
     mining.status === "running" || mining.status === "paused";
   const height = lab ? lab.nodes[nodeId].chain.length - 1 : 0;
-  const pending = lab?.nodes[nodeId].mempool.length ?? 0;
-  const currentStep = !lab
-    ? 0
-    : activeMining
-      ? 4
-      : lab.queue.some((m) => m.kind === "block")
-        ? 5
-        : height > 0 && !pending
-          ? 6
-          : pending
-            ? 3
-            : page === 1
-              ? 1
-              : 0;
+  const flow = learningFlow(lab, lesson, mining);
+  function observeMempool() {
+    if (lesson?.validation?.valid) setLesson({ ...lesson, phase: "mempool" });
+    setPage(2);
+  }
   function startLab(example: boolean) {
     start(difficulty, example);
     setPage(1);
@@ -106,7 +103,8 @@ export function App() {
               aria-current={page === i ? "page" : undefined}
               disabled={!lab && i !== 0}
               onClick={() => {
-                setPage(i);
+                if (i === 2) observeMempool();
+                else setPage(i);
                 setError("");
               }}
             >
@@ -182,21 +180,54 @@ export function App() {
             {flows.map((f, i) => (
               <div
                 key={f}
+                data-testid={`flow-${i}`}
+                data-state={
+                  i === flow.current
+                    ? flow.failed
+                      ? "failed"
+                      : "current"
+                    : flow.completed.includes(i)
+                      ? "complete"
+                      : "pending"
+                }
+                aria-current={i === flow.current ? "step" : undefined}
+                aria-label={`${f}: ${i === flow.current ? (flow.failed ? "검증 실패" : "현재 단계") : flow.completed.includes(i) ? "완료" : "대기"}`}
                 className={
-                  i === currentStep
-                    ? "flow-current"
-                    : i < currentStep
+                  i === flow.current
+                    ? `flow-current ${flow.failed ? "flow-failed" : ""}`
+                    : flow.completed.includes(i)
                       ? "flow-complete"
                       : ""
                 }
               >
                 <span>
-                  {i < currentStep ? "✓" : String(i + 1).padStart(2, "0")}
+                  {flow.completed.includes(i)
+                    ? "✓"
+                    : flow.failed && i === flow.current
+                      ? "✕"
+                      : String(i + 1).padStart(2, "0")}
                 </span>
                 {f}
                 {i < flows.length - 1 && <b aria-hidden="true">→</b>}
               </div>
             ))}
+          </div>
+          <div
+            className="learning-status"
+            data-testid="learning-status"
+            role="status"
+          >
+            <strong>
+              {flow.failed ? "✕ " : ""}
+              {flow.summary}
+            </strong>
+            {lesson?.signed && (
+              <small>
+                관찰 거래 {short(lesson.checked?.id ?? lesson.signed.id, 8)} ·{" "}
+                {lesson.validation ? "제출" : "작성"} 노드 {lesson.origin}
+                {lesson.experiment ? ` · ${lesson.experiment} 사본` : ""}
+              </small>
+            )}
           </div>
           {resetPrompt && (
             <div className="reset-banner" role="alert">
@@ -434,6 +465,11 @@ export function App() {
               nodeId={nodeId}
               touch={touch}
               addWallet={addWallet}
+              lesson={lesson}
+              setLesson={setLesson}
+              composer={composer}
+              setComposer={setComposer}
+              goMempool={observeMempool}
             />
           )}
           {lab && page === 2 && (

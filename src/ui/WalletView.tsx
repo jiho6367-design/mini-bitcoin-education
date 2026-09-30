@@ -7,7 +7,9 @@ import {
 } from "../core/crypto";
 import { balance, buildTransaction, reservedInputs } from "../core/transaction";
 import type { Lab } from "../core/lab";
-import type { NodeId, Transaction, UnsignedTransaction } from "../core/types";
+import type { NodeId } from "../core/types";
+import type { TransactionLesson } from "./learning";
+import { TransactionTrace } from "./TransactionTrace";
 import { Code, Notice, Panel, Validation } from "./shared";
 
 export function WalletView({
@@ -15,45 +17,61 @@ export function WalletView({
   nodeId,
   addWallet,
   touch,
+  lesson,
+  setLesson,
+  composer,
+  setComposer,
+  goMempool,
 }: {
   lab: Lab;
   nodeId: NodeId;
   addWallet: () => void;
   touch: () => void;
+  lesson: TransactionLesson | null;
+  setLesson: (value: TransactionLesson | null) => void;
+  composer: { sender: number; receiver: number; amount: string };
+  setComposer: (value: {
+    sender: number;
+    receiver: number;
+    amount: string;
+  }) => void;
+  goMempool: () => void;
 }) {
-  const [sender, setSender] = useState(0);
-  const [receiver, setReceiver] = useState(1);
-  const [amount, setAmount] = useState("30");
-  const [draft, setDraft] = useState<UnsignedTransaction | null>(null);
-  const [signed, setSigned] = useState<Transaction | null>(null);
+  const { sender, receiver, amount } = composer;
+  const draft = lesson?.draft;
+  const signed = lesson?.signed;
   const [error, setError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const node = lab.nodes[nodeId];
+  const submitted =
+    !!signed &&
+    (node.mempool.some((tx) => tx.id === signed.id) ||
+      node.chain.some((b) => b.transactions.some((tx) => tx.id === signed.id)));
   function clear() {
-    setDraft(null);
-    setSigned(null);
-    setSubmitted(false);
+    setLesson(null);
     setError("");
   }
   function create() {
     try {
-      setDraft(
-        buildTransaction(
-          lab.wallets[sender],
-          lab.wallets[receiver].address,
-          Number(amount),
-          node.utxos,
-          node.mempool,
-          lab.sessionId,
-        ),
+      const next = buildTransaction(
+        lab.wallets[sender],
+        lab.wallets[receiver].address,
+        Number(amount),
+        node.utxos,
+        node.mempool,
+        lab.sessionId,
       );
-      setSigned(null);
-      setSubmitted(false);
+      setLesson({
+        origin: nodeId,
+        phase: "draft",
+        draft: next,
+        inputs: next.inputs.map((input) =>
+          structuredClone(node.utxos[`${input.txId}:${input.outputIndex}`]),
+        ),
+      });
       setError("");
     } catch (e) {
       setError((e as Error).message);
-      setDraft(null);
-      setSigned(null);
+      setLesson(null);
     }
   }
   function submit(badSignature = false) {
@@ -64,8 +82,16 @@ export function WalletView({
       tx.id = transactionId(tx);
     }
     const validation = lab.submit(nodeId, tx);
+    if (lesson)
+      setLesson({
+        ...lesson,
+        origin: nodeId,
+        checked: tx,
+        phase: "validated",
+        validation,
+        experiment: badSignature ? "잘못된 서명" : undefined,
+      });
     touch();
-    if (!badSignature && validation.valid) setSubmitted(true);
   }
   return (
     <>
@@ -141,7 +167,7 @@ export function WalletView({
               <select
                 value={sender}
                 onChange={(e) => {
-                  setSender(Number(e.target.value));
+                  setComposer({ ...composer, sender: Number(e.target.value) });
                   clear();
                 }}
               >
@@ -157,7 +183,10 @@ export function WalletView({
               <select
                 value={receiver}
                 onChange={(e) => {
-                  setReceiver(Number(e.target.value));
+                  setComposer({
+                    ...composer,
+                    receiver: Number(e.target.value),
+                  });
                   clear();
                 }}
               >
@@ -177,7 +206,7 @@ export function WalletView({
               step="1"
               value={amount}
               onChange={(e) => {
-                setAmount(e.target.value);
+                setComposer({ ...composer, amount: e.target.value });
                 clear();
               }}
             />
@@ -189,10 +218,17 @@ export function WalletView({
               className="secondary"
               disabled={!draft || !!signed}
               onClick={() => {
-                if (draft)
-                  setSigned(
-                    signTransaction(draft, lab.wallets[sender].privateKey),
-                  );
+                if (lesson)
+                  setLesson({
+                    ...lesson,
+                    phase: "signed",
+                    signed: signTransaction(
+                      lesson.draft,
+                      lab.wallets[sender].privateKey,
+                    ),
+                    validation: undefined,
+                    checked: undefined,
+                  });
               }}
             >
               2. 전자서명
@@ -210,9 +246,12 @@ export function WalletView({
               {error}
             </div>
           )}
-          {submitted && (
+          {submitted && lesson?.validation?.valid && (
             <div role="status" className="result good">
               ✓ 거래가 승인되었습니다. Mempool 화면에서 확인한 뒤 채굴하세요.
+              <button className="secondary" onClick={goMempool}>
+                검증 결과 확인 · Mempool로 이동
+              </button>
             </div>
           )}
           {draft && (
@@ -253,10 +292,17 @@ export function WalletView({
             </details>
           )}
         </Panel>
-        <Panel title={`Node ${nodeId}의 검증 결과`} eyebrow="02 / VERIFY">
-          <Validation value={node.lastValidation} />
+        <Panel title="현재 거래의 검증 결과" eyebrow="02 / VERIFY">
+          <p>
+            현재 관찰 거래의 제출 노드:{" "}
+            {lesson?.validation
+              ? `Node ${lesson.origin}`
+              : "아직 제출하지 않음"}
+          </p>
+          <Validation value={lesson?.validation ?? null} />
         </Panel>
       </div>
+      {lesson && <TransactionTrace lab={lab} nodeId={nodeId} lesson={lesson} />}
       <Panel title="실패도 직접 확인해 보세요" className="experiment-strip">
         <p>
           올바른 노드는 잘못된 거래를 Mempool에 넣지 않습니다. 실패 실험은 원래
@@ -283,7 +329,23 @@ export function WalletView({
               const owner = lab.wallets.find(
                 (w) => w.publicKey === original.publicKey,
               )!;
-              lab.submit(nodeId, signTransaction(original, owner.privateKey));
+              const conflict = signTransaction(original, owner.privateKey);
+              const validation = lab.submit(nodeId, conflict);
+              const inputs = conflict.inputs.map((input) =>
+                structuredClone(
+                  node.utxos[`${input.txId}:${input.outputIndex}`],
+                ),
+              );
+              setLesson({
+                origin: nodeId,
+                phase: "validated",
+                draft: conflict,
+                signed: conflict,
+                checked: conflict,
+                inputs,
+                validation,
+                experiment: "이중 지출",
+              });
               touch();
             }}
           >

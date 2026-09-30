@@ -34,6 +34,7 @@ async function mine(page: Page) {
     .click();
   await expect(page.getByText("✓ 채굴 성공 ·", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "노드 전파 확인" }).click();
+  await page.getByRole("checkbox", { name: "메시지 자동 전달" }).check();
   await expect(
     page.getByRole("heading", { name: "전달 대기열 · 0", exact: true }),
   ).toBeVisible();
@@ -225,4 +226,188 @@ test("키보드로 본문과 초기화 확인을 조작한다", async ({ page })
   await expect(
     page.getByRole("button", { name: "초기화 확인", exact: true }),
   ).toBeHidden();
+});
+
+test("선택 거래의 작성·서명·실패 검증·Mempool·후속 거래 단계를 구분한다", async ({
+  page,
+}) => {
+  await start(page);
+  await expect(page.getByTestId("flow-0")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  await page.getByRole("button", { name: "1. 거래 작성", exact: true }).click();
+  await expect(page.getByTestId("flow-1")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  await page.getByRole("button", { name: "2. 전자서명", exact: true }).click();
+  await expect(page.getByTestId("flow-2")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  await page.getByRole("button", { name: "잘못된 서명 실험" }).click();
+  await expect(page.getByTestId("flow-2")).toHaveAttribute(
+    "data-state",
+    "failed",
+  );
+  await expect(page.getByTestId("flow-3")).toHaveAttribute(
+    "data-state",
+    "pending",
+  );
+  await page.getByRole("button", { name: "3. 검증·전파", exact: true }).click();
+  await expect(page.getByTestId("learning-status")).toContainText("검증 통과");
+  await expect(page.getByTestId("flow-2")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  const doubleSpend = page
+    .locator(".checks li")
+    .filter({ hasText: "이중 지출" });
+  await expect(doubleSpend).toContainText("사용 중인 입력이 없습니다");
+  await expect(page.getByTestId("input-state")).toHaveText(
+    "대기 거래에 예약됨",
+  );
+  await expect(page.getByTestId("output-state").first()).toHaveText(
+    "대기 중 · 아직 사용 불가",
+  );
+  await page
+    .getByRole("button", { name: "검증 결과 확인 · Mempool로 이동" })
+    .click();
+  await expect(page.getByTestId("flow-3")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  await navigate(page, "지갑·거래");
+  await expect(
+    page.getByRole("button", { name: "2. 전자서명", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByTestId("flow-3")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  await mine(page);
+  await expect(page.getByTestId("flow-6")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  await navigate(page, "지갑·거래");
+  await expect(page.getByTestId("input-state")).toHaveText("소비됨");
+  await expect(page.getByTestId("output-state").first()).toHaveText(
+    "블록 포함 · 사용 가능",
+  );
+  await page.getByLabel("송금액").fill("10");
+  await expect(page.getByTestId("flow-6")).toHaveAttribute(
+    "data-state",
+    "pending",
+  );
+  await page.getByRole("button", { name: "1. 거래 작성", exact: true }).click();
+  await expect(page.getByTestId("flow-1")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+});
+
+test("수동 기본값과 선택 경로·실제 FIFO 수신 경로·출발 노드를 구분한다", async ({
+  page,
+}) => {
+  await start(page);
+  await send(page);
+  await navigate(page, "노드·블록체인");
+  await expect(
+    page.getByRole("checkbox", { name: "메시지 자동 전달" }),
+  ).not.toBeChecked();
+  await expect(
+    page.getByRole("heading", { name: "전달 대기열 · 2" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /경로 보기 A → C/ }).click();
+  await expect(page.getByTestId("selected-message-route")).toHaveAttribute(
+    "data-to",
+    "C",
+  );
+  await expect(page.getByTestId("next-message-caption")).toContainText("A → B");
+  await page.getByRole("button", { name: "메시지 1개 전달" }).click();
+  await expect(page.getByTestId("recent-message-route")).toHaveAttribute(
+    "data-to",
+    "B",
+  );
+  await expect(page.getByTestId("recent-message-caption")).toContainText(
+    "✓ 승인",
+  );
+  await page.getByRole("button", { name: "메시지 1개 전달" }).click();
+  await navigate(page, "채굴");
+  await page
+    .getByRole("button", { name: "연속 채굴 시작", exact: true })
+    .click();
+  await expect(page.getByText("✓ 채굴 성공 ·", { exact: false })).toBeVisible();
+  await expect(page.getByTestId("flow-5")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  await page.getByRole("button", { name: "노드 전파 확인" }).click();
+  await expect(page.getByTestId("selected-message-route")).toHaveAttribute(
+    "data-kind",
+    "block",
+  );
+  await page.getByRole("button", { name: "메시지 1개 전달" }).click();
+  await expect(page.getByTestId("flow-5")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  await page.getByRole("button", { name: "메시지 1개 전달" }).click();
+  await expect(page.getByTestId("flow-6")).toHaveAttribute(
+    "data-state",
+    "current",
+  );
+  await page.getByLabel("관찰 노드", { exact: true }).selectOption("C");
+  await navigate(page, "지갑·거래");
+  await page
+    .getByRole("combobox", { name: "보내는 지갑", exact: true })
+    .selectOption("1");
+  await page
+    .getByRole("combobox", { name: "받는 지갑", exact: true })
+    .selectOption("0");
+  await send(page, "5");
+  await navigate(page, "노드·블록체인");
+  await expect(page.getByTestId("selected-message-route")).toHaveAttribute(
+    "data-from",
+    "C",
+  );
+  await expect(page.getByTestId("selected-message-route")).toHaveAttribute(
+    "data-to",
+    "A",
+  );
+  await expect(page.getByTestId("next-message-caption")).toContainText("C → A");
+});
+
+test("채굴 UI는 저속 실제 표본과 중지를 제공한다", async ({ page }) => {
+  await start(page, "4");
+  await send(page);
+  await navigate(page, "채굴");
+  await page
+    .getByRole("button", { name: "천천히 학습 실행", exact: true })
+    .click();
+  await expect(page.getByTestId("mining-sample").first()).toBeVisible();
+  await expect(page.getByText(/학습 실행 · 약 250ms/)).toBeVisible();
+  // 첫 계산이 우연히 성공하면 그 실제 성공을 그대로 인정한다.
+  if (
+    await page
+      .getByRole("button", { name: "일시정지", exact: true })
+      .isVisible()
+  ) {
+    await page.getByRole("button", { name: "일시정지", exact: true }).click();
+    await expect(page.getByText("● 일시정지", { exact: true })).toBeVisible();
+    const pausedAttempts = await page.getByTestId("attempts").textContent();
+    await page.waitForTimeout(400);
+    await expect(page.getByTestId("attempts")).toHaveText(pausedAttempts!);
+    await page.getByRole("button", { name: "채굴 중지", exact: true }).click();
+    await expect(page.getByText("● 중지됨", { exact: true })).toBeVisible();
+  } else {
+    await expect(
+      page.getByText("✓ 채굴 성공 ·", { exact: false }),
+    ).toBeVisible();
+  }
+  expect(await page.getByTestId("mining-sample").count()).toBeLessThanOrEqual(
+    12,
+  );
 });

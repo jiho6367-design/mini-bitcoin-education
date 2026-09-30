@@ -1,6 +1,11 @@
 import { targetHex } from "../core/block";
 import type { Lab } from "../core/lab";
 import type { NodeId } from "../core/types";
+import {
+  LEARNING_INTERVAL_MS,
+  MINING_SAMPLE_LIMIT,
+  type MiningMode,
+} from "../mining/protocol";
 import type { MiningState } from "./useLab";
 import { Code, Notice, Panel } from "./shared";
 
@@ -23,7 +28,7 @@ export function MiningView({
   lab: Lab;
   nodeId: NodeId;
   mining: MiningState;
-  begin: (node: NodeId, step: boolean) => void;
+  begin: (node: NodeId, step: boolean, mode?: MiningMode) => void;
   command: (type: "pause" | "resume" | "step" | "stop") => void;
   goNetwork: () => void;
 }) {
@@ -52,6 +57,11 @@ export function MiningView({
             </span>
             <span>채굴 노드 {active ? mining.node : nodeId}</span>
           </div>
+          <p className="mining-mode-note">
+            {mining.mode === "learning"
+              ? `학습 실행 · 약 ${LEARNING_INTERVAL_MS}ms마다 Nonce 하나를 실제로 계산합니다.`
+              : "빠른 실행 · 실제 계산한 최근 결과를 표본으로 표시합니다."}
+          </p>
           <div className="nonce-label">NONCE</div>
           <div className="nonce-number" data-testid="nonce">
             {mining.block?.nonce.toLocaleString() ?? "—"}
@@ -84,6 +94,13 @@ export function MiningView({
               onClick={() => begin(nodeId, false)}
             >
               연속 채굴 시작
+            </button>
+            <button
+              className="secondary"
+              disabled={active || noCandidate}
+              onClick={() => begin(nodeId, false, "learning")}
+            >
+              천천히 학습 실행
             </button>
             {active && (
               <>
@@ -168,7 +185,7 @@ export function MiningView({
           </Panel>
         </div>
       </div>
-      <div className="metrics">
+      <div className="metrics mining-metrics">
         <div>
           <span>실제 시도 횟수</span>
           <strong data-testid="attempts">
@@ -196,7 +213,45 @@ export function MiningView({
           </strong>
           <small>PC와 실행 상황에 따라 달라짐</small>
         </div>
+        <div>
+          <span>학습 관찰 대기 시간</span>
+          <strong data-testid="observation-time">
+            {(mining.observationMs / 1000).toFixed(3)}
+            <em>s</em>
+          </strong>
+          <small>저속 실행의 계산 사이 대기 · 일시정지 제외</small>
+        </div>
       </div>
+      <Panel title="최근 실제 Nonce·Hash 비교" className="mining-samples">
+        <p className="muted">
+          최근 {MINING_SAMPLE_LIMIT}개까지 표시합니다. 실패는 목표값보다 큰
+          해시, 성공은 목표값 이하의 해시입니다. 첫 계산이 성공할 수도 있습니다.
+        </p>
+        {mining.samples.length ? (
+          <ol className="hash-sample-list" data-testid="mining-samples">
+            {[...mining.samples].reverse().map((sample) => (
+              <li
+                key={sample.nonce}
+                className={`hash-sample ${sample.passed ? "passed" : ""}`}
+                data-testid="mining-sample"
+              >
+                <b>Nonce {sample.nonce.toLocaleString()}</b>
+                <code data-testid="sample-hash">
+                  <mark>{sample.hash.slice(0, difficulty)}</mark>
+                  {sample.hash.slice(difficulty)}
+                </code>
+                <span className="sample-result">
+                  {sample.passed
+                    ? "✓ 성공 · 목표값 이하"
+                    : "× 실패 · 목표값 초과"}
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p>계산을 시작하면 실제 결과를 이곳에서 비교할 수 있습니다.</p>
+        )}
+      </Panel>
       <p className="muted">
         연속 실행 화면은 실제 계산 결과의 일부를 표본으로 보여줍니다. 정답
         해시를 미리 정하거나 애니메이션으로 만들어내지 않습니다.

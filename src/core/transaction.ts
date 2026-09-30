@@ -64,8 +64,13 @@ export function validateTransaction(
   reserved = new Set<string>(),
 ): ValidationResult {
   const steps: Check[] = [];
-  const check = (ok: boolean, label: string, message: string) => {
-    steps.push({ ok, label, message });
+  const check = (
+    ok: boolean,
+    label: string,
+    success: string,
+    failure: string,
+  ) => {
+    steps.push({ ok, label, message: ok ? success : failure });
     return ok;
   };
   const fail = (code: string) =>
@@ -74,7 +79,8 @@ export function validateTransaction(
     !check(
       hasTransactionShape(value),
       "형식·금액",
-      "입력·출력, 키·서명 형식과 양의 정수 금액을 확인합니다.",
+      "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다.",
+      "입력·출력, 키·서명 형식 또는 금액이 올바르지 않습니다. 금액은 1 이상의 안전한 정수여야 합니다.",
     )
   )
     return fail("FORMAT");
@@ -83,7 +89,8 @@ export function validateTransaction(
     !check(
       tx.sessionId === sessionId,
       "실습 식별자",
-      "현재 실습에서 생성된 거래여야 합니다.",
+      "거래의 실습 식별자가 현재 실습과 일치합니다.",
+      "거래의 실습 식별자가 현재 실습과 일치하지 않습니다.",
     )
   )
     return fail("SESSION");
@@ -91,7 +98,8 @@ export function validateTransaction(
     !check(
       tx.id === transactionId(tx),
       "거래 ID",
-      "서명된 거래를 다시 해시한 값이 거래 ID와 일치해야 합니다.",
+      "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다.",
+      "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다.",
     )
   )
     return fail("TX_ID");
@@ -99,7 +107,8 @@ export function validateTransaction(
     !check(
       verifySignature(tx),
       "전자서명",
-      "공개키로 서명과 거래 원문의 일치 여부를 검증합니다.",
+      "공개키로 검증한 서명이 거래 원문과 일치합니다.",
+      "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
     )
   )
     return fail("SIGNATURE");
@@ -108,7 +117,8 @@ export function validateTransaction(
     !check(
       new Set(keys).size === keys.length,
       "중복 입력",
-      "같은 출력을 한 거래에서 두 번 사용할 수 없습니다.",
+      "한 거래 안에서 같은 출력을 중복 사용하지 않습니다.",
+      "같은 출력을 한 거래에서 두 번 사용하려고 합니다.",
     )
   )
     return fail("DUPLICATE_INPUT");
@@ -116,7 +126,8 @@ export function validateTransaction(
     !check(
       keys.every((k) => utxos[k] !== undefined),
       "미사용 출력",
-      "존재하는 확정 UTXO만 사용할 수 있습니다. 이미 소비한 출력은 사용할 수 없습니다.",
+      "모든 입력이 존재하는 확정 UTXO를 가리킵니다.",
+      "입력이 가리키는 확정 UTXO가 없습니다. 존재하지 않거나 이미 소비한 출력은 사용할 수 없습니다.",
     )
   )
     return fail("MISSING_UTXO");
@@ -124,7 +135,8 @@ export function validateTransaction(
     !check(
       keys.every((k) => !reserved.has(k)),
       "이중 지출",
-      "다른 대기 거래 또는 같은 블록의 거래가 이미 사용하는 입력입니다.",
+      "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다.",
+      "선택한 입력을 다른 대기 거래나 같은 블록의 거래가 이미 사용 중입니다.",
     )
   )
     return fail("DOUBLE_SPEND");
@@ -138,7 +150,8 @@ export function validateTransaction(
     !check(
       keys.every((k) => utxos[k].address === owner),
       "소유권",
-      "모든 입력은 서명자의 공개키에 대응하는 주소 소유여야 합니다.",
+      "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다.",
+      "서명자의 공개키에 대응하는 주소가 소유하지 않은 입력이 있습니다.",
     )
   )
     return fail("OWNER");
@@ -150,7 +163,8 @@ export function validateTransaction(
         Number.isSafeInteger(output) &&
         input === output,
       "금액 보존",
-      "수수료가 0이므로 입력 합계와 출력 합계가 같아야 합니다.",
+      `입력 합계 ${input} 코인과 출력 합계 ${output} 코인이 일치합니다. 수수료는 0입니다.`,
+      "입력·출력 합계는 안전한 정수여야 하며, 수수료가 0이므로 두 합계가 같아야 합니다.",
     )
   )
     return fail("VALUE");

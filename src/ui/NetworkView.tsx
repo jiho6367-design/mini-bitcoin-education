@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   calculateNonce,
   createCandidate,
@@ -7,64 +7,166 @@ import {
 } from "../core/block";
 import { balance } from "../core/transaction";
 import type { Lab } from "../core/lab";
-import { NODE_IDS, type NodeId } from "../core/types";
+import { NODE_IDS, type NetworkMessage, type NodeId } from "../core/types";
+import {
+  messageKind,
+  messageLabel,
+  messageRoute,
+  nodePositions,
+  selectedQueuedMessage,
+} from "./network";
 import { Code, Notice, Panel, short, Validation } from "./shared";
 
-export function NetworkDiagram({ lab }: { lab: Lab }) {
+export function NetworkDiagram({
+  lab,
+  selectedMessage = lab.queue[0] ?? null,
+}: {
+  lab: Lab;
+  selectedMessage?: NetworkMessage | null;
+}) {
+  const arrowId = useId().replaceAll(":", "");
+  const recent = lab.lastDelivery;
+  const selectedRoute = selectedMessage
+    ? messageRoute(selectedMessage.from, selectedMessage.to)
+    : null;
+  const recentRoute = recent
+    ? messageRoute(recent.message.from, recent.message.to)
+    : null;
+  const recentColor = recent?.validation.valid ? "#365c4b" : "#ab3832";
+  const routeLabel = selectedMessage
+    ? `선택 대기 메시지 ${messageLabel(selectedMessage)}`
+    : recent
+      ? `최근 수신 메시지 ${messageLabel(recent.message)}`
+      : "전달 대기 메시지가 없습니다";
   return (
     <div className="network-diagram">
       <svg
-        viewBox="0 0 600 170"
+        viewBox="0 0 600 220"
         role="img"
-        aria-label="독립 노드 A, B, C 사이의 모의 메시지 전달"
+        aria-label={`독립 노드 A, B, C 사이의 모의 메시지 전달. ${routeLabel}`}
       >
+        <defs>
+          {[
+            ["pending", "#b8622c"],
+            ["recent", recentColor],
+          ].map(([kind, color]) => (
+            <marker
+              key={kind}
+              id={`${arrowId}-${kind}`}
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="5"
+              markerHeight="5"
+              orient="auto"
+            >
+              <path d="M0 0 L10 5 L0 10 Z" fill={color} />
+            </marker>
+          ))}
+        </defs>
         <path
-          d="M100 80 L300 80 L500 80 M100 80 Q300 230 500 80"
+          d="M100 100 L300 100 L500 100 M100 100 Q300 236 500 100"
           fill="none"
           stroke="#c5d7cb"
           strokeWidth="2"
           strokeDasharray="6 6"
         />
-        {[100, 300, 500].map((x, i) => (
-          <g key={x}>
-            <circle cx={x} cy="80" r="33" fill="#eaf1e9" stroke="#365c4b" />
+        {recent && recentRoute && (
+          <path
+            data-testid="recent-message-route"
+            data-from={recent.message.from}
+            data-to={recent.message.to}
+            data-kind={recent.message.kind}
+            d={recentRoute.path}
+            fill="none"
+            stroke={recentColor}
+            strokeWidth="5"
+            strokeDasharray="8 6"
+            markerEnd={`url(#${arrowId}-recent)`}
+          />
+        )}
+        {selectedMessage && selectedRoute && (
+          <g>
+            <path
+              data-testid="selected-message-route"
+              data-from={selectedMessage.from}
+              data-to={selectedMessage.to}
+              data-kind={selectedMessage.kind}
+              d={selectedRoute.path}
+              fill="none"
+              stroke="#b8622c"
+              strokeWidth="3"
+              markerEnd={`url(#${arrowId}-pending)`}
+            />
+            <rect
+              x={selectedRoute.labelX - 23}
+              y={selectedRoute.labelY - 11}
+              width="46"
+              height="22"
+              rx="5"
+              fill="#fff3e7"
+            />
             <text
-              x={x}
-              y="87"
+              x={selectedRoute.labelX}
+              y={selectedRoute.labelY + 5}
+              textAnchor="middle"
+              fill="#8c4525"
+              fontSize="13"
+            >
+              {messageKind(selectedMessage.kind)}
+            </text>
+          </g>
+        )}
+        {NODE_IDS.map((id) => (
+          <g key={id}>
+            <circle
+              cx={nodePositions[id].x}
+              cy="100"
+              r="33"
+              fill="#eaf1e9"
+              stroke="#365c4b"
+            />
+            <text
+              x={nodePositions[id].x}
+              y="107"
               textAnchor="middle"
               fill="#244638"
               fontSize="23"
               fontWeight="700"
             >
-              {NODE_IDS[i]}
+              {id}
             </text>
             <text
-              x={x}
-              y="137"
+              x={nodePositions[id].x}
+              y="155"
               textAnchor="middle"
               fill="#53645d"
               fontSize="13"
             >
-              높이 {lab.nodes[NODE_IDS[i]].chain.length - 1} · 대기{" "}
-              {lab.nodes[NODE_IDS[i]].mempool.length}
+              높이 {lab.nodes[id].chain.length - 1} · 대기{" "}
+              {lab.nodes[id].mempool.length}
             </text>
           </g>
         ))}
-        {lab.queue.length > 0 && (
-          <g>
-            <circle cx="200" cy="80" r="8" fill="#d57842" />
-            <text
-              x="300"
-              y="25"
-              textAnchor="middle"
-              fill="#a4542c"
-              fontSize="13"
-            >
-              {lab.queue.length}개 메시지 전달 대기
-            </text>
-          </g>
-        )}
       </svg>
+      <div className="network-caption" aria-live="polite">
+        <p data-testid="selected-message-caption">
+          {selectedMessage
+            ? `선택 대기 경로: ${messageLabel(selectedMessage)}`
+            : "선택할 대기 메시지가 없습니다."}
+        </p>
+        {recent && (
+          <p data-testid="recent-message-caption">
+            최근 수신: {messageLabel(recent.message)} ·{" "}
+            {recent.validation.valid ? "✓ 승인" : "✕ 거부"}
+          </p>
+        )}
+      </div>
+      <p className="network-legend muted">
+        주황 실선: 선택한 전달 대기 경로 · 초록/빨강 점선: 최근 수신의
+        승인/거부. 화살표는 도착 노드를 가리키며 이동 속도나 실제 인터넷 통신을
+        표현하지 않습니다.
+      </p>
     </div>
   );
 }
@@ -145,6 +247,11 @@ export function NetworkView({
   touch: () => void;
 }) {
   const [selected, setSelected] = useState(0);
+  const [selectedMessageId, setSelectedMessageId] = useState<number | null>(
+    null,
+  );
+  const selectedMessage = selectedQueuedMessage(lab.queue, selectedMessageId);
+  const nextMessage = lab.queue[0];
   const node = lab.nodes[nodeId];
   const block = node.chain[Math.min(selected, node.chain.length - 1)];
   const verification = validateChain(node.chain, lab.genesis);
@@ -152,7 +259,7 @@ export function NetworkView({
     <>
       <div className="two-col">
         <Panel title="세 노드, 세 번의 검증" eyebrow="SIMULATED NETWORK">
-          <NetworkDiagram lab={lab} />
+          <NetworkDiagram lab={lab} selectedMessage={selectedMessage} />
           <label className="toggle">
             <input
               type="checkbox"
@@ -171,9 +278,28 @@ export function NetworkView({
           >
             메시지 1개 전달
           </button>
-          <p className="muted">
-            자동 전달을 끄면 수신 전후 상태를 하나씩 비교할 수 있습니다.
+          <p data-testid="next-message-caption">
+            다음 실제 전달:{" "}
+            {nextMessage ? messageLabel(nextMessage) : "대기 없음"}
           </p>
+          <p className="muted">
+            목록 선택은 경로 미리보기입니다. 전달 버튼과 자동 전달은 대기열의 첫
+            메시지를 처리합니다. 수신 전후 노드의 높이·Mempool·잔액을
+            비교하세요.
+          </p>
+          {lab.lastDelivery && (
+            <div className="delivery-result">
+              <strong>
+                Node {lab.lastDelivery.message.to}의 최근 수신 검증 ·{" "}
+                {lab.lastDelivery.validation.valid ? "✓ 승인" : "✕ 거부"}
+              </strong>
+              <p>{lab.lastDelivery.validation.message}</p>
+              <details className="delivery-validation">
+                <summary>이 메시지의 검증 단계 보기</summary>
+                <Validation value={lab.lastDelivery.validation} />
+              </details>
+            </div>
+          )}
         </Panel>
         <Panel
           title={`전달 대기열 · ${lab.queue.length}`}
@@ -186,13 +312,24 @@ export function NetworkView({
             </div>
           ) : (
             <ol className="message-list">
-              {lab.queue.map((m) => (
+              {lab.queue.map((m, index) => (
                 <li key={m.id}>
-                  <strong>
-                    {m.from} → {m.to}
-                  </strong>
-                  <span>{m.kind === "block" ? "블록" : "거래"}</span>
-                  <span className="tag">전달 대기</span>
+                  <button
+                    className={`message-choice ${selectedMessage?.id === m.id ? "selected" : ""}`}
+                    aria-pressed={selectedMessage?.id === m.id}
+                    aria-label={`경로 보기 ${messageLabel(m)}`}
+                    onClick={() => setSelectedMessageId(m.id)}
+                  >
+                    <strong>
+                      {m.from} → {m.to}
+                    </strong>
+                    <span>
+                      {messageKind(m.kind)} #{m.id}
+                    </span>
+                    <span className="tag">
+                      {index === 0 ? "다음 전달" : "전달 대기"}
+                    </span>
+                  </button>
                 </li>
               ))}
             </ol>

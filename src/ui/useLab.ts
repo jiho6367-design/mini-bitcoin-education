@@ -2,7 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createWallet } from "../core/crypto";
 import { Lab } from "../core/lab";
 import type { Block, NodeId, Wallet } from "../core/types";
-import type { MiningCommand, MiningUpdate } from "../mining/protocol";
+import type {
+  MiningCommand,
+  MiningMode,
+  MiningSample,
+  MiningUpdate,
+} from "../mining/protocol";
+import type { TransactionLesson } from "./learning";
 
 export interface MiningState {
   status: "idle" | "running" | "paused" | "found" | "stopped" | "error";
@@ -11,16 +17,28 @@ export interface MiningState {
   block?: Block;
   node?: NodeId;
   message?: string;
+  mode: MiningMode;
+  observationMs: number;
+  samples: MiningSample[];
 }
 const initialMining: MiningState = {
   status: "idle",
   attempts: 0,
   elapsedMs: 0,
+  mode: "fast",
+  observationMs: 0,
+  samples: [],
 };
 export function useLab() {
   const [lab, setLab] = useState<Lab | null>(null);
   const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [automatic, setAutomatic] = useState(true);
+  const [automatic, setAutomatic] = useState(false);
+  const [lesson, setLesson] = useState<TransactionLesson | null>(null);
+  const [composer, setComposer] = useState({
+    sender: 0,
+    receiver: 1,
+    amount: "30",
+  });
   const [revision, setRevision] = useState(0);
   const [mining, setMining] = useState<MiningState>(initialMining);
   const [error, setError] = useState("");
@@ -49,6 +67,9 @@ export function useLab() {
     setLab(null);
     setWallets([]);
     setMining(initialMining);
+    setLesson(null);
+    setComposer({ sender: 0, receiver: 1, amount: "30" });
+    setAutomatic(false);
     setError("");
     touch();
   }
@@ -61,6 +82,9 @@ export function useLab() {
     setWallets(next.wallets);
     setLab(next);
     setMining(initialMining);
+    setLesson(null);
+    setComposer({ sender: 0, receiver: 1, amount: "30" });
+    setAutomatic(false);
     setError("");
     touch();
   }
@@ -78,7 +102,7 @@ export function useLab() {
     } else setWallets([...wallets, wallet]);
     touch();
   }
-  function beginMining(node: NodeId, step: boolean) {
+  function beginMining(node: NodeId, step: boolean, mode: MiningMode = "fast") {
     if (!lab || activeJob.current) return;
     try {
       const candidate = lab.candidate(node);
@@ -96,6 +120,9 @@ export function useLab() {
         attempts: 0,
         elapsedMs: 0,
         block: candidate,
+        mode,
+        observationMs: 0,
+        samples: [],
       });
       miner.onmessage = (event: MessageEvent<MiningUpdate>) => {
         const update = event.data;
@@ -119,6 +146,9 @@ export function useLab() {
           elapsedMs: update.elapsedMs,
           block: update.block,
           message: update.message,
+          mode: update.mode ?? mode,
+          observationMs: update.observationMs ?? 0,
+          samples: update.samples ?? [],
         });
       };
       miner.onerror = () => {
@@ -135,6 +165,7 @@ export function useLab() {
         jobId,
         candidate,
         step,
+        mode,
       } satisfies MiningCommand);
       setError("");
     } catch (e) {
@@ -156,6 +187,10 @@ export function useLab() {
   }
   return {
     lab,
+    lesson,
+    setLesson,
+    composer,
+    setComposer,
     wallets,
     automatic,
     setAutomatic,
