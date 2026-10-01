@@ -1,29 +1,49 @@
 # Mini Bitcoin Education Lab
 
-비트코인 핵심 원리를 직접 조작하며 배우는 **웹 기반 교육용 축소 모델**입니다. 실제 자산이나 Bitcoin 네트워크에 연결하지 않습니다. 개인 졸업작품으로 이해하고 설명할 수 있도록 UI와 순수 TypeScript 핵심 로직을 분리했습니다.
+비트코인 핵심 원리를 직접 조작하며 배우는 **웹 기반 교육용 축소 모델**입니다. 실제 자산이나 Bitcoin 네트워크에 연결하지 않습니다. 개인 졸업작품으로 이해하고 설명할 수 있도록 **화면(React 프런트엔드)** 과 **규칙(Python 백엔드)** 을 나누었습니다.
 
 **지갑 → 거래 작성·전자서명 → 검증 → Mempool → PoW 채굴 → 블록 전파·검증 → Blockchain** 전체 흐름과 과거 블록 변조를 실험합니다.
 
+```
+frontend/   React + TypeScript + Vite. 화면 표시와 사용자 조작만 담당
+backend/    Python + FastAPI. 지갑·서명·검증·모의 노드 3개·채굴·실패 실험의 모든 규칙
+docs/       사용 안내·설계·보고서·시연 대본·테스트 기록
+```
+
 ## 빠른 실행 — Windows PowerShell
 
-Node.js **24.x**와 npm이 필요합니다. 저장소 폴더에서 실행합니다.
+Node.js **24.x**와 npm, 그리고 Python 프로젝트 도구 **uv**가 필요합니다. Python 3.12는 uv가 준비합니다. 터미널 두 개를 사용합니다.
+
+**터미널 1 — 백엔드** (`http://127.0.0.1:8000`)
 
 ```powershell
+cd backend
+uv sync
+uv run mini-bitcoin-backend
+```
+
+**터미널 2 — 화면** (`http://127.0.0.1:5173`)
+
+```powershell
+cd frontend
 node --version
 npm.cmd ci
 npm.cmd run dev
 ```
 
-터미널에 표시된 `http://127.0.0.1:5173`을 Chrome 또는 Edge로 엽니다. 종료는 `Ctrl+C`입니다. PowerShell에서 `npm.ps1` 실행 정책 오류가 나면 위처럼 `npm.cmd`를 사용합니다. 실행 정책을 변경할 필요가 없습니다.
+터미널 2에 표시된 `http://127.0.0.1:5173`을 Chrome 또는 Edge로 엽니다. 종료는 각 터미널에서 `Ctrl+C`입니다. PowerShell에서 `npm.ps1` 실행 정책 오류가 나면 위처럼 `npm.cmd`를 사용합니다. 실행 정책을 변경할 필요가 없습니다.
 
-배포용 빌드 확인:
+화면은 같은 주소의 `/api`만 호출하고, 화면 서버가 이 요청을 백엔드(8000)로 전달합니다. 백엔드를 먼저 실행하지 않으면 화면에 **백엔드에 연결할 수 없습니다**라는 안내가 표시됩니다.
+
+배포용 빌드 확인(백엔드는 실행한 상태로 둡니다):
 
 ```powershell
+cd frontend
 npm.cmd run build
 npm.cmd run preview
 ```
 
-기본 미리보기 주소는 `http://127.0.0.1:4173`입니다. `dist/index.html`을 더블클릭하는 `file://` 방식 대신 로컬 서버로 실행하세요. 최초 설치 후 실습은 외부 API·폰트·계정·인터넷 연결을 사용하지 않습니다. Node.js는 개발·정적 파일 서버 역할이며 별도 애플리케이션 백엔드는 없습니다.
+기본 미리보기 주소는 `http://127.0.0.1:4173`입니다. `dist/index.html`을 더블클릭하는 `file://` 방식 대신 로컬 서버로 실행하세요. 최초 설치 후 실습은 외부 API·폰트·계정·인터넷 연결을 사용하지 않습니다. 두 서버 모두 이 PC의 `127.0.0.1`에서만 동작하며 DB는 없습니다.
 
 ## 3분 사용법
 
@@ -36,34 +56,51 @@ npm.cmd run preview
 
 상단 **화면 테마**에서 시스템·라이트·다크를 선택합니다. 처음에는 운영체제 설정을 따르며, 선택한 테마 설정만 이 브라우저에 저장되어 새로고침 후에도 유지됩니다. 테마 전환은 거래·검증 결과·채굴 작업을 유지합니다.
 
-새로고침·탭 닫기·초기화 시 모든 지갑과 실습 상태가 사라집니다. 실습의 자동 저장·복원 기능은 없습니다. 개인키는 교육용이며 실제 자산을 보관하지 마세요.
+지갑과 실습 상태는 백엔드의 메모리에만 있습니다. 새로고침·탭 닫기·초기화를 하거나 백엔드를 다시 시작하면 사라집니다. 실습의 자동 저장·복원 기능은 없습니다. 개인키는 교육용이며 실제 자산을 보관하지 마세요.
 
 ## 검증 명령
 
 ```powershell
+cd backend
+uv run pytest
+uv run ruff check .
+
+cd ..\frontend
 npm.cmd run check
 npm.cmd run test:e2e
 ```
 
-`check`는 타입 검사·린트·Vitest·배포용 빌드를 순서대로 실행합니다. E2E는 **설치된 Chrome과 Edge**를 사용합니다. 둘 중 하나만 설치되어 있다면 `npm.cmd run test:e2e -- --project=chrome` 또는 `--project=edge`로 선택합니다. 두 브라우저의 실행 결과는 [테스트 기록](docs/test-results.md)을 참고하세요.
+- `uv run pytest`는 암호·거래·블록·체인·노드·채굴 규칙과 HTTP API를 검사합니다.
+- `check`는 타입 검사·린트·Vitest·배포용 빌드를 순서대로 실행합니다.
+- E2E는 **설치된 Chrome과 Edge**를 사용하며, 테스트 전용 포트로 백엔드(8173)와 화면 서버(4173)를 스스로 시작합니다. 둘 중 하나만 설치되어 있다면 `npm.cmd run test:e2e -- --project=chrome` 또는 `--project=edge`로 선택합니다.
+
+실행 결과는 [테스트 기록](docs/test-results.md)을 참고하세요.
 
 ## 코드 읽는 순서
 
-1. `src/core/types.ts`: 데이터 구조
-2. `src/core/crypto.ts`, `transaction.ts`: 지갑·서명·UTXO와 검증
-3. `src/core/block.ts`: 헤더·PoW·블록·체인 검증
-4. `src/core/lab.ts`: 독립 노드·메시지·상태 반영
-5. `src/mining/`: Worker 계산과 메시지 규약
-6. `src/ui/`: 학습 화면과 실습 제어
+백엔드(`backend/src/mini_bitcoin_backend/`):
 
-React는 화면 표시, 핵심 TypeScript는 규칙 검사, Worker는 반복 해시 계산을 담당합니다.
+1. `core/types.py`: 데이터 구조
+2. `core/crypto.py`, `core/transaction.py`: 지갑·서명·UTXO와 거래 검증
+3. `core/block.py`: 헤더·PoW·블록·체인 검증
+4. `core/lab.py`: 독립 노드 3개·메시지 대기열·상태 반영
+5. `core/mining.py`, `core/experiments.py`: 채굴 작업과 실패 실험
+6. `service/`, `api/`: 실습 하나의 상태 보관과 HTTP 경로
 
-상단 흐름은 보고 있는 화면이나 체인 높이가 아니라 **현재 선택 거래**의 작성·서명·검증·블록 포함 상태를 추적합니다. 화면·관찰 노드를 바꿔도 작성 데이터와 검증 결과가 유지되며, 송금 조건을 바꾸거나 새 거래를 작성하면 새 추적을 시작합니다. 검증과 Mempool 등록은 즉시 계산되지만 검증 결과를 관찰하는 화면 단계를 따로 표시합니다.
+화면(`frontend/src/`):
+
+7. `api/`: 백엔드 호출과 주고받는 JSON의 형태
+8. `ui/useLab.ts`: 실습 제어기(요청 순서, 자동 전달, 채굴 계산 요청)
+9. `ui/`: 학습 화면
+
+React는 화면 표시, Python 핵심 모듈은 규칙 검사와 해시 계산, FastAPI는 둘 사이의 HTTP 경로를 담당합니다. 브라우저에는 서명·검증·해시 코드가 없습니다.
+
+상단 흐름은 보고 있는 화면이나 체인 높이가 아니라 **현재 선택 거래**의 작성·서명·검증·블록 포함 상태를 추적합니다. 화면·관찰 노드를 바꿔도 작성 데이터와 검증 결과가 유지되며, 송금 조건을 바꾸거나 새 거래를 작성하면 새 추적을 시작합니다. 검증과 Mempool 등록은 백엔드가 한 번의 요청에서 함께 처리하지만 검증 결과를 관찰하는 화면 단계를 따로 표시합니다.
 
 ## 문서와 제한
 
 [문서 목차](docs/README.md)에서 사용 안내·설계·보고서·시연 대본을 확인하세요.
 
-현재 버전은 `package.json`을 기준으로 앱에 자동 표시합니다. 완료된 업데이트 단위의 버전 규칙은 [개발 기록](docs/development-log.md), 실제 변경 내역은 [CHANGELOG](CHANGELOG.md)에서 확인합니다.
+현재 버전은 `frontend/package.json`을 기준으로 앱에 자동 표시하며 `backend/pyproject.toml`도 같은 값으로 맞춥니다. 완료된 업데이트 단위의 버전 규칙은 [개발 기록](docs/development-log.md), 실제 변경 내역은 [CHANGELOG](CHANGELOG.md)에서 확인합니다.
 
-실제 secp256k1 ECDSA 서명과 SHA-256, UTXO, 독립 노드 검증을 사용하지만, Bitcoin 호환 주소·바이너리 형식·Merkle Tree·채굴 보상·실제 P2P·동시 채굴·체인 분기 선택은 구현하지 않습니다. 세 노드의 일치가 완전한 분산 합의 구현을 뜻하지 않습니다. 차이는 [단순화 목록](docs/bitcoin-differences.md)과 앱 안에 명시합니다.
+실제 secp256k1 ECDSA 서명과 SHA-256, UTXO, 독립 노드 검증을 사용하지만, Bitcoin 호환 주소·바이너리 형식·Merkle Tree·채굴 보상·실제 P2P·동시 채굴·체인 분기 선택은 구현하지 않습니다. 세 노드는 백엔드 프로세스 하나 안의 독립 상태이며, 세 노드의 일치가 완전한 분산 합의 구현을 뜻하지 않습니다. 개인키를 백엔드가 보관하는 점도 사용자의 기기에서 서명하는 실제 지갑과 다릅니다. 차이는 [단순화 목록](docs/bitcoin-differences.md)과 앱 안에 명시합니다.

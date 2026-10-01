@@ -1,8 +1,10 @@
 # 프로젝트 문서
 
 - [요구사항](requirements.md): 학습 목표, 구현 범위, 완료 기준
-- [설계](architecture.md): 데이터 구조, 핵심 규칙, 인터페이스와 실행 흐름
-- [사용 안내](user-guide.md): 실행, 실습, 실패 실험, 문제 해결
+- [설계](architecture.md): 화면과 백엔드의 책임, 데이터 구조, 핵심 규칙, HTTP API, 채굴 작업
+- [사용 안내](user-guide.md): 두 서버 실행, 실습, 실패 실험, 문제 해결
+- [백엔드 안내](../backend/README.md): Python 백엔드의 실행·구조·검사
+- [TypeScript 기준값 안내](../backend/tests/vectors/README.md): 1.1.0 구현과의 일치 검사에 쓰는 기준값의 출처
 - [Bitcoin 대비 단순화와 용어](bitcoin-differences.md): 유지한 개념과 제외한 범위
 - [테스트 기록](test-results.md): 실행 환경, 자동 검사, 화면 확인 결과
 - [결과보고서 초안](final-report.md): 목적·설계·구현·검증·한계

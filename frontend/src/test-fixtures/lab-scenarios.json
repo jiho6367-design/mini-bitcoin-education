@@ -1,0 +1,5126 @@
+{
+  "learning": {
+    "initial": {
+      "labId": "learning-flow",
+      "phase": "running",
+      "revision": 1,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "genesis": {
+        "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        }
+      },
+      "queue": [],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        }
+      ],
+      "lastValidation": null,
+      "lastDelivery": null,
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    },
+    "draft": {
+      "draft": {
+        "version": 1,
+        "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+        "inputs": [
+          {
+            "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+            "outputIndex": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+            "amount": 30
+          },
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 70
+          }
+        ],
+        "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+      },
+      "inputs": [
+        {
+          "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+          "outputIndex": 0,
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+          "amount": 100
+        }
+      ],
+      "signingText": "[1,\"f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703\",[[\"94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5\",0]],[[\"mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7\",30],[\"mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554\",70]],\"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798\"]",
+      "signingHash": "5065b2903c2912cfbba48034b679e3a7af30894fd36e4ce8d0cc3e684983450a"
+    },
+    "signed": {
+      "version": 1,
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "inputs": [
+        {
+          "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+          "outputIndex": 0
+        }
+      ],
+      "outputs": [
+        {
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+          "amount": 30
+        },
+        {
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+          "amount": 70
+        }
+      ],
+      "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+      "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+      "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+    },
+    "validation": {
+      "valid": true,
+      "code": "VALID",
+      "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+      "steps": [
+        {
+          "label": "형식·금액",
+          "ok": true,
+          "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+        },
+        {
+          "label": "실습 식별자",
+          "ok": true,
+          "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+        },
+        {
+          "label": "거래 ID",
+          "ok": true,
+          "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+        },
+        {
+          "label": "전자서명",
+          "ok": true,
+          "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+        },
+        {
+          "label": "중복 입력",
+          "ok": true,
+          "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+        },
+        {
+          "label": "미사용 출력",
+          "ok": true,
+          "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+        },
+        {
+          "label": "이중 지출",
+          "ok": true,
+          "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+        },
+        {
+          "label": "소유권",
+          "ok": true,
+          "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+        },
+        {
+          "label": "금액 보존",
+          "ok": true,
+          "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+        }
+      ]
+    },
+    "submitted": {
+      "labId": "learning-flow",
+      "phase": "running",
+      "revision": 2,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "genesis": {
+        "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "inputs": [
+                {
+                  "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+              "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+            }
+          ],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": true,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+              },
+              {
+                "label": "중복 입력",
+                "ok": true,
+                "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+              },
+              {
+                "label": "미사용 출력",
+                "ok": true,
+                "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+              },
+              {
+                "label": "이중 지출",
+                "ok": true,
+                "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+              },
+              {
+                "label": "소유권",
+                "ok": true,
+                "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+              },
+              {
+                "label": "금액 보존",
+                "ok": true,
+                "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        }
+      },
+      "queue": [
+        {
+          "id": 3,
+          "from": "A",
+          "to": "B",
+          "kind": "transaction"
+        },
+        {
+          "id": 4,
+          "from": "A",
+          "to": "C",
+          "kind": "transaction"
+        }
+      ],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        }
+      ],
+      "lastValidation": {
+        "valid": true,
+        "code": "VALID",
+        "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+        "steps": [
+          {
+            "label": "형식·금액",
+            "ok": true,
+            "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+          },
+          {
+            "label": "실습 식별자",
+            "ok": true,
+            "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+          },
+          {
+            "label": "거래 ID",
+            "ok": true,
+            "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+          },
+          {
+            "label": "전자서명",
+            "ok": true,
+            "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+          },
+          {
+            "label": "중복 입력",
+            "ok": true,
+            "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+          },
+          {
+            "label": "미사용 출력",
+            "ok": true,
+            "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+          },
+          {
+            "label": "이중 지출",
+            "ok": true,
+            "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+          },
+          {
+            "label": "소유권",
+            "ok": true,
+            "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+          },
+          {
+            "label": "금액 보존",
+            "ok": true,
+            "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+          }
+        ]
+      },
+      "lastDelivery": null,
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    },
+    "wrong": {
+      "version": 1,
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "inputs": [
+        {
+          "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+          "outputIndex": 0
+        }
+      ],
+      "outputs": [
+        {
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+          "amount": 30
+        },
+        {
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+          "amount": 70
+        }
+      ],
+      "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+      "signature": "a4375f3d6408d8b5c8c3b36fe37ac3ace172d7838997a0d780297cf8735e38d4121e380e37a26cb45d77205cdf39ac113946e65a26c74745b4e8c9e8486ded18",
+      "id": "dd5df68e8cc4c4790c4e736d3ffecc3f6b3c9fb93d527c28cf5dc8d6fd2f6888"
+    },
+    "wrongValidation": {
+      "valid": false,
+      "code": "SIGNATURE",
+      "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
+      "steps": [
+        {
+          "label": "형식·금액",
+          "ok": true,
+          "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+        },
+        {
+          "label": "실습 식별자",
+          "ok": true,
+          "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+        },
+        {
+          "label": "거래 ID",
+          "ok": true,
+          "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+        },
+        {
+          "label": "전자서명",
+          "ok": false,
+          "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다."
+        }
+      ]
+    },
+    "afterWrong": {
+      "labId": "learning-flow",
+      "phase": "running",
+      "revision": 3,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "genesis": {
+        "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "inputs": [
+                {
+                  "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+              "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+            }
+          ],
+          "lastValidation": {
+            "valid": false,
+            "code": "SIGNATURE",
+            "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": false,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        }
+      },
+      "queue": [
+        {
+          "id": 3,
+          "from": "A",
+          "to": "B",
+          "kind": "transaction"
+        },
+        {
+          "id": 4,
+          "from": "A",
+          "to": "C",
+          "kind": "transaction"
+        }
+      ],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 6,
+          "node": "A",
+          "kind": "검증 거부",
+          "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
+          "ok": false
+        }
+      ],
+      "lastValidation": {
+        "valid": false,
+        "code": "SIGNATURE",
+        "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
+        "steps": [
+          {
+            "label": "형식·금액",
+            "ok": true,
+            "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+          },
+          {
+            "label": "실습 식별자",
+            "ok": true,
+            "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+          },
+          {
+            "label": "거래 ID",
+            "ok": true,
+            "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+          },
+          {
+            "label": "전자서명",
+            "ok": false,
+            "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다."
+          }
+        ]
+      },
+      "lastDelivery": null,
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    },
+    "candidate": {
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "height": 1,
+      "previousHash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+      "transactionsHash": "736000faefa594d5f335af2860ed05ca661dca8ee3be30c2ad558933ea81ab65",
+      "timestamp": 1001,
+      "difficulty": 1,
+      "nonce": 0,
+      "transactions": [
+        {
+          "version": 1,
+          "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+          "inputs": [
+            {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0
+            }
+          ],
+          "outputs": [
+            {
+              "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+              "amount": 30
+            },
+            {
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 70
+            }
+          ],
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+          "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+        }
+      ],
+      "hash": ""
+    },
+    "block": {
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "height": 1,
+      "previousHash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+      "transactionsHash": "736000faefa594d5f335af2860ed05ca661dca8ee3be30c2ad558933ea81ab65",
+      "timestamp": 1001,
+      "difficulty": 1,
+      "nonce": 0,
+      "transactions": [
+        {
+          "version": 1,
+          "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+          "inputs": [
+            {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0
+            }
+          ],
+          "outputs": [
+            {
+              "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+              "amount": 30
+            },
+            {
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 70
+            }
+          ],
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+          "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+        }
+      ],
+      "hash": "0544e70fb693b53cc6341dfd50e7798685f4ea1b783a12fc90a66f2de762a536"
+    },
+    "minedAtA": {
+      "labId": "learning-flow",
+      "phase": "running",
+      "revision": 4,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "genesis": {
+        "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            },
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 1,
+              "previousHash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "transactionsHash": "736000faefa594d5f335af2860ed05ca661dca8ee3be30c2ad558933ea81ab65",
+              "timestamp": 1001,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [
+                {
+                  "version": 1,
+                  "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+                  "inputs": [
+                    {
+                      "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                      "outputIndex": 0
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                      "amount": 30
+                    },
+                    {
+                      "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                      "amount": 70
+                    }
+                  ],
+                  "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+                  "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+                  "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+                }
+              ],
+              "hash": "0544e70fb693b53cc6341dfd50e7798685f4ea1b783a12fc90a66f2de762a536"
+            }
+          ],
+          "utxos": {
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:0": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 0,
+              "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+              "amount": 30
+            },
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:1": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 1,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 70
+            }
+          },
+          "mempool": [],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+            "steps": [
+              {
+                "label": "블록 형식",
+                "ok": true,
+                "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+              },
+              {
+                "label": "이전 블록 연결",
+                "ok": true,
+                "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+              },
+              {
+                "label": "생성 시각",
+                "ok": true,
+                "message": "이전 블록보다 이른 시각일 수 없습니다."
+              },
+              {
+                "label": "공통 난이도",
+                "ok": true,
+                "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+              },
+              {
+                "label": "거래 목록 해시",
+                "ok": true,
+                "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+              },
+              {
+                "label": "블록 해시",
+                "ok": true,
+                "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+              },
+              {
+                "label": "작업증명",
+                "ok": true,
+                "message": "해시가 실습의 목표값 이하여야 합니다."
+              },
+              {
+                "label": "모든 거래",
+                "ok": true,
+                "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #1까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 70,
+              "spendable": 70
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 30,
+              "spendable": 30
+            }
+          },
+          "canStartMining": false
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        }
+      },
+      "queue": [
+        {
+          "id": 3,
+          "from": "A",
+          "to": "B",
+          "kind": "transaction"
+        },
+        {
+          "id": 4,
+          "from": "A",
+          "to": "C",
+          "kind": "transaction"
+        },
+        {
+          "id": 8,
+          "from": "A",
+          "to": "B",
+          "kind": "block"
+        },
+        {
+          "id": 9,
+          "from": "A",
+          "to": "C",
+          "kind": "block"
+        }
+      ],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 6,
+          "node": "A",
+          "kind": "검증 거부",
+          "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
+          "ok": false
+        },
+        {
+          "id": 7,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+          "ok": true
+        },
+        {
+          "id": 10,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "블록 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        }
+      ],
+      "lastValidation": {
+        "valid": true,
+        "code": "VALID",
+        "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+        "steps": [
+          {
+            "label": "블록 형식",
+            "ok": true,
+            "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+          },
+          {
+            "label": "이전 블록 연결",
+            "ok": true,
+            "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+          },
+          {
+            "label": "생성 시각",
+            "ok": true,
+            "message": "이전 블록보다 이른 시각일 수 없습니다."
+          },
+          {
+            "label": "공통 난이도",
+            "ok": true,
+            "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+          },
+          {
+            "label": "거래 목록 해시",
+            "ok": true,
+            "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+          },
+          {
+            "label": "블록 해시",
+            "ok": true,
+            "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+          },
+          {
+            "label": "작업증명",
+            "ok": true,
+            "message": "해시가 실습의 목표값 이하여야 합니다."
+          },
+          {
+            "label": "모든 거래",
+            "ok": true,
+            "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+          }
+        ]
+      },
+      "lastDelivery": null,
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    },
+    "oneMessageLeft": {
+      "labId": "learning-flow",
+      "phase": "running",
+      "revision": 5,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "genesis": {
+        "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            },
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 1,
+              "previousHash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "transactionsHash": "736000faefa594d5f335af2860ed05ca661dca8ee3be30c2ad558933ea81ab65",
+              "timestamp": 1001,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [
+                {
+                  "version": 1,
+                  "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+                  "inputs": [
+                    {
+                      "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                      "outputIndex": 0
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                      "amount": 30
+                    },
+                    {
+                      "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                      "amount": 70
+                    }
+                  ],
+                  "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+                  "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+                  "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+                }
+              ],
+              "hash": "0544e70fb693b53cc6341dfd50e7798685f4ea1b783a12fc90a66f2de762a536"
+            }
+          ],
+          "utxos": {
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:0": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 0,
+              "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+              "amount": 30
+            },
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:1": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 1,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 70
+            }
+          },
+          "mempool": [],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+            "steps": [
+              {
+                "label": "블록 형식",
+                "ok": true,
+                "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+              },
+              {
+                "label": "이전 블록 연결",
+                "ok": true,
+                "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+              },
+              {
+                "label": "생성 시각",
+                "ok": true,
+                "message": "이전 블록보다 이른 시각일 수 없습니다."
+              },
+              {
+                "label": "공통 난이도",
+                "ok": true,
+                "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+              },
+              {
+                "label": "거래 목록 해시",
+                "ok": true,
+                "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+              },
+              {
+                "label": "블록 해시",
+                "ok": true,
+                "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+              },
+              {
+                "label": "작업증명",
+                "ok": true,
+                "message": "해시가 실습의 목표값 이하여야 합니다."
+              },
+              {
+                "label": "모든 거래",
+                "ok": true,
+                "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #1까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 70,
+              "spendable": 70
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 30,
+              "spendable": 30
+            }
+          },
+          "canStartMining": false
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            },
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 1,
+              "previousHash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "transactionsHash": "736000faefa594d5f335af2860ed05ca661dca8ee3be30c2ad558933ea81ab65",
+              "timestamp": 1001,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [
+                {
+                  "version": 1,
+                  "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+                  "inputs": [
+                    {
+                      "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                      "outputIndex": 0
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                      "amount": 30
+                    },
+                    {
+                      "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                      "amount": 70
+                    }
+                  ],
+                  "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+                  "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+                  "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+                }
+              ],
+              "hash": "0544e70fb693b53cc6341dfd50e7798685f4ea1b783a12fc90a66f2de762a536"
+            }
+          ],
+          "utxos": {
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:0": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 0,
+              "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+              "amount": 30
+            },
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:1": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 1,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 70
+            }
+          },
+          "mempool": [],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+            "steps": [
+              {
+                "label": "블록 형식",
+                "ok": true,
+                "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+              },
+              {
+                "label": "이전 블록 연결",
+                "ok": true,
+                "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+              },
+              {
+                "label": "생성 시각",
+                "ok": true,
+                "message": "이전 블록보다 이른 시각일 수 없습니다."
+              },
+              {
+                "label": "공통 난이도",
+                "ok": true,
+                "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+              },
+              {
+                "label": "거래 목록 해시",
+                "ok": true,
+                "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+              },
+              {
+                "label": "블록 해시",
+                "ok": true,
+                "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+              },
+              {
+                "label": "작업증명",
+                "ok": true,
+                "message": "해시가 실습의 목표값 이하여야 합니다."
+              },
+              {
+                "label": "모든 거래",
+                "ok": true,
+                "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #1까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 70,
+              "spendable": 70
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 30,
+              "spendable": 30
+            }
+          },
+          "canStartMining": false
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "inputs": [
+                {
+                  "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+              "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+            }
+          ],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": true,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+              },
+              {
+                "label": "중복 입력",
+                "ok": true,
+                "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+              },
+              {
+                "label": "미사용 출력",
+                "ok": true,
+                "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+              },
+              {
+                "label": "이중 지출",
+                "ok": true,
+                "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+              },
+              {
+                "label": "소유권",
+                "ok": true,
+                "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+              },
+              {
+                "label": "금액 보존",
+                "ok": true,
+                "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        }
+      },
+      "queue": [
+        {
+          "id": 9,
+          "from": "A",
+          "to": "C",
+          "kind": "block"
+        }
+      ],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 6,
+          "node": "A",
+          "kind": "검증 거부",
+          "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
+          "ok": false
+        },
+        {
+          "id": 7,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+          "ok": true
+        },
+        {
+          "id": 10,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "블록 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 11,
+          "node": "B",
+          "kind": "수신",
+          "message": "A → B · 거래 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 12,
+          "node": "B",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 13,
+          "node": "C",
+          "kind": "수신",
+          "message": "A → C · 거래 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 14,
+          "node": "C",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 15,
+          "node": "B",
+          "kind": "수신",
+          "message": "A → B · 블록 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 16,
+          "node": "B",
+          "kind": "검증 승인",
+          "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+          "ok": true
+        }
+      ],
+      "lastValidation": {
+        "valid": true,
+        "code": "VALID",
+        "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+        "steps": [
+          {
+            "label": "블록 형식",
+            "ok": true,
+            "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+          },
+          {
+            "label": "이전 블록 연결",
+            "ok": true,
+            "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+          },
+          {
+            "label": "생성 시각",
+            "ok": true,
+            "message": "이전 블록보다 이른 시각일 수 없습니다."
+          },
+          {
+            "label": "공통 난이도",
+            "ok": true,
+            "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+          },
+          {
+            "label": "거래 목록 해시",
+            "ok": true,
+            "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+          },
+          {
+            "label": "블록 해시",
+            "ok": true,
+            "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+          },
+          {
+            "label": "작업증명",
+            "ok": true,
+            "message": "해시가 실습의 목표값 이하여야 합니다."
+          },
+          {
+            "label": "모든 거래",
+            "ok": true,
+            "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+          }
+        ]
+      },
+      "lastDelivery": {
+        "message": {
+          "id": 8,
+          "from": "A",
+          "to": "B",
+          "kind": "block"
+        },
+        "validation": {
+          "valid": true,
+          "code": "VALID",
+          "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+          "steps": [
+            {
+              "label": "블록 형식",
+              "ok": true,
+              "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+            },
+            {
+              "label": "이전 블록 연결",
+              "ok": true,
+              "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+            },
+            {
+              "label": "생성 시각",
+              "ok": true,
+              "message": "이전 블록보다 이른 시각일 수 없습니다."
+            },
+            {
+              "label": "공통 난이도",
+              "ok": true,
+              "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+            },
+            {
+              "label": "거래 목록 해시",
+              "ok": true,
+              "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+            },
+            {
+              "label": "블록 해시",
+              "ok": true,
+              "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+            },
+            {
+              "label": "작업증명",
+              "ok": true,
+              "message": "해시가 실습의 목표값 이하여야 합니다."
+            },
+            {
+              "label": "모든 거래",
+              "ok": true,
+              "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+            }
+          ]
+        }
+      },
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    },
+    "delivered": {
+      "labId": "learning-flow",
+      "phase": "running",
+      "revision": 6,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "genesis": {
+        "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            },
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 1,
+              "previousHash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "transactionsHash": "736000faefa594d5f335af2860ed05ca661dca8ee3be30c2ad558933ea81ab65",
+              "timestamp": 1001,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [
+                {
+                  "version": 1,
+                  "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+                  "inputs": [
+                    {
+                      "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                      "outputIndex": 0
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                      "amount": 30
+                    },
+                    {
+                      "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                      "amount": 70
+                    }
+                  ],
+                  "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+                  "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+                  "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+                }
+              ],
+              "hash": "0544e70fb693b53cc6341dfd50e7798685f4ea1b783a12fc90a66f2de762a536"
+            }
+          ],
+          "utxos": {
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:0": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 0,
+              "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+              "amount": 30
+            },
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:1": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 1,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 70
+            }
+          },
+          "mempool": [],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+            "steps": [
+              {
+                "label": "블록 형식",
+                "ok": true,
+                "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+              },
+              {
+                "label": "이전 블록 연결",
+                "ok": true,
+                "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+              },
+              {
+                "label": "생성 시각",
+                "ok": true,
+                "message": "이전 블록보다 이른 시각일 수 없습니다."
+              },
+              {
+                "label": "공통 난이도",
+                "ok": true,
+                "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+              },
+              {
+                "label": "거래 목록 해시",
+                "ok": true,
+                "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+              },
+              {
+                "label": "블록 해시",
+                "ok": true,
+                "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+              },
+              {
+                "label": "작업증명",
+                "ok": true,
+                "message": "해시가 실습의 목표값 이하여야 합니다."
+              },
+              {
+                "label": "모든 거래",
+                "ok": true,
+                "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #1까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 70,
+              "spendable": 70
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 30,
+              "spendable": 30
+            }
+          },
+          "canStartMining": false
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            },
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 1,
+              "previousHash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "transactionsHash": "736000faefa594d5f335af2860ed05ca661dca8ee3be30c2ad558933ea81ab65",
+              "timestamp": 1001,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [
+                {
+                  "version": 1,
+                  "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+                  "inputs": [
+                    {
+                      "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                      "outputIndex": 0
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                      "amount": 30
+                    },
+                    {
+                      "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                      "amount": 70
+                    }
+                  ],
+                  "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+                  "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+                  "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+                }
+              ],
+              "hash": "0544e70fb693b53cc6341dfd50e7798685f4ea1b783a12fc90a66f2de762a536"
+            }
+          ],
+          "utxos": {
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:0": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 0,
+              "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+              "amount": 30
+            },
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:1": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 1,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 70
+            }
+          },
+          "mempool": [],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+            "steps": [
+              {
+                "label": "블록 형식",
+                "ok": true,
+                "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+              },
+              {
+                "label": "이전 블록 연결",
+                "ok": true,
+                "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+              },
+              {
+                "label": "생성 시각",
+                "ok": true,
+                "message": "이전 블록보다 이른 시각일 수 없습니다."
+              },
+              {
+                "label": "공통 난이도",
+                "ok": true,
+                "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+              },
+              {
+                "label": "거래 목록 해시",
+                "ok": true,
+                "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+              },
+              {
+                "label": "블록 해시",
+                "ok": true,
+                "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+              },
+              {
+                "label": "작업증명",
+                "ok": true,
+                "message": "해시가 실습의 목표값 이하여야 합니다."
+              },
+              {
+                "label": "모든 거래",
+                "ok": true,
+                "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #1까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 70,
+              "spendable": 70
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 30,
+              "spendable": 30
+            }
+          },
+          "canStartMining": false
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            },
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 1,
+              "previousHash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "transactionsHash": "736000faefa594d5f335af2860ed05ca661dca8ee3be30c2ad558933ea81ab65",
+              "timestamp": 1001,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [
+                {
+                  "version": 1,
+                  "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+                  "inputs": [
+                    {
+                      "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                      "outputIndex": 0
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                      "amount": 30
+                    },
+                    {
+                      "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                      "amount": 70
+                    }
+                  ],
+                  "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+                  "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+                  "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+                }
+              ],
+              "hash": "0544e70fb693b53cc6341dfd50e7798685f4ea1b783a12fc90a66f2de762a536"
+            }
+          ],
+          "utxos": {
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:0": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 0,
+              "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+              "amount": 30
+            },
+            "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb:1": {
+              "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+              "outputIndex": 1,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 70
+            }
+          },
+          "mempool": [],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+            "steps": [
+              {
+                "label": "블록 형식",
+                "ok": true,
+                "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+              },
+              {
+                "label": "이전 블록 연결",
+                "ok": true,
+                "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+              },
+              {
+                "label": "생성 시각",
+                "ok": true,
+                "message": "이전 블록보다 이른 시각일 수 없습니다."
+              },
+              {
+                "label": "공통 난이도",
+                "ok": true,
+                "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+              },
+              {
+                "label": "거래 목록 해시",
+                "ok": true,
+                "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+              },
+              {
+                "label": "블록 해시",
+                "ok": true,
+                "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+              },
+              {
+                "label": "작업증명",
+                "ok": true,
+                "message": "해시가 실습의 목표값 이하여야 합니다."
+              },
+              {
+                "label": "모든 거래",
+                "ok": true,
+                "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #1까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 70,
+              "spendable": 70
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 30,
+              "spendable": 30
+            }
+          },
+          "canStartMining": false
+        }
+      },
+      "queue": [],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 6,
+          "node": "A",
+          "kind": "검증 거부",
+          "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
+          "ok": false
+        },
+        {
+          "id": 7,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+          "ok": true
+        },
+        {
+          "id": 10,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "블록 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 11,
+          "node": "B",
+          "kind": "수신",
+          "message": "A → B · 거래 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 12,
+          "node": "B",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 13,
+          "node": "C",
+          "kind": "수신",
+          "message": "A → C · 거래 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 14,
+          "node": "C",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 15,
+          "node": "B",
+          "kind": "수신",
+          "message": "A → B · 블록 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 16,
+          "node": "B",
+          "kind": "검증 승인",
+          "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+          "ok": true
+        },
+        {
+          "id": 17,
+          "node": "C",
+          "kind": "수신",
+          "message": "A → C · 블록 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 18,
+          "node": "C",
+          "kind": "검증 승인",
+          "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+          "ok": true
+        }
+      ],
+      "lastValidation": {
+        "valid": true,
+        "code": "VALID",
+        "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+        "steps": [
+          {
+            "label": "블록 형식",
+            "ok": true,
+            "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+          },
+          {
+            "label": "이전 블록 연결",
+            "ok": true,
+            "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+          },
+          {
+            "label": "생성 시각",
+            "ok": true,
+            "message": "이전 블록보다 이른 시각일 수 없습니다."
+          },
+          {
+            "label": "공통 난이도",
+            "ok": true,
+            "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+          },
+          {
+            "label": "거래 목록 해시",
+            "ok": true,
+            "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+          },
+          {
+            "label": "블록 해시",
+            "ok": true,
+            "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+          },
+          {
+            "label": "작업증명",
+            "ok": true,
+            "message": "해시가 실습의 목표값 이하여야 합니다."
+          },
+          {
+            "label": "모든 거래",
+            "ok": true,
+            "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+          }
+        ]
+      },
+      "lastDelivery": {
+        "message": {
+          "id": 9,
+          "from": "A",
+          "to": "C",
+          "kind": "block"
+        },
+        "validation": {
+          "valid": true,
+          "code": "VALID",
+          "message": "블록 검증 통과 · 체인에 추가할 수 있습니다.",
+          "steps": [
+            {
+              "label": "블록 형식",
+              "ok": true,
+              "message": "일반 블록에는 올바른 헤더와 서명된 거래가 필요하며 초기 배정을 넣을 수 없습니다."
+            },
+            {
+              "label": "이전 블록 연결",
+              "ok": true,
+              "message": "실습 식별자·높이·Previous Hash가 현재 체인과 일치해야 합니다."
+            },
+            {
+              "label": "생성 시각",
+              "ok": true,
+              "message": "이전 블록보다 이른 시각일 수 없습니다."
+            },
+            {
+              "label": "공통 난이도",
+              "ok": true,
+              "message": "실습 시작 때 정한 난이도를 사용해야 합니다."
+            },
+            {
+              "label": "거래 목록 해시",
+              "ok": true,
+              "message": "블록에 담긴 실제 거래 목록과 헤더의 해시가 일치해야 합니다."
+            },
+            {
+              "label": "블록 해시",
+              "ok": true,
+              "message": "헤더를 다시 계산한 해시가 저장된 해시와 일치해야 합니다."
+            },
+            {
+              "label": "작업증명",
+              "ok": true,
+              "message": "해시가 실습의 목표값 이하여야 합니다."
+            },
+            {
+              "label": "모든 거래",
+              "ok": true,
+              "message": "서명·소유권·금액 보존·이중 지출 검증을 모두 통과했습니다."
+            }
+          ]
+        }
+      },
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    },
+    "secondDraft": {
+      "draft": {
+        "version": 1,
+        "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+        "inputs": [
+          {
+            "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+            "outputIndex": 1
+          }
+        ],
+        "outputs": [
+          {
+            "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+            "amount": 10
+          },
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 60
+          }
+        ],
+        "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+      },
+      "inputs": [
+        {
+          "txId": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb",
+          "outputIndex": 1,
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+          "amount": 70
+        }
+      ],
+      "signingText": "[1,\"f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703\",[[\"25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb\",1]],[[\"mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7\",10],[\"mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554\",60]],\"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798\"]",
+      "signingHash": "11d52f6f77aebeb49ad1a7d4d5b9ef6ed8f189c6d1a6d8031cbf3d647b677207"
+    },
+    "otherNodeAccepted": {
+      "labId": "learning-flow",
+      "phase": "running",
+      "revision": 1,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+      "genesis": {
+        "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "inputs": [
+                {
+                  "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+              "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+            }
+          ],
+          "lastValidation": {
+            "valid": false,
+            "code": "SIGNATURE",
+            "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": false,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "inputs": [
+                {
+                  "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "7f467b4b2abc4965348010e4911004e031b2283bed69d712be363bf789ccea183bd1be90b67fa7adbde0652c59a57926903dbb00a54cb4c46adc03517e0894c8",
+              "id": "25813eacd01fb1f77481bcbb330949ab486aa08fd8217c14fae7c319d5ef4fdb"
+            }
+          ],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": true,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+              },
+              {
+                "label": "중복 입력",
+                "ok": true,
+                "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+              },
+              {
+                "label": "미사용 출력",
+                "ok": true,
+                "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+              },
+              {
+                "label": "이중 지출",
+                "ok": true,
+                "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+              },
+              {
+                "label": "소유권",
+                "ok": true,
+                "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+              },
+              {
+                "label": "금액 보존",
+                "ok": true,
+                "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "f6df676e7984a85506377b5866fa02695a9637134e5497b088c4394d541cf703",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5:0": {
+              "txId": "94173232b97caa8457599763ee53c3939f0da212c72782f38e0c85df7c1216f5",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        }
+      },
+      "queue": [
+        {
+          "id": 4,
+          "from": "A",
+          "to": "C",
+          "kind": "transaction"
+        }
+      ],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 6,
+          "node": "A",
+          "kind": "검증 거부",
+          "message": "공개키로 검증한 서명이 거래 원문과 일치하지 않습니다.",
+          "ok": false
+        },
+        {
+          "id": 7,
+          "node": "B",
+          "kind": "수신",
+          "message": "A → B · 거래 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 8,
+          "node": "B",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        }
+      ],
+      "lastValidation": {
+        "valid": true,
+        "code": "VALID",
+        "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+        "steps": [
+          {
+            "label": "형식·금액",
+            "ok": true,
+            "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+          },
+          {
+            "label": "실습 식별자",
+            "ok": true,
+            "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+          },
+          {
+            "label": "거래 ID",
+            "ok": true,
+            "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+          },
+          {
+            "label": "전자서명",
+            "ok": true,
+            "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+          },
+          {
+            "label": "중복 입력",
+            "ok": true,
+            "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+          },
+          {
+            "label": "미사용 출력",
+            "ok": true,
+            "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+          },
+          {
+            "label": "이중 지출",
+            "ok": true,
+            "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+          },
+          {
+            "label": "소유권",
+            "ok": true,
+            "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+          },
+          {
+            "label": "금액 보존",
+            "ok": true,
+            "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+          }
+        ]
+      },
+      "lastDelivery": {
+        "message": {
+          "id": 3,
+          "from": "A",
+          "to": "B",
+          "kind": "transaction"
+        },
+        "validation": {
+          "valid": true,
+          "code": "VALID",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "steps": [
+            {
+              "label": "형식·금액",
+              "ok": true,
+              "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+            },
+            {
+              "label": "실습 식별자",
+              "ok": true,
+              "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+            },
+            {
+              "label": "거래 ID",
+              "ok": true,
+              "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+            },
+            {
+              "label": "전자서명",
+              "ok": true,
+              "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+            },
+            {
+              "label": "중복 입력",
+              "ok": true,
+              "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+            },
+            {
+              "label": "미사용 출력",
+              "ok": true,
+              "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+            },
+            {
+              "label": "이중 지출",
+              "ok": true,
+              "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+            },
+            {
+              "label": "소유권",
+              "ok": true,
+              "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+            },
+            {
+              "label": "금액 보존",
+              "ok": true,
+              "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+            }
+          ]
+        }
+      },
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    }
+  },
+  "network": {
+    "submitted": {
+      "labId": "network-display",
+      "phase": "running",
+      "revision": 1,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+      "genesis": {
+        "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "inputs": [
+                {
+                  "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "9aa17dfca1fe7311ea1eb656b5b2d3c948ed4c99f82747686858faf29f6a90a9030cbe8c12c1eac70872bee84f27200d18b1b0c0d9165e7c9ab32a25f474c53e",
+              "id": "3d3405c094c149c806d8f7a1f1adb520461ecde8ad1e6ff603022698d8c5d848"
+            }
+          ],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": true,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+              },
+              {
+                "label": "중복 입력",
+                "ok": true,
+                "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+              },
+              {
+                "label": "미사용 출력",
+                "ok": true,
+                "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+              },
+              {
+                "label": "이중 지출",
+                "ok": true,
+                "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+              },
+              {
+                "label": "소유권",
+                "ok": true,
+                "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+              },
+              {
+                "label": "금액 보존",
+                "ok": true,
+                "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        }
+      },
+      "queue": [
+        {
+          "id": 3,
+          "from": "A",
+          "to": "B",
+          "kind": "transaction"
+        },
+        {
+          "id": 4,
+          "from": "A",
+          "to": "C",
+          "kind": "transaction"
+        }
+      ],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        }
+      ],
+      "lastValidation": {
+        "valid": true,
+        "code": "VALID",
+        "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+        "steps": [
+          {
+            "label": "형식·금액",
+            "ok": true,
+            "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+          },
+          {
+            "label": "실습 식별자",
+            "ok": true,
+            "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+          },
+          {
+            "label": "거래 ID",
+            "ok": true,
+            "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+          },
+          {
+            "label": "전자서명",
+            "ok": true,
+            "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+          },
+          {
+            "label": "중복 입력",
+            "ok": true,
+            "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+          },
+          {
+            "label": "미사용 출력",
+            "ok": true,
+            "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+          },
+          {
+            "label": "이중 지출",
+            "ok": true,
+            "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+          },
+          {
+            "label": "소유권",
+            "ok": true,
+            "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+          },
+          {
+            "label": "금액 보존",
+            "ok": true,
+            "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+          }
+        ]
+      },
+      "lastDelivery": null,
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    },
+    "afterFirstDelivery": {
+      "labId": "network-display",
+      "phase": "running",
+      "revision": 2,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+      "genesis": {
+        "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "inputs": [
+                {
+                  "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "9aa17dfca1fe7311ea1eb656b5b2d3c948ed4c99f82747686858faf29f6a90a9030cbe8c12c1eac70872bee84f27200d18b1b0c0d9165e7c9ab32a25f474c53e",
+              "id": "3d3405c094c149c806d8f7a1f1adb520461ecde8ad1e6ff603022698d8c5d848"
+            }
+          ],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": true,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+              },
+              {
+                "label": "중복 입력",
+                "ok": true,
+                "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+              },
+              {
+                "label": "미사용 출력",
+                "ok": true,
+                "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+              },
+              {
+                "label": "이중 지출",
+                "ok": true,
+                "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+              },
+              {
+                "label": "소유권",
+                "ok": true,
+                "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+              },
+              {
+                "label": "금액 보존",
+                "ok": true,
+                "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "inputs": [
+                {
+                  "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "9aa17dfca1fe7311ea1eb656b5b2d3c948ed4c99f82747686858faf29f6a90a9030cbe8c12c1eac70872bee84f27200d18b1b0c0d9165e7c9ab32a25f474c53e",
+              "id": "3d3405c094c149c806d8f7a1f1adb520461ecde8ad1e6ff603022698d8c5d848"
+            }
+          ],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": true,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+              },
+              {
+                "label": "중복 입력",
+                "ok": true,
+                "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+              },
+              {
+                "label": "미사용 출력",
+                "ok": true,
+                "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+              },
+              {
+                "label": "이중 지출",
+                "ok": true,
+                "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+              },
+              {
+                "label": "소유권",
+                "ok": true,
+                "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+              },
+              {
+                "label": "금액 보존",
+                "ok": true,
+                "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        }
+      },
+      "queue": [
+        {
+          "id": 4,
+          "from": "A",
+          "to": "C",
+          "kind": "transaction"
+        }
+      ],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "A",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "A",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 6,
+          "node": "B",
+          "kind": "수신",
+          "message": "A → B · 거래 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 7,
+          "node": "B",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        }
+      ],
+      "lastValidation": {
+        "valid": true,
+        "code": "VALID",
+        "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+        "steps": [
+          {
+            "label": "형식·금액",
+            "ok": true,
+            "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+          },
+          {
+            "label": "실습 식별자",
+            "ok": true,
+            "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+          },
+          {
+            "label": "거래 ID",
+            "ok": true,
+            "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+          },
+          {
+            "label": "전자서명",
+            "ok": true,
+            "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+          },
+          {
+            "label": "중복 입력",
+            "ok": true,
+            "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+          },
+          {
+            "label": "미사용 출력",
+            "ok": true,
+            "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+          },
+          {
+            "label": "이중 지출",
+            "ok": true,
+            "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+          },
+          {
+            "label": "소유권",
+            "ok": true,
+            "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+          },
+          {
+            "label": "금액 보존",
+            "ok": true,
+            "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+          }
+        ]
+      },
+      "lastDelivery": {
+        "message": {
+          "id": 3,
+          "from": "A",
+          "to": "B",
+          "kind": "transaction"
+        },
+        "validation": {
+          "valid": true,
+          "code": "VALID",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "steps": [
+            {
+              "label": "형식·금액",
+              "ok": true,
+              "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+            },
+            {
+              "label": "실습 식별자",
+              "ok": true,
+              "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+            },
+            {
+              "label": "거래 ID",
+              "ok": true,
+              "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+            },
+            {
+              "label": "전자서명",
+              "ok": true,
+              "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+            },
+            {
+              "label": "중복 입력",
+              "ok": true,
+              "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+            },
+            {
+              "label": "미사용 출력",
+              "ok": true,
+              "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+            },
+            {
+              "label": "이중 지출",
+              "ok": true,
+              "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+            },
+            {
+              "label": "소유권",
+              "ok": true,
+              "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+            },
+            {
+              "label": "금액 보존",
+              "ok": true,
+              "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+            }
+          ]
+        }
+      },
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    },
+    "invalidMessageId": 3,
+    "rejectedDelivery": {
+      "labId": "network-display",
+      "phase": "running",
+      "revision": 1,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+      "genesis": {
+        "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": {
+            "valid": false,
+            "code": "TX_ID",
+            "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": false,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": null,
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "inputs": [
+                {
+                  "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "9aa17dfca1fe7311ea1eb656b5b2d3c948ed4c99f82747686858faf29f6a90a9030cbe8c12c1eac70872bee84f27200d18b1b0c0d9165e7c9ab32a25f474c53e",
+              "id": "3d3405c094c149c806d8f7a1f1adb520461ecde8ad1e6ff603022698d8c5d848"
+            }
+          ],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": true,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+              },
+              {
+                "label": "중복 입력",
+                "ok": true,
+                "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+              },
+              {
+                "label": "미사용 출력",
+                "ok": true,
+                "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+              },
+              {
+                "label": "이중 지출",
+                "ok": true,
+                "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+              },
+              {
+                "label": "소유권",
+                "ok": true,
+                "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+              },
+              {
+                "label": "금액 보존",
+                "ok": true,
+                "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        }
+      },
+      "queue": [
+        {
+          "id": 4,
+          "from": "C",
+          "to": "B",
+          "kind": "transaction"
+        }
+      ],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "C",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "C",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 6,
+          "node": "A",
+          "kind": "수신",
+          "message": "C → A · 거래 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 7,
+          "node": "A",
+          "kind": "검증 거부",
+          "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다.",
+          "ok": false
+        }
+      ],
+      "lastValidation": {
+        "valid": false,
+        "code": "TX_ID",
+        "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다.",
+        "steps": [
+          {
+            "label": "형식·금액",
+            "ok": true,
+            "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+          },
+          {
+            "label": "실습 식별자",
+            "ok": true,
+            "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+          },
+          {
+            "label": "거래 ID",
+            "ok": false,
+            "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다."
+          }
+        ]
+      },
+      "lastDelivery": {
+        "message": {
+          "id": 3,
+          "from": "C",
+          "to": "A",
+          "kind": "transaction"
+        },
+        "validation": {
+          "valid": false,
+          "code": "TX_ID",
+          "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다.",
+          "steps": [
+            {
+              "label": "형식·금액",
+              "ok": true,
+              "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+            },
+            {
+              "label": "실습 식별자",
+              "ok": true,
+              "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+            },
+            {
+              "label": "거래 ID",
+              "ok": false,
+              "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다."
+            }
+          ]
+        }
+      },
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    },
+    "acceptedDelivery": {
+      "labId": "network-display",
+      "phase": "running",
+      "revision": 2,
+      "wallets": [
+        {
+          "name": "Alice",
+          "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+          "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554"
+        },
+        {
+          "name": "Bob",
+          "publicKey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+          "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7"
+        }
+      ],
+      "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+      "genesis": {
+        "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+        "height": 0,
+        "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+        "timestamp": 1000,
+        "difficulty": 1,
+        "nonce": 0,
+        "transactions": [],
+        "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+        "allocations": [
+          {
+            "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+            "amount": 100
+          }
+        ]
+      },
+      "difficulty": 1,
+      "targetHex": "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "nodes": {
+        "A": {
+          "id": "A",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [],
+          "lastValidation": {
+            "valid": false,
+            "code": "TX_ID",
+            "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": false,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 100
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": false
+        },
+        "B": {
+          "id": "B",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "inputs": [
+                {
+                  "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "9aa17dfca1fe7311ea1eb656b5b2d3c948ed4c99f82747686858faf29f6a90a9030cbe8c12c1eac70872bee84f27200d18b1b0c0d9165e7c9ab32a25f474c53e",
+              "id": "3d3405c094c149c806d8f7a1f1adb520461ecde8ad1e6ff603022698d8c5d848"
+            }
+          ],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": true,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+              },
+              {
+                "label": "중복 입력",
+                "ok": true,
+                "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+              },
+              {
+                "label": "미사용 출력",
+                "ok": true,
+                "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+              },
+              {
+                "label": "이중 지출",
+                "ok": true,
+                "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+              },
+              {
+                "label": "소유권",
+                "ok": true,
+                "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+              },
+              {
+                "label": "금액 보존",
+                "ok": true,
+                "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        },
+        "C": {
+          "id": "C",
+          "chain": [
+            {
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "height": 0,
+              "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "transactionsHash": "1610c3845135e636170d8c51d3e8973dfe6b5337e7b6aaaf48af02e7e9961f59",
+              "timestamp": 1000,
+              "difficulty": 1,
+              "nonce": 0,
+              "transactions": [],
+              "hash": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "allocations": [
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 100
+                }
+              ]
+            }
+          ],
+          "utxos": {
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0": {
+              "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+              "outputIndex": 0,
+              "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+              "amount": 100
+            }
+          },
+          "mempool": [
+            {
+              "version": 1,
+              "sessionId": "1dfbfdde482e806316bddcc248bdaa403f7db9db85235db46de20ac4c6cebb0a",
+              "inputs": [
+                {
+                  "txId": "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7",
+                  "outputIndex": 0
+                }
+              ],
+              "outputs": [
+                {
+                  "address": "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7",
+                  "amount": 30
+                },
+                {
+                  "address": "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554",
+                  "amount": 70
+                }
+              ],
+              "publicKey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+              "signature": "9aa17dfca1fe7311ea1eb656b5b2d3c948ed4c99f82747686858faf29f6a90a9030cbe8c12c1eac70872bee84f27200d18b1b0c0d9165e7c9ab32a25f474c53e",
+              "id": "3d3405c094c149c806d8f7a1f1adb520461ecde8ad1e6ff603022698d8c5d848"
+            }
+          ],
+          "lastValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+            "steps": [
+              {
+                "label": "형식·금액",
+                "ok": true,
+                "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+              },
+              {
+                "label": "실습 식별자",
+                "ok": true,
+                "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+              },
+              {
+                "label": "거래 ID",
+                "ok": true,
+                "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+              },
+              {
+                "label": "전자서명",
+                "ok": true,
+                "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+              },
+              {
+                "label": "중복 입력",
+                "ok": true,
+                "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+              },
+              {
+                "label": "미사용 출력",
+                "ok": true,
+                "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+              },
+              {
+                "label": "이중 지출",
+                "ok": true,
+                "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+              },
+              {
+                "label": "소유권",
+                "ok": true,
+                "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+              },
+              {
+                "label": "금액 보존",
+                "ok": true,
+                "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+              }
+            ]
+          },
+          "chainValidation": {
+            "valid": true,
+            "code": "VALID",
+            "message": "Genesis부터 블록 #0까지 검증 통과",
+            "steps": []
+          },
+          "reserved": [
+            "353f9718b0c4d58560d85e34b93edd2683c47681790e430576695656fe608ea7:0"
+          ],
+          "balances": {
+            "mini_0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554": {
+              "confirmed": 100,
+              "spendable": 0
+            },
+            "mini_b1c9938f01121e159887ac2c8d393a22e4476ff8212de13fe1939de2a236f0a7": {
+              "confirmed": 0,
+              "spendable": 0
+            }
+          },
+          "canStartMining": true
+        }
+      },
+      "queue": [],
+      "events": [
+        {
+          "id": 1,
+          "node": "LAB",
+          "kind": "초기화",
+          "message": "독립 노드 A·B·C 생성. 동일 Genesis에서 Alice에게 학습용 100 코인을 배정했습니다.",
+          "ok": true
+        },
+        {
+          "id": 2,
+          "node": "C",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        },
+        {
+          "id": 5,
+          "node": "C",
+          "kind": "전파 대기",
+          "message": "거래 사본을 다른 두 노드로 보냅니다.",
+          "ok": true
+        },
+        {
+          "id": 6,
+          "node": "A",
+          "kind": "수신",
+          "message": "C → A · 거래 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 7,
+          "node": "A",
+          "kind": "검증 거부",
+          "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치하지 않습니다.",
+          "ok": false
+        },
+        {
+          "id": 8,
+          "node": "B",
+          "kind": "수신",
+          "message": "C → B · 거래 수신 후 독립 검증",
+          "ok": true
+        },
+        {
+          "id": 9,
+          "node": "B",
+          "kind": "검증 승인",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "ok": true
+        }
+      ],
+      "lastValidation": {
+        "valid": true,
+        "code": "VALID",
+        "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+        "steps": [
+          {
+            "label": "형식·금액",
+            "ok": true,
+            "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+          },
+          {
+            "label": "실습 식별자",
+            "ok": true,
+            "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+          },
+          {
+            "label": "거래 ID",
+            "ok": true,
+            "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+          },
+          {
+            "label": "전자서명",
+            "ok": true,
+            "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+          },
+          {
+            "label": "중복 입력",
+            "ok": true,
+            "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+          },
+          {
+            "label": "미사용 출력",
+            "ok": true,
+            "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+          },
+          {
+            "label": "이중 지출",
+            "ok": true,
+            "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+          },
+          {
+            "label": "소유권",
+            "ok": true,
+            "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+          },
+          {
+            "label": "금액 보존",
+            "ok": true,
+            "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+          }
+        ]
+      },
+      "lastDelivery": {
+        "message": {
+          "id": 4,
+          "from": "C",
+          "to": "B",
+          "kind": "transaction"
+        },
+        "validation": {
+          "valid": true,
+          "code": "VALID",
+          "message": "모든 검증 통과 · Mempool에 들어갈 수 있는 거래입니다.",
+          "steps": [
+            {
+              "label": "형식·금액",
+              "ok": true,
+              "message": "입력·출력, 키·서명 형식과 양의 정수 금액이 올바릅니다."
+            },
+            {
+              "label": "실습 식별자",
+              "ok": true,
+              "message": "거래의 실습 식별자가 현재 실습과 일치합니다."
+            },
+            {
+              "label": "거래 ID",
+              "ok": true,
+              "message": "서명된 거래를 다시 해시한 값이 거래 ID와 일치합니다."
+            },
+            {
+              "label": "전자서명",
+              "ok": true,
+              "message": "공개키로 검증한 서명이 거래 원문과 일치합니다."
+            },
+            {
+              "label": "중복 입력",
+              "ok": true,
+              "message": "한 거래 안에서 같은 출력을 중복 사용하지 않습니다."
+            },
+            {
+              "label": "미사용 출력",
+              "ok": true,
+              "message": "모든 입력이 존재하는 확정 UTXO를 가리킵니다."
+            },
+            {
+              "label": "이중 지출",
+              "ok": true,
+              "message": "다른 대기 거래나 같은 블록의 거래가 사용 중인 입력이 없습니다."
+            },
+            {
+              "label": "소유권",
+              "ok": true,
+              "message": "모든 입력이 서명자의 공개키에 대응하는 주소 소유입니다."
+            },
+            {
+              "label": "금액 보존",
+              "ok": true,
+              "message": "입력 합계 100 코인과 출력 합계 100 코인이 일치합니다. 수수료는 0입니다."
+            }
+          ]
+        }
+      },
+      "mining": null,
+      "limits": {
+        "miningSampleLimit": 12,
+        "learningIntervalMs": 250
+      }
+    }
+  }
+}

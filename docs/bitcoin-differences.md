@@ -22,9 +22,11 @@
 | 거래 목록 | Merkle root와 Merkle proof | 전체 실제 거래 목록의 단일 해시 |
 | PoW | 80바이트 헤더, 이중 SHA-256, 수치 target | 교육용 JSON 헤더, 단일 SHA-256, 16진수 선행 0 |
 | 난이도 | 네트워크 규칙에 따른 주기적 자동 조정 | 실습별 1~4로 고정, 변경하려면 새 실습 |
-| 노드 | 서로 다른 장치·프로세스의 P2P 통신 | 브라우저 한 곳의 독립 상태와 직렬화 메시지 |
+| 노드 | 서로 다른 장치·프로세스의 P2P 통신 | 백엔드 프로세스 하나 안의 독립 상태 3개와 메시지 대기열 |
 | 체인 선택 | 유효한 체인들의 누적 작업량을 비교, 필요 시 재구성 | 한 번에 한 채굴 작업. 분기 경쟁·복구 제외 |
-| 데이터 | 영속 저장, 동기화, 실제 키 관리 | 실습 상태는 메모리에만 보관하고 새로고침 시 초기화. 화면 테마 선택값만 저장 |
+| 키 보관·서명 | 지갑이 사용자의 기기에서 개인키를 보관하고 서명. 노드는 서명된 거래만 받음 | 백엔드가 교육용 개인키를 보관하고 서명. 화면은 펼쳐 볼 때만 개인키를 받음 |
+| 채굴 실행 | 채굴자가 스스로 계속 계산 | 화면이 요청할 때마다 백엔드가 다음 Nonce들을 계산. 화면이 없으면 진행하지 않음 |
+| 데이터 | 영속 저장, 동기화, 실제 키 관리 | 실습 상태는 백엔드 메모리에만 보관하고 새로고침·백엔드 재시작 시 초기화. 화면 테마 선택값만 브라우저에 저장 |
 
 교육용 난이도 2는 Bitcoin 네트워크의 숫자 difficulty=2와 같은 의미가 아니다. 여기서는 16진수 앞 두 자리가 0인 해시를 뜻한다. 목표값을 함께 표시하여 선행 0이 수치 비교의 쉬운 표현임을 설명한다.
 
@@ -52,7 +54,7 @@
 - [Bitcoin Developer Guide: Transactions](https://developer.bitcoin.org/devguide/transactions.html)
 - [Bitcoin Developer Guide: Block Chain](https://developer.bitcoin.org/devguide/block_chain.html)
 - [Bitcoin Developer Guide: Operating Modes](https://developer.bitcoin.org/devguide/operating_modes.html)
-- [noble-curves 공식 문서](https://github.com/paulmillr/noble-curves)
-- [noble-hashes 공식 문서](https://github.com/paulmillr/noble-hashes)
+- [cryptography: Elliptic curve cryptography](https://cryptography.io/en/latest/hazmat/primitives/asymmetric/ec/)
+- [RFC 6979: Deterministic Usage of DSA and ECDSA](https://www.rfc-editor.org/rfc/rfc6979)
 
 Bitcoin 문서는 핵심 개념의 근거로 참고하며, 최신 Bitcoin 프로토콜 전체를 구현했다는 의미가 아니다.

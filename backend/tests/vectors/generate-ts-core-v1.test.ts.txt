@@ -1,0 +1,377 @@
+// Python 백엔드 이식 검증용 기준값 생성기.
+// WRITE_VECTORS=1 로 실행하면 backend/tests/vectors/ts-core-v1.json 을 기록하고,
+// 그 외에는 저장된 파일이 현재 TypeScript 핵심 로직의 결과와 같은지 확인한다.
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { describe, expect, it } from "vitest";
+import {
+  blockHash,
+  calculateNonce,
+  createCandidate,
+  headerText,
+  targetHex,
+  transactionDigest,
+  validateChain,
+  validPow,
+} from "./block";
+import {
+  createWallet,
+  hashText,
+  signTransaction,
+  signingText,
+  transactionId,
+  verifySignature,
+} from "./crypto";
+import { Lab } from "./lab";
+import {
+  balance,
+  buildTransaction,
+  reservedInputs,
+  validateTransaction,
+} from "./transaction";
+import {
+  NODE_IDS,
+  type Block,
+  type NodeId,
+  type Transaction,
+  type Wallet,
+} from "./types";
+
+const root = existsSync(resolve(process.cwd(), "docs"))
+  ? process.cwd()
+  : resolve(process.cwd(), "..");
+const file = resolve(root, "backend/tests/vectors/ts-core-v1.json");
+
+const CURVE_ORDER =
+  0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
+const key = (n: string) => n.padStart(64, "0");
+
+function firstValid(candidate: Block): Block {
+  for (let n = 0; n < 1_000_000; n++) {
+    const b = calculateNonce(candidate, n);
+    if (validPow(b.hash, b.difficulty)) return b;
+  }
+  throw new Error("Nonce 탐색 한도 초과");
+}
+function firstInvalid(candidate: Block): Block {
+  let bad = calculateNonce(candidate, 0);
+  while (validPow(bad.hash, bad.difficulty))
+    bad = calculateNonce(candidate, bad.nonce + 1);
+  return bad;
+}
+// TamperView.tsx 가 복사본에 수행하는 변경과 여섯 검사를 그대로 재현한다.
+function tamper(
+  chain: Block[],
+  genesis: Block,
+  height: number,
+  mode: "transaction" | "header",
+  amount: number,
+  recompute: boolean,
+) {
+  const copy = structuredClone(chain);
+  if (mode === "transaction")
+    copy[height].transactions[0].outputs[0].amount = amount;
+  else copy[height].timestamp += 1;
+  if (recompute) {
+    copy[height].transactionsHash = transactionDigest(
+      copy[height].transactions,
+    );
+    copy[height].hash = blockHash(copy[height]);
+  }
+  const altered = copy[height];
+  const tx = altered.transactions[0];
+  const checks: [string, boolean][] = [
+    ["거래 전자서명", verifySignature(tx)],
+    ["거래 ID 일치", tx.id === transactionId(tx)],
+    [
+      "거래 목록 해시",
+      altered.transactionsHash === transactionDigest(altered.transactions),
+    ],
+    ["헤더와 블록 해시 일치", altered.hash === blockHash(altered)],
+    ["현재 헤더의 작업증명", validPow(blockHash(altered), altered.difficulty)],
+  ];
+  if (copy[height + 1])
+    checks.push([
+      "다음 블록의 Previous Hash 연결",
+      copy[height + 1].previousHash === blockHash(altered),
+    ]);
+  return {
+    height,
+    mode,
+    amount,
+    recompute,
+    altered,
+    recomputedHash: blockHash(altered),
+    checks,
+    chainValidation: validateChain(copy, genesis),
+  };
+}
+
+function generate() {
+  const wallets: Wallet[] = [
+    createWallet("Alice", key("1")),
+    createWallet("Bob", key("2")),
+    createWallet("Carol", key("3")),
+  ];
+  const [alice, bob] = wallets;
+  const sessionId = hashText("parity-v1");
+  const lab = new Lab(wallets, 1, 1000, sessionId);
+
+  const unsigned = buildTransaction(
+    alice,
+    bob.address,
+    30,
+    lab.nodes.A.utxos,
+    [],
+    sessionId,
+  );
+  const tx1 = signTransaction(unsigned, alice.privateKey);
+  const check = (tx: unknown) =>
+    validateTransaction(tx, lab.nodes.A.utxos, sessionId);
+
+  const s = BigInt(`0x${tx1.signature.slice(64)}`);
+  const highS: Transaction = {
+    ...structuredClone(tx1),
+    signature:
+      tx1.signature.slice(0, 64) +
+      (CURVE_ORDER - s).toString(16).padStart(64, "0"),
+  };
+  highS.id = transactionId(highS);
+  const forged: Transaction = {
+    ...structuredClone(tx1),
+    signature: "ff".repeat(64),
+  };
+  forged.id = transactionId(forged);
+  const wrongKey = signTransaction(tx1, bob.privateKey);
+  // 시나리오가 UTXO를 소비하기 전의 상태에서 판정을 기록한다.
+  const verdicts = {
+    transfer: check(tx1),
+    highS: check(highS),
+    forged: check(forged),
+    wrongKey: check(wrongKey),
+  };
+
+  const steps: Record<string, unknown>[] = [];
+  const record = (step: Record<string, unknown>) =>
+    steps.push({
+      ...step,
+      queue: lab.queue.map(({ id, from, to, kind }) => ({
+        id,
+        from,
+        to,
+        kind,
+      })),
+      lastEventId: lab.events.at(-1)?.id ?? 0,
+    });
+  const submit = (node: NodeId, transaction: Transaction) =>
+    record({
+      op: "submit",
+      node,
+      transaction,
+      validation: lab.submit(node, transaction),
+    });
+  const deliver = () =>
+    record({ op: "deliver", validation: lab.deliverNext() });
+  const mine = (node: NodeId, timestamp: number) => {
+    const state = lab.nodes[node];
+    const candidate = createCandidate(
+      state.chain[state.chain.length - 1],
+      state.mempool,
+      timestamp,
+    );
+    const block = firstValid(candidate);
+    record({
+      op: "mine",
+      node,
+      timestamp,
+      candidate,
+      block,
+      validation: lab.acceptMined(node, block),
+    });
+    return candidate;
+  };
+  const build = (
+    node: NodeId,
+    sender: number,
+    recipient: number,
+    amount: number,
+  ) => {
+    const draft = buildTransaction(
+      wallets[sender],
+      wallets[recipient].address,
+      amount,
+      lab.nodes[node].utxos,
+      lab.nodes[node].mempool,
+      sessionId,
+    );
+    const signed = signTransaction(draft, wallets[sender].privateKey);
+    record({ op: "build", node, sender, recipient, amount, draft, signed });
+    return signed;
+  };
+
+  submit("A", tx1);
+  submit("A", tx1);
+  // WalletView.tsx 의 이중 지출 실험: 대기 거래의 수신자를 바꿔 다시 서명한다.
+  const original = structuredClone(lab.nodes.A.mempool[0]);
+  original.outputs[0].address =
+    original.outputs[0].address === wallets[0].address
+      ? wallets[1].address
+      : wallets[0].address;
+  const conflict = signTransaction(original, alice.privateKey);
+  record({
+    op: "doubleSpend",
+    node: "A",
+    conflict,
+    validation: lab.submit("A", conflict),
+  });
+  // NetworkView.tsx 의 잘못된 PoW 블록 수신 실험.
+  const badCandidate = createCandidate(
+    lab.nodes.A.chain[lab.nodes.A.chain.length - 1],
+    lab.nodes.A.mempool,
+    1500,
+  );
+  const bad = firstInvalid(badCandidate);
+  record({
+    op: "invalidPow",
+    node: "A",
+    timestamp: 1500,
+    block: bad,
+    validation: lab.receiveBlock("A", bad),
+  });
+  const pending = {
+    confirmed: balance(lab.nodes.A.utxos, alice.address),
+    spendable: balance(
+      lab.nodes.A.utxos,
+      alice.address,
+      reservedInputs(lab.nodes.A.mempool),
+    ),
+  };
+  deliver();
+  deliver();
+  const candidate = mine("A", 2000);
+  deliver();
+  deliver();
+  const tx2 = build("B", 1, 0, 10);
+  submit("B", tx2);
+  deliver();
+  deliver();
+  mine("C", 3000);
+  deliver();
+  deliver();
+  const tx3 = build("A", 0, 2, 75);
+  submit("A", tx3);
+  deliver();
+  deliver();
+  mine("A", 4000);
+  deliver();
+  deliver();
+  record({ op: "deliver", validation: lab.deliverNext() });
+
+  const chain = lab.nodes.A.chain;
+  return {
+    meta: {
+      description:
+        "Reference values produced by the TypeScript core (v1.1.0) for checking the Python port.",
+      difficulty: 1,
+      genesisTimestamp: 1000,
+    },
+    hashText: ["", "abc", "한글 블록체인 실습"].map((input) => ({
+      input,
+      hash: hashText(input),
+    })),
+    targets: [1, 2, 3, 4].map((difficulty) => ({
+      difficulty,
+      target: targetHex(difficulty),
+    })),
+    wallets,
+    sessionId,
+    genesis: lab.genesis,
+    transfer: {
+      unsigned,
+      signingText: signingText(unsigned),
+      signingHash: hashText(signingText(unsigned)),
+      signed: tx1,
+      validation: verdicts.transfer,
+    },
+    highS: {
+      transaction: highS,
+      verifies: verifySignature(highS),
+      validation: verdicts.highS,
+    },
+    forged: {
+      transaction: forged,
+      verifies: verifySignature(forged),
+      validation: verdicts.forged,
+    },
+    wrongKey: {
+      transaction: wrongKey,
+      verifies: verifySignature(wrongKey),
+      validation: verdicts.wrongKey,
+    },
+    pendingAliceBalance: pending,
+    digests: {
+      one: transactionDigest([tx1]),
+      two: transactionDigest([tx1, tx2]),
+      three: transactionDigest([tx1, tx2, tx3]),
+    },
+    candidate: {
+      block: candidate,
+      headerText: headerText(candidate),
+      hashes: Array.from(
+        { length: 16 },
+        (_, nonce) => calculateNonce(candidate, nonce).hash,
+      ),
+    },
+    steps,
+    final: {
+      nodes: Object.fromEntries(
+        NODE_IDS.map((id) => [
+          id,
+          {
+            chain: lab.nodes[id].chain,
+            utxos: lab.nodes[id].utxos,
+            mempool: lab.nodes[id].mempool,
+            lastValidation: lab.nodes[id].lastValidation,
+            chainValidation: validateChain(lab.nodes[id].chain, lab.genesis),
+            balances: Object.fromEntries(
+              wallets.map((w) => [
+                w.address,
+                {
+                  confirmed: balance(lab.nodes[id].utxos, w.address),
+                  spendable: balance(
+                    lab.nodes[id].utxos,
+                    w.address,
+                    reservedInputs(lab.nodes[id].mempool),
+                  ),
+                },
+              ]),
+            ),
+          },
+        ]),
+      ),
+      queue: lab.queue,
+      events: lab.events,
+      lastValidation: lab.lastValidation,
+      lastDelivery: lab.lastDelivery,
+    },
+    tamper: [
+      tamper(chain, lab.genesis, 1, "transaction", 999, false),
+      tamper(chain, lab.genesis, 1, "transaction", 999, true),
+      tamper(chain, lab.genesis, 1, "header", 0, false),
+      tamper(chain, lab.genesis, 1, "header", 0, true),
+      tamper(chain, lab.genesis, 3, "transaction", 999, false),
+      tamper(chain, lab.genesis, 3, "header", 0, true),
+    ],
+  };
+}
+
+describe("Python 이식 기준값", () => {
+  it("저장된 기준값이 TypeScript 핵심 로직의 결과와 일치한다", () => {
+    const vectors = JSON.parse(JSON.stringify(generate()));
+    if (process.env.WRITE_VECTORS === "1") {
+      mkdirSync(dirname(file), { recursive: true });
+      writeFileSync(file, `${JSON.stringify(vectors, null, 2)}\n`, "utf8");
+    }
+    expect(vectors).toEqual(JSON.parse(readFileSync(file, "utf8")));
+  });
+});
