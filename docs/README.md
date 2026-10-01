@@ -2,7 +2,7 @@
 
 - [요구사항](requirements.md): 학습 목표, 구현 범위, 완료 기준
 - [설계](architecture.md): 화면과 백엔드의 책임, 데이터 구조, 핵심 규칙, HTTP API, 채굴 작업
-- [사용 안내](user-guide.md): 두 서버 실행, 실습, 실패 실험, 문제 해결
+- [사용 안내](user-guide.md): 백엔드 하나로 실행하는 방법과 화면 수정용 두 서버 방식, 실습, 실패 실험, 문제 해결
 - [백엔드 안내](../backend/README.md): Python 백엔드의 실행·구조·검사
 - [TypeScript 기준값 안내](../backend/tests/vectors/README.md): 1.1.0 구현과의 일치 검사에 쓰는 기준값의 출처
 - [Bitcoin 대비 단순화와 용어](bitcoin-differences.md): 유지한 개념과 제외한 범위

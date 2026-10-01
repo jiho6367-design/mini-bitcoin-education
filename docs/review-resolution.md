@@ -28,3 +28,16 @@ G-04의 별도 가이드 모드·퀴즈, G-05의 난이도별 누적 비교 실�
 - `tests/worker.spec.ts`: 실제 저속 계산과 pause/stop/stale 작업, 첫 묶음 표본 제한, Nonce 0 성공.
 
 실제로 실행한 결과와 실패 후 재검증 이력은 [테스트 기록](test-results.md)에 기재한다.
+
+## 2026-10-01 추가: 위 파일의 현재 위치
+
+위 내용은 2026-09-30(1.1.0) 시점의 기록이며 반영 내용 자체는 그대로 유효하다. 2.0.0에서 화면과 Python 백엔드를 나누면서 검증 근거의 파일 위치가 바뀌었다.
+
+| 당시 파일 | 현재 |
+|---|---|
+| `src/core/transaction-feedback.test.ts` | `backend/tests/test_transaction_feedback.py` (같은 9단계·실패 코드별 문구 검사) |
+| `src/ui/learning.test.ts`, `src/ui/network.test.ts` | `frontend/src/ui/`의 같은 이름. 백엔드로 만든 예시 상태를 사용 |
+| `tests/learning.spec.ts` | `frontend/tests/learning.spec.ts` (내용 변경 없음) |
+| `tests/worker.spec.ts` | 삭제. 같은 검사 내용은 `backend/tests/test_mining_job.py`와 `frontend/tests/mining.spec.ts`가 담당 |
+
+G-02의 "실제 계산"은 이제 브라우저의 Web Worker가 아니라 Python 백엔드가 수행한다.

@@ -6,9 +6,13 @@
 
 ```powershell
 uv sync
-uv run mini-bitcoin-backend            # http://127.0.0.1:8000
+uv run mini-bitcoin-backend             # http://127.0.0.1:8000 — 화면과 API
 uv run mini-bitcoin-backend --port 8173
+uv run mini-bitcoin-backend --api-only  # 화면 없이 API만
+uv run mini-bitcoin-backend --frontend C:\path\to\dist
 ```
+
+`../frontend/dist`에 빌드된 화면(`index.html`)이 있으면 `/`에서 함께 제공합니다. 없으면 API만 제공하고 시작할 때 빌드 방법을 안내합니다. 화면 폴더는 `--frontend`나 환경 변수 `MINI_BITCOIN_FRONTEND_DIR`로 바꿀 수 있습니다. `/api` 경로가 항상 우선합니다.
 
 실행 중에는 `http://127.0.0.1:8000/api/docs`에서 경로 목록을 볼 수 있습니다. 서버는 `127.0.0.1`에서만 요청을 받고, 실습 상태는 메모리에만 보관합니다. 서버를 끄면 모든 지갑·체인이 사라집니다.
 
@@ -18,6 +22,7 @@ uv run mini-bitcoin-backend --port 8173
 |---|---|
 | `src/mini_bitcoin_backend/core/` | 순수 Python 규칙. FastAPI에 의존하지 않음 |
 | `core/types.py` | 지갑·거래·UTXO·블록·검증 결과·노드 상태 |
+| `core/encoding.py`, `core/wire.py`, `core/errors.py` | 해시 입력용 JSON·정수 규칙, 내부 객체와 API용 JSON의 변환, 실습 오류 |
 | `core/crypto.py` | SHA-256, secp256k1 키와 ECDSA 서명·검증 |
 | `core/transaction.py` | 거래 작성, UTXO 선택, 거래 검증 9단계 |
 | `core/block.py` | 헤더·PoW·블록 검증·체인 검증 |
@@ -25,7 +30,7 @@ uv run mini-bitcoin-backend --port 8173
 | `core/mining.py` | 채굴 작업(한 번 계산·빠른 실행·학습 실행·일시정지·중지) |
 | `core/experiments.py` | 잘못된 서명·이중 지출·잘못된 PoW·변조 실험 |
 | `service/` | 실습 하나의 상태 보관, 화면용 상태(JSON) 구성 |
-| `api/` | FastAPI 경로와 오류 응답 형식 |
+| `api/` | FastAPI 경로, 오류 응답 형식, 빌드된 화면 제공 |
 
 ## 검사
 

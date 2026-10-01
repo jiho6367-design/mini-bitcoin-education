@@ -32,9 +32,10 @@ export default defineConfig({
     },
   ],
   // 테스트 전용 포트로 Python 백엔드와 화면 개발 서버를 함께 시작한다.
+  // 화면은 개발 서버가 제공하므로 백엔드는 API만 제공하게 한다.
   webServer: [
     {
-      command: "uv run mini-bitcoin-backend --port 8173",
+      command: "uv run mini-bitcoin-backend --port 8173 --api-only",
       cwd: "../backend",
       url: "http://127.0.0.1:8173/api/health",
       reuseExistingServer: !process.env.CI,
