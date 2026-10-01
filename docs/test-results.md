@@ -1,5 +1,47 @@
 # 테스트 및 실행 검증 기록
 
+## 2026-10-02 — 2.2.0 학습 안내·비교·인터랙션
+
+환경: Windows, Node.js 24.19.0, uv 0.12.21, Python 3.13.15, Chrome for Testing 154.0.8037.92, Edge 154.0.4258.48. 저장소 기본 Python 지정은 3.12이며, 이 PC에서는 설치된 3.13을 `UV_PYTHON`으로 지정했다. `requires-python >=3.12`를 충족한다.
+
+| 검사 | 결과 |
+|---|---|
+| 백엔드 pytest | 76/76 통과 |
+| 백엔드 ruff | 통과 |
+| 프런트엔드 `npm.cmd run check` | 타입 검사·ESLint·Vitest 22/22·빌드 통과 |
+| 두 서버 전체 E2E | 54/54 통과, Chrome 27 + Edge 27, 2.9분 |
+| Python 서버 하나 전체 E2E | 54/54 통과, Chrome 27 + Edge 27, 2.0분 |
+| 마지막 안내 보완 후 관련 E2E 재검사 | 두 서버 8/8, Python 서버 하나 8/8 통과, 각각 Chrome 4 + Edge 4 |
+
+추가 단위 검사는 실제 fixture로 노드별 Mempool/포함 상태, 두 번째 거래와 거부 실험의 분리, 출력 소비 후에도 블록 포함 유지, 여러 입력/거스름돈 없음, 기준 노드와 현재 잔액 비교를 확인한다. 마지막 검토에서 일부 노드만 블록을 받은 거래에는 전파를 안내하고, 이전 채굴 성공을 새 거래의 안내에 적용하지 않도록 보완했다. 이 보완을 검증하는 단위 테스트 한 개를 추가한 뒤 `check`의 최종 결과는 22/22이다.
+
+추가 브라우저 검사는 안내의 이동·포커스(실험 자동 실행 없음), 실제 잔액·노드·실습 요약·변조 전후 값, 지연 요청 중 비활성화와 입력 변경 후 늦은 응답 무시, 선택 표본 유지와 새 작업 초기화, 390px 폭·라이트/다크·모션 감소를 확인한다. 기존 전체 흐름·실패 실험·테마·키보드·초기화·백엔드 오류 시나리오도 함께 통과했다. 마지막 안내 분기 보완 후에는 전체 E2E를 반복하지 않고 영향받은 `visibility.spec.ts`를 두 실행 방식에서 모두 다시 검사했다.
+
+사전 검사에서 설치 Chrome 부재로 실행이 실패했고, 시스템 Chrome 설치도 권한 문제로 완료되지 않았다. 별도 Chrome for Testing을 `work/browsers`에 준비하고 `MINI_BITCOIN_CHROME_PATH`로 지정했다. Edge 사전 실행에서는 새 테스트의 송금액 필드를 `exact: true`로 찾은 한 건이 실패했다. 기존 라벨은 설명 문구도 포함하므로 해당 선택자를 수정했다. 제품의 대기 시간이나 검증 규칙을 완화하지 않았다.
+
+실제 빌드 결과를 Python 서버 하나(8000)로 제공하며 Edge에서 송금→채굴→전파→변조를 추가로 실행했고 페이지 오류는 0개였다. 다음 캡처 6개를 생성하고 직접 열어 레이아웃을 확인했다. 이전 버전 캡처는 역사 기록으로 유지한다.
+
+- [거래 안내](screenshots/2.2-wallet.png), [잔액 비교](screenshots/2.2-balance-comparison.png)
+- [채굴·선택 표본·다크](screenshots/2.2-mining-dark.png), [노드와 완료 요약](screenshots/2.2-network.png)
+- [변조 비교](screenshots/2.2-tamper.png), [모바일 폭·다크](screenshots/2.2-mobile-dark.png)
+
+화면 조작과 자동 검사 결과이며 학생 대상 교육 효과 측정이나 보조공학 인증을 수행한 것은 아니다. 채굴 성공 시도 수와 소요 시간은 실행마다 다르다.
+
+### 재현
+
+일반적인 설치 환경은 README의 명령을 사용한다. 이번 PC의 별도 테스트 브라우저와 Python을 사용한 환경 변수는 다음과 같다(저장소 루트에서 설정).
+
+```powershell
+$env:UV_PYTHON = 'C:\Users\jiho\AppData\Local\Programs\Python\Python313\python.exe'
+$env:MINI_BITCOIN_CHROME_PATH = (Resolve-Path 'work\browsers\chrome\win64-154.0.8037.92\chrome-win64\chrome.exe').Path
+cd frontend
+npm.cmd run check
+npm.cmd run test:e2e
+npm.cmd run test:e2e:single
+```
+
+---
+
 검증일: **2026-09-30 (Asia/Seoul)**
 
 ## 실행 환경

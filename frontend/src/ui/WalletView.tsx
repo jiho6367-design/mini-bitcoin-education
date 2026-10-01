@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LabSnapshot, NodeId } from "../api/types";
 import type { TransactionLesson } from "./learning";
+import { useInteraction } from "./useInteraction";
 import { TransactionTrace } from "./TransactionTrace";
 import { Code, Notice, Panel, Validation } from "./shared";
 import { errorMessage, type LabActions } from "./useLab";
@@ -47,7 +48,7 @@ export function WalletView({
 }: {
   lab: LabSnapshot;
   nodeId: NodeId;
-  addWallet: () => void;
+  addWallet: () => Promise<void>;
   actions: LabActions;
   lesson: TransactionLesson | null;
   setLesson: (value: TransactionLesson | null) => void;
@@ -60,11 +61,18 @@ export function WalletView({
   goMempool: () => void;
 }) {
   const { sender, receiver, amount } = composer;
+  const interaction = useInteraction();
   const draft = lesson?.draft;
   const signed = lesson?.signed;
   const [error, setError] = useState("");
   // 작성 조건을 바꾸면 값이 달라져, 그 전에 보낸 요청의 늦은 응답을 버릴 수 있다.
   const generation = useRef(0);
+  useEffect(
+    () => () => {
+      generation.current++;
+    },
+    [],
+  );
   const node = lab.nodes[nodeId];
   const submitted =
     !!signed &&
@@ -85,7 +93,12 @@ export function WalletView({
         Number(amount),
       );
       if (!result || token !== generation.current) return;
-      setLesson({ origin: nodeId, phase: "draft", ...result });
+      setLesson({
+        origin: nodeId,
+        phase: "draft",
+        ...result,
+        baseline: { node: nodeId, balances: structuredClone(node.balances) },
+      });
       setError("");
     } catch (e) {
       if (token !== generation.current) return;
@@ -107,6 +120,7 @@ export function WalletView({
         checked: undefined,
       });
     } catch (e) {
+      if (token !== generation.current) return;
       setError(errorMessage(e));
     }
   }
@@ -131,6 +145,7 @@ export function WalletView({
         experiment: badSignature ? "잘못된 서명" : undefined,
       });
     } catch (e) {
+      if (token !== generation.current) return;
       setError(errorMessage(e));
     }
   }
@@ -153,6 +168,7 @@ export function WalletView({
         signingHash: result.signingHash,
       });
     } catch (e) {
+      if (token !== generation.current) return;
       setError(errorMessage(e));
     }
   }
@@ -162,7 +178,11 @@ export function WalletView({
         <p>
           지갑은 키를 관리합니다. 코인은 노드가 검증한 미사용 출력에 기록됩니다.
         </p>
-        <button className="secondary" onClick={addWallet}>
+        <button
+          className="secondary"
+          disabled={interaction.busy}
+          onClick={() => interaction.run("지갑 추가", addWallet)}
+        >
           ＋ 지갑 추가
         </button>
       </div>
@@ -214,6 +234,9 @@ export function WalletView({
       </div>
       <div className="two-col">
         <Panel title="거래를 만들어 보세요" eyebrow="01 / TRANSACTION">
+          {interaction.busy && (
+            <p role="status">{interaction.pending.join(" · ")} 처리 중…</p>
+          )}
           <div className="form-grid">
             <label>
               보내는 지갑
@@ -266,22 +289,39 @@ export function WalletView({
             <small>정수 단위 · 수수료 0 · 선택 노드 {nodeId}에 제출</small>
           </label>
           <div className="actions">
-            <button onClick={create}>1. 거래 작성</button>
+            <button
+              data-action="draft"
+              disabled={interaction.busy}
+              onClick={() => interaction.run("거래 작성", create)}
+            >
+              1. 거래 작성
+            </button>
             <button
               className="secondary"
-              disabled={!draft || !!signed}
-              onClick={sign}
+              data-action="sign"
+              disabled={interaction.busy || !draft || !!signed}
+              onClick={() => interaction.run("전자서명", sign)}
             >
               2. 전자서명
             </button>
             <button
               className="secondary"
-              disabled={!signed || submitted}
-              onClick={() => submit()}
+              data-action="submit"
+              disabled={interaction.busy || !signed || submitted}
+              onClick={() => interaction.run("검증·전파", () => submit())}
             >
               3. 검증·전파
             </button>
           </div>
+          <p className="action-hint">
+            {!draft
+              ? "먼저 거래를 작성하면 서명할 수 있습니다."
+              : !signed
+                ? "전자서명을 마치면 검증·전파할 수 있습니다."
+                : submitted
+                  ? "이 거래는 이미 제출됐습니다. 새 금액으로 거래를 다시 작성할 수 있습니다."
+                  : "서명한 거래를 제출하면 노드가 검증합니다."}
+          </p>
           {error && (
             <div role="alert" className="result bad">
               {error}
@@ -352,15 +392,15 @@ export function WalletView({
         <div className="actions">
           <button
             className="secondary"
-            disabled={!signed}
-            onClick={() => submit(true)}
+            disabled={interaction.busy || !signed}
+            onClick={() => interaction.run("서명 실험", () => submit(true))}
           >
             잘못된 서명 실험
           </button>
           <button
             className="secondary"
-            disabled={!node.mempool.length}
-            onClick={doubleSpend}
+            disabled={interaction.busy || !node.mempool.length}
+            onClick={() => interaction.run("이중 지출 실험", doubleSpend)}
           >
             이중 지출 실험
           </button>

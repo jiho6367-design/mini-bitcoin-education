@@ -19,6 +19,9 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         channel: "chrome",
+        launchOptions: process.env.MINI_BITCOIN_CHROME_PATH
+          ? { executablePath: process.env.MINI_BITCOIN_CHROME_PATH }
+          : undefined,
         viewport: { width: 1440, height: 1000 },
       },
     },

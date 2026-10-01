@@ -11,6 +11,8 @@ import { MiningView } from "./MiningView";
 import { TamperView } from "./TamperView";
 import { learningFlow } from "./learning";
 import { short } from "./shared";
+import { LearningGuide, LessonRecap, NodeLesson } from "./LearningGuide";
+import { useInteraction } from "./useInteraction";
 
 const pages = [
   { title: "실습 안내", sub: "블록체인의 첫걸음", icon: "◈" },
@@ -52,6 +54,7 @@ export function App() {
     composer,
     setComposer,
   } = controller;
+  const interaction = useInteraction();
   const [page, setPage] = useState(0);
   const [nodeId, setNodeId] = useState<NodeId>("A");
   const [difficulty, setDifficulty] = useState(2);
@@ -63,6 +66,17 @@ export function App() {
     mining.status === "running" || mining.status === "paused";
   const height = lab ? lab.nodes[nodeId].chain.length - 1 : 0;
   const flow = learningFlow(lab, lesson, mining);
+  function navigate(targetPage: number, action?: string) {
+    if (targetPage === 2) observeMempool();
+    else setPage(targetPage);
+    requestAnimationFrame(() => {
+      const target = document.querySelector<HTMLElement>(
+        action ? `[data-action="${action}"]` : "#main h1",
+      );
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({ block: "center", behavior: "instant" });
+    });
+  }
   function observeMempool() {
     if (lesson?.validation?.valid) setLesson({ ...lesson, phase: "mempool" });
     setPage(2);
@@ -191,7 +205,7 @@ export function App() {
               <div className="eyebrow">
                 LEARN BY DOING / {String(page + 1).padStart(2, "0")}
               </div>
-              <h1>{pages[page].title}</h1>
+              <h1 tabIndex={-1}>{pages[page].title}</h1>
               <p>{pages[page].sub}</p>
             </div>
             <span className="education-badge">EDUCATIONAL MODEL</span>
@@ -249,6 +263,31 @@ export function App() {
               </small>
             )}
           </div>
+          <LearningGuide
+            page={page}
+            lab={lab}
+            lesson={lesson}
+            mining={mining}
+            nodeId={nodeId}
+            navigate={navigate}
+          />
+          {lab && lesson && (page === 2 || page === 4) && (
+            <NodeLesson lab={lab} lesson={lesson} />
+          )}
+          {lab && lesson && (page === 1 || page === 4) && (
+            <LessonRecap
+              lab={lab}
+              lesson={lesson}
+              newTransaction={() => {
+                setLesson(null);
+                navigate(1, "draft");
+              }}
+              tamper={() => navigate(5)}
+            />
+          )}
+          {interaction.busy && (
+            <p role="status">{interaction.pending.join(" · ")} 처리 중…</p>
+          )}
           {resetPrompt && (
             <div className="reset-banner" role="alert">
               <div>
@@ -422,13 +461,21 @@ export function App() {
                         교육용 코인을 배정합니다. 송금과 채굴은 직접 실행합니다.
                       </p>
                       <div className="actions">
-                        <button onClick={() => startLab(true)}>
+                        <button
+                          data-action="start"
+                          disabled={interaction.busy}
+                          onClick={() =>
+                            interaction.run("실습 시작", () => startLab(true))
+                          }
+                        >
                           예제 실습 시작 <span>→</span>
                         </button>
                         <button
                           className="secondary"
-                          disabled={wallets.length >= 2}
-                          onClick={addWallet}
+                          disabled={interaction.busy || wallets.length >= 2}
+                          onClick={() =>
+                            interaction.run("지갑 생성", addWallet)
+                          }
                         >
                           {wallets.length === 0
                             ? "직접 시작: Alice 지갑 생성"
@@ -439,7 +486,12 @@ export function App() {
                         {wallets.length >= 2 && (
                           <button
                             className="secondary"
-                            onClick={() => startLab(false)}
+                            disabled={interaction.busy}
+                            onClick={() =>
+                              interaction.run("실습 시작", () =>
+                                startLab(false),
+                              )
+                            }
                           >
                             생성한 지갑으로 시작
                           </button>
@@ -532,6 +584,7 @@ export function App() {
             <MiningView
               lab={lab}
               nodeId={nodeId}
+              key={`${lab.labId}-${mining.jobId ?? "ready"}`}
               mining={mining}
               begin={beginMining}
               command={miningCommand}
@@ -540,6 +593,7 @@ export function App() {
           )}
           {lab && page === 4 && (
             <NetworkView
+              key={lab.labId}
               lab={lab}
               nodeId={nodeId}
               automatic={automatic}

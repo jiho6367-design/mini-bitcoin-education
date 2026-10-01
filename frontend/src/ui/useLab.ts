@@ -18,6 +18,7 @@ import type {
 import type { TransactionLesson } from "./learning";
 
 export interface MiningState {
+  jobId?: string;
   status: "idle" | "running" | "paused" | "found" | "stopped" | "error";
   attempts: number;
   elapsedMs: number;
@@ -38,6 +39,7 @@ const initialMining: MiningState = {
 };
 const initialComposer = { sender: 0, receiver: 1, amount: "30" };
 const miningState = (m: MiningSnapshot): MiningState => ({
+  jobId: m.jobId,
   status: m.status,
   attempts: m.attempts,
   elapsedMs: m.elapsedMs,
@@ -252,11 +254,11 @@ export function useLab() {
       setError(errorMessage(e));
     }
   }
-  function miningCommand(type: "pause" | "resume" | "step" | "stop") {
+  async function miningCommand(type: "pause" | "resume" | "step" | "stop") {
     const { labId, jobId } = live.current;
     if (!labId || !jobId) return;
     if (type === "pause" || type === "stop") stopTicking();
-    void command(labId, jobId, type);
+    await command(labId, jobId, type);
   }
 
   const actions = useMemo(

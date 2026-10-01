@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { ValidationResult } from "../api/types";
+import { failureExplanation } from "./learningInsights";
 
 export const short = (value: string, size = 12) =>
   value
@@ -44,13 +45,22 @@ export function Validation({ value }: { value: ValidationResult | null }) {
       </div>
     );
   return (
-    <div className="validation" aria-live="polite">
+    <div
+      key={`${value.code}-${value.message}`}
+      className="validation change-flash"
+      aria-live="polite"
+    >
       <div className={`result ${value.valid ? "good" : "bad"}`}>
         <strong>
           {value.valid ? "✓ 검증 통과" : "✕ 검증 실패"}{" "}
           <small>{value.code}</small>
         </strong>
         <p>{value.message}</p>
+        {!value.valid && (
+          <p className="failure-help">
+            확인할 점: {failureExplanation(value.code)}
+          </p>
+        )}
       </div>
       <ol className="checks">
         {value.steps.map((s, i) => (

@@ -13,6 +13,7 @@ import {
   nodePositions,
   selectedQueuedMessage,
 } from "./network";
+import { useInteraction } from "./useInteraction";
 import { Code, Notice, Panel, short, Validation } from "./shared";
 
 export function NetworkDiagram({
@@ -248,6 +249,7 @@ export function NetworkView({
   actions: LabActions;
   reportError: (error: unknown) => void;
 }) {
+  const interaction = useInteraction();
   const [selected, setSelected] = useState(0);
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(
     null,
@@ -272,11 +274,26 @@ export function NetworkView({
           </label>
           <button
             className="secondary"
-            disabled={automatic || !lab.queue.length}
-            onClick={() => actions.deliverNext().catch(reportError)}
+            data-action="deliver"
+            disabled={interaction.busy || automatic || !lab.queue.length}
+            onClick={() =>
+              interaction.run("메시지 전달", () =>
+                actions.deliverNext().catch(reportError),
+              )
+            }
           >
             메시지 1개 전달
           </button>
+          {interaction.busy && (
+            <p role="status">{interaction.pending.join(" · ")} 처리 중…</p>
+          )}
+          <p className="action-hint">
+            {automatic
+              ? "수동으로 전달하려면 자동 전달을 끄세요."
+              : !lab.queue.length
+                ? "새 거래나 블록이 생기면 전달할 메시지가 추가됩니다."
+                : "버튼을 누르면 대기열의 첫 메시지 하나를 전달합니다."}
+          </p>
           <p data-testid="next-message-caption">
             다음 실제 전달:{" "}
             {nextMessage ? messageLabel(nextMessage) : "대기 없음"}
@@ -287,7 +304,11 @@ export function NetworkView({
             비교하세요.
           </p>
           {lab.lastDelivery && (
-            <div className="delivery-result">
+            <div
+              key={lab.lastDelivery.message.id}
+              className="delivery-result change-flash"
+              role="status"
+            >
               <strong>
                 Node {lab.lastDelivery.message.to}의 최근 수신 검증 ·{" "}
                 {lab.lastDelivery.validation.valid ? "✓ 승인" : "✕ 거부"}
@@ -472,8 +493,12 @@ export function NetworkView({
         </p>
         <button
           className="secondary"
-          disabled={!node.mempool.length}
-          onClick={() => actions.invalidPowBlock(nodeId).catch(reportError)}
+          disabled={interaction.busy || !node.mempool.length}
+          onClick={() =>
+            interaction.run("PoW 실험", () =>
+              actions.invalidPowBlock(nodeId).catch(reportError),
+            )
+          }
         >
           잘못된 PoW 블록 수신 실험
         </button>

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   LabSnapshot,
   NodeId,
@@ -7,6 +7,7 @@ import type {
   TamperRequest,
 } from "../api/types";
 import { Code, Notice, Panel, Validation } from "./shared";
+import { useInteraction } from "./useInteraction";
 import type { LabActions } from "./useLab";
 
 export function TamperView({
@@ -29,6 +30,13 @@ export function TamperView({
   const [amount, setAmount] = useState("999");
   const [mode, setMode] = useState<TamperMode>("transaction");
   const latest = useRef(0);
+  const interaction = useInteraction();
+  useEffect(
+    () => () => {
+      latest.current++;
+    },
+    [],
+  );
   const chain = lab.nodes[nodeId].chain;
   const h = Math.min(height, chain.length - 1);
   const original = chain[h];
@@ -39,7 +47,7 @@ export function TamperView({
       const report = await actions.tamper(nodeId, applied);
       if (report && token === latest.current) setCopy({ applied, report });
     } catch (e) {
-      reportError(e);
+      if (token === latest.current) reportError(e);
     }
   }
   function discard() {
@@ -63,6 +71,7 @@ export function TamperView({
       ) : (
         <>
           <Panel title="변조 실험 설정" eyebrow="TAMPER LAB">
+            {interaction.busy && <p role="status">변조·검증 처리 중…</p>}
             <div className="form-grid">
               <label>
                 변조할 블록
@@ -101,41 +110,56 @@ export function TamperView({
                     min="1"
                     step="1"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      setAmount(e.target.value);
+                      discard();
+                    }}
                   />
                 </label>
               )}
             </div>
             <div className="actions">
               <button
+                data-action="tamper"
                 disabled={
-                  mode === "transaction" &&
-                  (!Number.isSafeInteger(Number(amount)) ||
-                    Number(amount) <= 0 ||
-                    Number(amount) ===
-                      original.transactions[0].outputs[0].amount)
+                  interaction.busy ||
+                  (mode === "transaction" &&
+                    (!Number.isSafeInteger(Number(amount)) ||
+                      Number(amount) <= 0 ||
+                      Number(amount) ===
+                        original.transactions[0].outputs[0].amount))
                 }
                 onClick={() =>
-                  inspect({
-                    height: h,
-                    mode,
-                    amount: mode === "transaction" ? Number(amount) : undefined,
-                    recomputeHashes: false,
-                  })
+                  interaction.run("변조·검증", () =>
+                    inspect({
+                      height: h,
+                      mode,
+                      amount:
+                        mode === "transaction" ? Number(amount) : undefined,
+                      recomputeHashes: false,
+                    }),
+                  )
                 }
               >
                 복사본 변조·검증
               </button>
               <button
                 className="secondary"
-                disabled={!copy}
+                disabled={interaction.busy || !copy}
                 onClick={() =>
-                  copy && inspect({ ...copy.applied, recomputeHashes: true })
+                  copy &&
+                  interaction.run("해시 재계산", () =>
+                    inspect({ ...copy.applied, recomputeHashes: true }),
+                  )
                 }
               >
                 해시만 재계산
               </button>
-              <button className="secondary" disabled={!copy} onClick={discard}>
+              <button
+                className="secondary"
+                disabled={interaction.busy || !copy}
+                onClick={discard}
+              >
                 복사본 지우기
               </button>
             </div>
@@ -172,8 +196,34 @@ export function TamperView({
               )}
             </Panel>
           </div>
-          {copy && (
-            <Panel title="어떤 관계가 깨졌을까요?">
+          {copy && altered && (
+            <Panel title="어떤 관계가 깨졌을까요?" className="change-flash">
+              <div className="change-comparison" data-testid="tamper-change">
+                <strong>
+                  {copy.applied.mode === "transaction"
+                    ? "송금액 변경"
+                    : "블록 시각 변경"}
+                </strong>
+                <p>
+                  {copy.applied.mode === "transaction"
+                    ? original.transactions[0].outputs[0].amount
+                    : original.timestamp}{" "}
+                  →{" "}
+                  {copy.applied.mode === "transaction"
+                    ? altered.transactions[0].outputs[0].amount
+                    : altered.timestamp}
+                </p>
+                <p>
+                  {copy.applied.mode === "transaction"
+                    ? "서명했던 금액과 달라졌습니다. 아래 서명·거래 ID·거래 목록 검사 결과를 함께 확인하세요."
+                    : "시각은 헤더의 일부입니다. 헤더 해시와 작업증명 검사 결과를 확인하세요."}
+                </p>
+                <p>
+                  {copy.applied.recomputeHashes
+                    ? "해시를 다시 계산한 결과입니다. 해시를 갱신해도 서명과 다른 블록의 연결까지 자동으로 고쳐지지 않습니다."
+                    : "원래 해시를 남겨 둔 채 데이터만 바꾼 결과입니다."}
+                </p>
+              </div>
               <ul className="diagnostics">
                 {copy.report.checks.map(({ label, ok }) => (
                   <li key={label} className={ok ? "good-text" : "bad-text"}>

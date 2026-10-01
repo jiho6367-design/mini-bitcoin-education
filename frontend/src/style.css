@@ -73,6 +73,130 @@
   --green: var(--accent);
   --orange: var(--pending);
 }
+
+/* Learning guidance uses the existing semantic palette in both themes. */
+.lesson-guide {
+  margin: 18px 0 24px;
+  padding: 22px;
+  border: 1px solid var(--selected-border);
+  border-left: 5px solid var(--accent);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.lesson-guide h2 {
+  margin: 4px 0 16px;
+  font-size: 1.35rem;
+}
+.guide-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.guide-columns > div,
+.presence-card {
+  min-width: 0;
+}
+.guide-columns p {
+  margin: 8px 0 12px;
+}
+.guide-columns small,
+.action-hint {
+  color: var(--muted);
+}
+.action-hint {
+  font-size: 0.9rem;
+}
+.presence-card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-subtle);
+  overflow-wrap: anywhere;
+}
+.presence-card.included {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+}
+.presence-card.pending {
+  background: var(--pending-bg);
+  border-color: var(--pending-border);
+}
+.presence-card.rejected {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
+.presence-card p {
+  margin: 6px 0;
+}
+.lesson-recap {
+  border-color: var(--success-border);
+}
+.balance-comparison,
+.sample-inspector,
+.change-comparison {
+  padding: 18px;
+  margin: 18px 0;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.comparison-scroll {
+  overflow-x: auto;
+}
+.balance-comparison table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.balance-comparison th,
+.balance-comparison td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.sample-inspector code {
+  overflow-wrap: anywhere;
+}
+.hash-sample button[aria-pressed="true"] {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.failure-help {
+  padding-top: 8px;
+  border-top: 1px solid currentColor;
+}
+.change-flash {
+  animation: learning-change 650ms ease-out;
+}
+@keyframes learning-change {
+  from {
+    box-shadow: inset 4px 0 var(--focus);
+  }
+  to {
+    box-shadow: inset 0 0 transparent;
+  }
+}
+@media (max-width: 680px) {
+  .guide-columns {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .lesson-guide {
+    padding: 16px;
+  }
+  .balance-comparison {
+    padding: 10px;
+  }
+  .balance-comparison th,
+  .balance-comparison td {
+    padding: 6px;
+    font-size: 0.85rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .change-flash {
+    animation: none;
+  }
+}
 :root[data-theme="dark"] {
   color-scheme: dark;
   --page-bg: #101b15;

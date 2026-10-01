@@ -22,6 +22,10 @@ export interface TransactionLesson {
   // 백엔드가 계산한 서명 원문과 그 SHA-256.
   signingText: string;
   signingHash: string;
+  baseline?: {
+    node: NodeId;
+    balances: LabSnapshot["nodes"][NodeId]["balances"];
+  };
 }
 export interface LearningFlow {
   current: number;

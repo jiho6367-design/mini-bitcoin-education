@@ -1,4 +1,11 @@
-import type { LabSnapshot, MiningMode, NodeId } from "../api/types";
+import { useState } from "react";
+import { useInteraction } from "./useInteraction";
+import type {
+  LabSnapshot,
+  MiningMode,
+  MiningSample,
+  NodeId,
+} from "../api/types";
 import type { MiningState } from "./useLab";
 import { Code, Notice, Panel } from "./shared";
 
@@ -21,10 +28,14 @@ export function MiningView({
   lab: LabSnapshot;
   nodeId: NodeId;
   mining: MiningState;
-  begin: (node: NodeId, step: boolean, mode?: MiningMode) => void;
-  command: (type: "pause" | "resume" | "step" | "stop") => void;
+  begin: (node: NodeId, step: boolean, mode?: MiningMode) => Promise<void>;
+  command: (type: "pause" | "resume" | "step" | "stop") => Promise<void>;
   goNetwork: () => void;
 }) {
+  const interaction = useInteraction();
+  const [selectedSample, setSelectedSample] = useState<MiningSample | null>(
+    null,
+  );
   const active = mining.status === "running" || mining.status === "paused";
   const difficulty = lab.difficulty;
   const noCandidate = !lab.nodes[nodeId].canStartMining;
@@ -72,24 +83,42 @@ export function MiningView({
             <span>목표값 이하이면 성공</span>
             <code>{lab.targetHex}</code>
           </div>
+          {interaction.busy && (
+            <p role="status">{interaction.pending.join(" · ")} 처리 중…</p>
+          )}
           <div className="actions">
             <button
-              disabled={mining.status === "running" || (!active && noCandidate)}
-              onClick={() => (active ? command("step") : begin(nodeId, true))}
+              data-action="mine"
+              disabled={
+                interaction.busy ||
+                mining.status === "running" ||
+                (!active && noCandidate)
+              }
+              onClick={() =>
+                interaction.run("한 번 계산", () =>
+                  active ? command("step") : begin(nodeId, true),
+                )
+              }
             >
               한 번 계산하기
             </button>
             <button
               className="secondary"
-              disabled={active || noCandidate}
-              onClick={() => begin(nodeId, false)}
+              disabled={interaction.busy || active || noCandidate}
+              onClick={() =>
+                interaction.run("연속 채굴 시작", () => begin(nodeId, false))
+              }
             >
               연속 채굴 시작
             </button>
             <button
               className="secondary"
-              disabled={active || noCandidate}
-              onClick={() => begin(nodeId, false, "learning")}
+              disabled={interaction.busy || active || noCandidate}
+              onClick={() =>
+                interaction.run("학습 실행", () =>
+                  begin(nodeId, false, "learning"),
+                )
+              }
             >
               천천히 학습 실행
             </button>
@@ -97,13 +126,23 @@ export function MiningView({
               <>
                 <button
                   className="secondary"
+                  data-action="pause"
+                  disabled={interaction.pending.includes("채굴 제어")}
                   onClick={() =>
-                    command(mining.status === "running" ? "pause" : "resume")
+                    interaction.run("채굴 제어", () =>
+                      command(mining.status === "running" ? "pause" : "resume"),
+                    )
                   }
                 >
                   {mining.status === "running" ? "일시정지" : "계속 채굴"}
                 </button>
-                <button className="secondary" onClick={() => command("stop")}>
+                <button
+                  className="secondary"
+                  disabled={interaction.pending.includes("채굴 중지")}
+                  onClick={() =>
+                    interaction.run("채굴 중지", () => command("stop"))
+                  }
+                >
                   채굴 중지
                 </button>
               </>
@@ -215,9 +254,31 @@ export function MiningView({
       </div>
       <Panel title="최근 실제 Nonce·Hash 비교" className="mining-samples">
         <p className="muted">
-          최근 {lab.limits.miningSampleLimit}개까지 표시합니다. 실패는 목표값보다 큰
-          해시, 성공은 목표값 이하의 해시입니다. 첫 계산이 성공할 수도 있습니다.
+          최근 {lab.limits.miningSampleLimit}개까지 표시합니다. 실패는
+          목표값보다 큰 해시, 성공은 목표값 이하의 해시입니다. 첫 계산이 성공할
+          수도 있습니다.
         </p>
+        {selectedSample && (
+          <div className="sample-inspector" data-testid="sample-inspector">
+            <h3>선택한 표본 · Nonce {selectedSample.nonce}</h3>
+            <Code>{selectedSample.hash}</Code>
+            <p>
+              {selectedSample.passed
+                ? "✓ 목표값 이하 · 성공"
+                : "✕ 목표값 초과 · 실패"}
+            </p>
+            <p>
+              현재 최신 계산: Nonce {mining.block?.nonce ?? "—"}. 선택한 표본은
+              새 계산이 진행돼도 유지됩니다.
+            </p>
+            <button
+              className="secondary"
+              onClick={() => setSelectedSample(null)}
+            >
+              표본 선택 해제
+            </button>
+          </div>
+        )}
         {mining.samples.length ? (
           <ol className="hash-sample-list" data-testid="mining-samples">
             {[...mining.samples].reverse().map((sample) => (
@@ -226,7 +287,14 @@ export function MiningView({
                 className={`hash-sample ${sample.passed ? "passed" : ""}`}
                 data-testid="mining-sample"
               >
-                <b>Nonce {sample.nonce.toLocaleString()}</b>
+                <button
+                  className="secondary"
+                  aria-label={`Nonce ${sample.nonce} 표본 비교`}
+                  aria-pressed={selectedSample?.nonce === sample.nonce}
+                  onClick={() => setSelectedSample({ ...sample })}
+                >
+                  Nonce {sample.nonce.toLocaleString()}
+                </button>
                 <code data-testid="sample-hash">
                   <mark>{sample.hash.slice(0, difficulty)}</mark>
                   {sample.hash.slice(difficulty)}
