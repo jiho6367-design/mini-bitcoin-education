@@ -1,0 +1,358 @@
+{
+  "created_at_utc": "2026-10-02T16:48:46.688745+00:00",
+  "environment": {
+    "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu_name": "Intel(R) Core(TM) Ultra 7 356H",
+    "logical_processors": 16,
+    "source_url": "https://github.com/k9102/Nonce.git",
+    "source_commit": "1bca090c5b3796c96b7ac12834cc5f00a05a8892",
+    "source_file": "C:\\Users\\jiho\\.codex\\worktrees\\343d\\mini-bitcoin-education\\work\\source\\Nonce\\main.py"
+  },
+  "method": "Fixed nonce count; identical worker count and target; alternating order; warm process pool; GUI, console, disk I/O and process startup excluded; original worker imported unchanged with local queue/stop adapters.",
+  "gpu_measured": false,
+  "limitations": [
+    "These are CPU throughput measurements on this machine, not time-to-first-proof estimates.",
+    "The original latest CPU worker is the baseline; the older tkinter GUI and GPU kernel were not timed.",
+    "Each method used the same process count, message, target difficulty, and fixed nonce range in every pair."
+  ],
+  "reproduction_commands": [
+    "python -m hashcash_lab.benchmark --source work/source/Nonce --workers 4 --count 2000000 --repeats 5 --include-long-message --output work/hashcash-benchmark-4.json",
+    "python -m hashcash_lab.benchmark --source work/source/Nonce --workers 16 --count 8000000 --repeats 5 --output work/hashcash-benchmark-16.json"
+  ],
+  "summary": [
+    {
+      "workers": 4,
+      "count": 2000000,
+      "utf8_bytes": 28,
+      "source_hashes_per_second": 5206798.412431075,
+      "optimized_hashes_per_second": 8916565.909499412,
+      "speedup": 1.712485332293906,
+      "results_match": true
+    },
+    {
+      "workers": 4,
+      "count": 2000000,
+      "utf8_bytes": 672,
+      "source_hashes_per_second": 3827136.656871675,
+      "optimized_hashes_per_second": 9274287.03925796,
+      "speedup": 2.4232965453705066,
+      "results_match": true
+    },
+    {
+      "workers": 16,
+      "count": 8000000,
+      "utf8_bytes": 28,
+      "source_hashes_per_second": 16095118.933966264,
+      "optimized_hashes_per_second": 26367848.627210584,
+      "speedup": 1.6382512447028466,
+      "results_match": true
+    }
+  ],
+  "runs": [
+    {
+      "measured_at_utc": "2026-10-02T16:40:21.760940+00:00",
+      "environment": {
+        "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "logical_processors": 16,
+        "source_url": "https://github.com/k9102/Nonce.git",
+        "source_commit": "1bca090c5b3796c96b7ac12834cc5f00a05a8892",
+        "source_file": "C:\\Users\\jiho\\.codex\\worktrees\\343d\\mini-bitcoin-education\\work\\source\\Nonce\\main.py"
+      },
+      "method": "Fixed nonce count; identical worker count and target; alternating order; warm process pool; GUI, console, disk I/O and process startup excluded; original worker imported unchanged with local queue/stop adapters.",
+      "gpu_measured": false,
+      "cases": [
+        {
+          "message": "You are the best of best!!!!",
+          "utf8_bytes": 28,
+          "difficulty": 5,
+          "start_nonce": 0,
+          "count": 2000000,
+          "workers_per_backend": 4,
+          "repeats": 5,
+          "source": {
+            "seconds": [
+              0.3950463000073796,
+              0.3813748999964446,
+              0.39365909999469295,
+              0.38411320000886917,
+              0.37903569999616593
+            ],
+            "median_seconds": 0.38411320000886917,
+            "hashes_per_second": 5206798.412431075
+          },
+          "optimized": {
+            "seconds": [
+              0.22984600000199862,
+              0.2197840000008,
+              0.2200386000040453,
+              0.2258120000042254,
+              0.22430159999930765
+            ],
+            "median_seconds": 0.22430159999930765,
+            "hashes_per_second": 8916565.909499412
+          },
+          "speedup": 1.712485332293906,
+          "results_match": true,
+          "worker_results": [
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 1999996,
+              "last_hash": "78fff56f934eaffce936883aec09c9c252ada89384f28b408e7738844c550a64"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 1999997,
+              "last_hash": "a6415ec7240fc20b1f5123b64b7ede1e837170434adfc189edbd9a0639ae8782"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 1999998,
+              "last_hash": "5922222cce5b34729c51a54d0b9dabeecc5cd82fad51a5cd7018d531a74d88cb"
+            },
+            {
+              "checked": 500000,
+              "nonce": 1063959,
+              "hash": "000005fba5772405a173d1f84c9ca674396248d7c7bdecd400b6901a2cb7e359",
+              "last_nonce": 1999999,
+              "last_hash": "77afde852c52b64bc7c85895e163da344a492ec6e9d1e9159a21cbb89ef00427"
+            }
+          ]
+        },
+        {
+          "message": "난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지난스 😀\n메시지",
+          "utf8_bytes": 672,
+          "difficulty": 5,
+          "start_nonce": 0,
+          "count": 2000000,
+          "workers_per_backend": 4,
+          "repeats": 5,
+          "source": {
+            "seconds": [
+              0.5172983999946155,
+              0.5272354000044288,
+              0.5241749999986496,
+              0.5225839000049746,
+              0.4946118999941973
+            ],
+            "median_seconds": 0.5225839000049746,
+            "hashes_per_second": 3827136.656871675
+          },
+          "optimized": {
+            "seconds": [
+              0.2334796999930404,
+              0.21024359999864828,
+              0.21236720000160858,
+              0.21564999999827705,
+              0.22018959998968057
+            ],
+            "median_seconds": 0.21564999999827705,
+            "hashes_per_second": 9274287.03925796
+          },
+          "speedup": 2.4232965453705066,
+          "results_match": true,
+          "worker_results": [
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 1999996,
+              "last_hash": "1fd17797310afa4605a3d3b7c28175d5aafe3ec9fbfda2f9fcd52a967715adf9"
+            },
+            {
+              "checked": 500000,
+              "nonce": 1328125,
+              "hash": "000000c0088c584b451b6b13c3dd257e00e328d4a78135939df849f2e10f5895",
+              "last_nonce": 1999997,
+              "last_hash": "b84d6ba31e5e7b2d37ede47273fdd7064b5e36ba623e4fb7f486e8f965c40473"
+            },
+            {
+              "checked": 500000,
+              "nonce": 1735850,
+              "hash": "000004cd31d6f0acc8e9bb587016c39154796cc1968cdfc9f8a70f10d81b9fd3",
+              "last_nonce": 1999998,
+              "last_hash": "a75df46468ddaabceb3d59c45ff41f8fc9e6a0997c319aa6eea9350d2a039892"
+            },
+            {
+              "checked": 500000,
+              "nonce": 1022987,
+              "hash": "0000059f6c9cbffbdc863306c08755f20b2307f19fe44b97e30b6511fc36db08",
+              "last_nonce": 1999999,
+              "last_hash": "d7fda989d8ff3851acd72ccedc97fc7948e5a84408cc593e74fb40a2a7ca2469"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "measured_at_utc": "2026-10-02T16:48:06.717482+00:00",
+      "environment": {
+        "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "cpu_name": "Intel(R) Core(TM) Ultra 7 356H",
+        "logical_processors": 16,
+        "source_url": "https://github.com/k9102/Nonce.git",
+        "source_commit": "1bca090c5b3796c96b7ac12834cc5f00a05a8892",
+        "source_file": "C:\\Users\\jiho\\.codex\\worktrees\\343d\\mini-bitcoin-education\\work\\source\\Nonce\\main.py"
+      },
+      "method": "Fixed nonce count; identical worker count and target; alternating order; warm process pool; GUI, console, disk I/O and process startup excluded; original worker imported unchanged with local queue/stop adapters.",
+      "gpu_measured": false,
+      "cases": [
+        {
+          "message": "You are the best of best!!!!",
+          "utf8_bytes": 28,
+          "difficulty": 5,
+          "start_nonce": 0,
+          "count": 8000000,
+          "workers_per_backend": 16,
+          "repeats": 5,
+          "source": {
+            "seconds": [
+              0.4970450999971945,
+              0.501929599995492,
+              0.4897335999994539,
+              0.4938255999877583,
+              0.511612200003583
+            ],
+            "median_seconds": 0.4970450999971945,
+            "hashes_per_second": 16095118.933966264
+          },
+          "optimized": {
+            "seconds": [
+              0.2826945999986492,
+              0.3176792000012938,
+              0.3079001000005519,
+              0.30339980000280775,
+              0.28939119999995455
+            ],
+            "median_seconds": 0.30339980000280775,
+            "hashes_per_second": 26367848.627210584
+          },
+          "speedup": 1.6382512447028466,
+          "results_match": true,
+          "worker_results": [
+            {
+              "checked": 500000,
+              "nonce": 3725792,
+              "hash": "00000478fc1379e070be982201d30907a5605256c25e0388bbdfc7b3b8cbdaa0",
+              "last_nonce": 7999984,
+              "last_hash": "bc7cd66602e4c21d1419905e796f1d0af05b85e1bb75cae773432a49519ddec9"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999985,
+              "last_hash": "5386b23fe9c3e0304e5d1afe0edf9608603826a1e04f2d6d8297b6286c8b458f"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999986,
+              "last_hash": "5dcc27850db69a844f3422e92ff6073977acce02c990b44fd99c489e2acba6a5"
+            },
+            {
+              "checked": 500000,
+              "nonce": 3758643,
+              "hash": "0000073ca0d67f343dcac04b02a1b625c7927709ae8aa78e94234ffbb907874b",
+              "last_nonce": 7999987,
+              "last_hash": "e1c246c1c921d3ccf0b3d396306211b593a9d39355b92ee9c9153426611522cb"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999988,
+              "last_hash": "80fc547d83d532d771a4a64365adf0b1ba57d55d3bcdd008a88fcb1a38adba9b"
+            },
+            {
+              "checked": 500000,
+              "nonce": 7027573,
+              "hash": "00000ad4be7e67a982ac27a46a2841b175fbd0787e265a2dd3daac03d06b3cd7",
+              "last_nonce": 7999989,
+              "last_hash": "0b18e5093a48ef3f09c39f2d5c9e2bf57e3d2043dd250a30c6a0e6cf078ce1e1"
+            },
+            {
+              "checked": 500000,
+              "nonce": 4449782,
+              "hash": "00000799b7e13fd70a5bb97eb1771b77277a40cb804c146d89002a6485fcb5bd",
+              "last_nonce": 7999990,
+              "last_hash": "6c5deed5238bf341326f641f47a3d30969b8a762b6f4385a73de5e0bf32940b3"
+            },
+            {
+              "checked": 500000,
+              "nonce": 1063959,
+              "hash": "000005fba5772405a173d1f84c9ca674396248d7c7bdecd400b6901a2cb7e359",
+              "last_nonce": 7999991,
+              "last_hash": "f09ae07699701cf0cc7ab587208eb95284a1ff631ad6d65ade7b06bba563e618"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999992,
+              "last_hash": "16d3ada7c399575965b178c1decfe0cb0b34682f699b1ca1ffbaee367aba9d72"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999993,
+              "last_hash": "f19c7b6c2a88c0eec8543456ea5a0bdea1b8649629626d86ab372805d2e8e1f4"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999994,
+              "last_hash": "3a8561ec372372a41b7912a935cc80d6c328687d9d6f15c68c14551795d80750"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999995,
+              "last_hash": "1de925502611fea8f4633b0d4acef681ba32a2af5375c6f98c5bc38a70e7acd8"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999996,
+              "last_hash": "9ab565f30684beb2fc72387ae63af4c611196758075b1e295daf3d4497ad4f55"
+            },
+            {
+              "checked": 500000,
+              "nonce": 3871181,
+              "hash": "000005ee250600117b4c92a674c1c850905d629281ffb1905b5b0b8ca94a12da",
+              "last_nonce": 7999997,
+              "last_hash": "e37fd9d91f3bd590cb9a919d8dcf064f3f6037f8fc2333550915a4871855b72f"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999998,
+              "last_hash": "0ff13c28d3489a2730df9e8b2b592e39c0fd801531e972d4addb25067e498f3a"
+            },
+            {
+              "checked": 500000,
+              "nonce": null,
+              "hash": null,
+              "last_nonce": 7999999,
+              "last_hash": "d6a3d1e768eddb039e1f96a580eccbe123eb0facaae66daf4e6a6077c2f7d96c"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
