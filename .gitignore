@@ -33,3 +33,6 @@ coverage/
 test-results/
 playwright-report/
 work/
+
+# Local participant records and SQLite database files
+/data/

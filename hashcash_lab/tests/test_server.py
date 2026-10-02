@@ -1,6 +1,7 @@
 """Backend failures and HTTP lifecycle using real CPU proofs."""
 
 import json
+import tempfile
 import threading
 import time
 import unittest
@@ -243,6 +244,8 @@ class SearchConfigTests(unittest.TestCase):
             {"startNonce": "-1"}, {"startNonce": "1.0"}, {"startNonce": 2 ** 53 + 1},
             {"startNonce": str(lab.MAX_NONCE + 1)}, {"startNonce": "\uff11"},
             {"workers": 0}, {"workers": True}, {"mode": "unknown"},
+            {"participantName": ""}, {"participantName": "   "},
+            {"participantName": "x" * 61}, {"participantName": None},
         )
         for changes in cases:
             with self.subTest(changes=ascii(changes)):
@@ -259,7 +262,8 @@ class SearchConfigTests(unittest.TestCase):
 class HashcashHTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = lab.create_server(port=0, instance="http-test-instance")
+        cls.data_dir = tempfile.TemporaryDirectory()
+        cls.server = lab.create_server(port=0, instance="http-test-instance", data_dir=cls.data_dir.name)
         cls.server_thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.server_thread.start()
         cls.base_url = f"http://127.0.0.1:{cls.server.server_port}/api/hashcash"
@@ -269,6 +273,7 @@ class HashcashHTTPTests(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
         cls.server_thread.join(timeout=5)
+        cls.data_dir.cleanup()
 
     def request(self, path, payload=None, *, raw=None, headers=None):
         body = raw if raw is not None else (json.dumps(payload).encode("utf-8") if payload is not None else None)

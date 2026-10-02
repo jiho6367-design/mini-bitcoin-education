@@ -9,6 +9,7 @@ import argparse
 import json
 import multiprocessing as mp
 import os
+import sqlite3
 import threading
 import time
 import uuid
@@ -16,8 +17,10 @@ from dataclasses import dataclass
 from hashlib import sha256
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Callable
+from urllib.parse import parse_qs, urlsplit
 
 from .cpu import scan_batch
+from .history import HistoryStore, PROTOCOL, utc_now, validate_participant_name
 
 MAX_NONCE = (1 << 64) - 1
 CPU_BATCH = 50_000
@@ -41,6 +44,7 @@ class SearchConfig:
     start_nonce: int = 0
     workers: int = 1
     mode: str = "auto"
+    participant_name: str = "나"
 
     @classmethod
     def from_payload(cls, payload: dict) -> SearchConfig:
@@ -49,6 +53,7 @@ class SearchConfig:
         start = payload.get("startNonce", "0")
         workers = payload.get("workers", min(64, os.cpu_count() or 1))
         mode = payload.get("mode", "auto")
+        participant_name = validate_participant_name(payload.get("participantName", "나"))
         if not isinstance(message, str):
             raise ValueError("메시지는 문자열이어야 합니다.")
         if len(message.encode("utf-8")) > 4096:
@@ -64,7 +69,7 @@ class SearchConfig:
             raise ValueError("CPU 작업 수가 이 기기의 범위를 벗어났습니다.")
         if mode not in ("auto", "cpu", "gpu"):
             raise ValueError("연산 모드가 올바르지 않습니다.")
-        return cls(message, difficulty, nonce, workers, mode)
+        return cls(message, difficulty, nonce, workers, mode, participant_name)
 
 
 def make_gpu(message: str, difficulty: int):
@@ -73,9 +78,11 @@ def make_gpu(message: str, difficulty: int):
 
 
 class SearchJob:
-    def __init__(self, config: SearchConfig, gpu_factory: Callable = make_gpu):
+    def __init__(self, config: SearchConfig, gpu_factory: Callable = make_gpu, history: HistoryStore | None = None):
         self.config = config
         self.gpu_factory = gpu_factory
+        self.history = history
+        self.save_lock = threading.Lock()
         self.lock = threading.Lock()
         self.cancel = threading.Event()
         self.thread: threading.Thread | None = None
@@ -86,6 +93,7 @@ class SearchJob:
             "backend": "준비 중",
             "reason": "GPU 사용 가능 여부와 계산 결과를 검사합니다." if config.mode != "cpu" else "CPU 작업을 준비합니다.",
             "message": config.message,
+            "participantName": config.participant_name,
             "difficulty": config.difficulty,
             "startNonce": str(config.start_nonce),
             "checked": "0",
@@ -93,6 +101,8 @@ class SearchJob:
             "lastHash": None,
             "result": None,
             "error": None,
+            "recordId": None,
+            "saveError": None,
         }
         self.checked = 0
 
@@ -115,6 +125,31 @@ class SearchJob:
 
     def stop(self):
         self.cancel.set()
+
+    def save_result(self):
+        """Persist only a completed verified proof; disk errors preserve found.
+
+        Called after calculation cleanup. An HTTP retry is serialized with an
+        automatic save, and the database job identifier makes retries idempotent.
+        """
+        with self.save_lock:
+            state = self.snapshot()
+            if state["status"] != "found" or not state["result"] or not state["result"].get("verified"):
+                raise ValueError("검증을 마친 탐색 결과만 저장할 수 있습니다.")
+            if self.history is None:
+                return state
+            try:
+                record = self.history.save(
+                    job_id=state["id"], participant_name=self.config.participant_name,
+                    message=self.config.message, difficulty=self.config.difficulty,
+                    nonce=state["result"]["nonce"], hash_value=state["result"]["hash"],
+                    backend=state["backend"], checked=state["checked"], elapsed=state["elapsed"],
+                )
+            except Exception as exc:
+                self.update(saveError=f"기록 저장 실패: {type(exc).__name__}: {str(exc)[:500]}")
+            else:
+                self.update(recordId=record["id"], saveError=None)
+            return self.snapshot()
 
     def record(self, batch: dict):
         """Count only completed work and publish actual sampled hashes."""
@@ -208,13 +243,16 @@ class SearchJob:
             self.update(status="error", error=f"{type(exc).__name__}: {exc}")
         finally:
             self.update(elapsed=time.perf_counter() - self.started)
+            if self.snapshot()["status"] == "found" and self.history is not None:
+                self.save_result()
 
 
 class LabServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, address, instance: str | None = None):
+    def __init__(self, address, instance: str | None = None, data_dir: str | None = None):
         super().__init__(address, Handler)
+        self.history = HistoryStore(data_dir)
         self.job: SearchJob | None = None
         self.job_lock = threading.Lock()
         self.instance = instance
@@ -233,22 +271,57 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_):
         pass
 
-    def reply(self, status: int, data: dict):
+    def reply(self, status: int, data: dict, *, headers: dict | None = None):
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            for name, value in (headers or {}).items():
+                self.send_header(name, value)
+            self.end_headers()
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            # Changing history filters aborts the previous browser request.
+            # A disconnected client must not become a storage failure.
+            self.close_connection = True
 
     def do_GET(self):
-        if self.path == "/api/hashcash/health":
-            self.reply(200, {"ok": True, "cpuCount": min(64, os.cpu_count() or 1), "protocol": "sha256-utf8-decimal-hexzeros-v1", "instance": self.server.instance})
-        elif self.path == "/api/hashcash/status":
-            self.reply(200, {"job": self.server.job.snapshot() if self.server.job else None})
-        else:
-            self.reply(404, {"error": "경로를 찾을 수 없습니다."})
+        try:
+            url = urlsplit(self.path)
+            if url.path == "/api/hashcash/health":
+                self.reply(200, {"ok": True, "cpuCount": min(64, os.cpu_count() or 1), "protocol": PROTOCOL, "instance": self.server.instance})
+            elif url.path == "/api/hashcash/status":
+                self.reply(200, {"job": self.server.job.snapshot() if self.server.job else None})
+            elif url.path in ("/api/hashcash/history", "/api/hashcash/history/export"):
+                export = url.path.endswith("/export")
+                query = parse_qs(url.query, keep_blank_values=True)
+                allowed = {"participantName", "difficulty", "message"} | (set() if export else {"limit"})
+                if set(query) - allowed or any(len(values) != 1 for values in query.values()):
+                    raise ValueError("기록 조회 조건이 올바르지 않습니다.")
+                options = {"limit": None if export else 100}
+                for key, field in (("participantName", "participant_name"), ("message", "message")):
+                    if key in query:
+                        options[field] = query[key][0]
+                for key in ("difficulty", "limit"):
+                    if key in query:
+                        value = query[key][0]
+                        if not value.isascii() or not value.isdigit():
+                            raise ValueError("난이도와 기록 조회 수는 정수여야 합니다.")
+                        options[key] = int(value)
+                result = self.server.history.query(**options)
+                if export:
+                    result.update(exportedAt=utc_now(), protocol=PROTOCOL)
+                    self.reply(200, result, headers={"Content-Disposition": 'attachment; filename="hashcash-history.json"'})
+                else:
+                    self.reply(200, result)
+            else:
+                self.reply(404, {"error": "경로를 찾을 수 없습니다."})
+        except (ValueError, TypeError, UnicodeError) as exc:
+            self.reply(400, {"error": str(exc)})
+        except (OSError, sqlite3.Error) as exc:
+            self.reply(503, {"error": f"기록을 읽지 못했습니다: {type(exc).__name__}: {str(exc)[:500]}"})
 
     def do_POST(self):
         # The frontend is same-origin through Vite. Reject cross-origin writes.
@@ -267,10 +340,15 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/api/hashcash/start":
                 config = SearchConfig.from_payload(payload)
                 with self.server.job_lock:
-                    if self.server.job and not self.server.job.snapshot()["finished"]:
-                        self.reply(409, {"error": "진행 중인 탐색을 먼저 중지하세요."})
-                        return
-                    self.server.job = SearchJob(config)
+                    if self.server.job:
+                        previous = self.server.job.snapshot()
+                        if not previous["finished"]:
+                            self.reply(409, {"error": "진행 중인 탐색을 먼저 중지하세요."})
+                            return
+                        if previous["status"] == "found" and previous["result"] and previous["result"].get("verified") and not previous["recordId"] and previous["saveError"]:
+                            self.reply(409, {"error": "발견 결과의 기록 저장을 다시 시도한 후 새 탐색을 시작하세요."})
+                            return
+                    self.server.job = SearchJob(config, history=self.server.history)
                     self.server.job.start()
                 self.reply(200, {"job": self.server.job.snapshot()})
             elif self.path == "/api/hashcash/stop":
@@ -281,25 +359,41 @@ class Handler(BaseHTTPRequestHandler):
                 config = SearchConfig.from_payload({**payload, "startNonce": payload.get("nonce"), "workers": 1, "mode": "cpu"})
                 value = sha256(config.message.encode("utf-8") + str(config.start_nonce).encode("ascii")).hexdigest()
                 self.reply(200, {"hash": value, "valid": value.startswith("0" * config.difficulty)})
+            elif self.path == "/api/hashcash/history/save":
+                with self.server.job_lock:
+                    job = self.server.job
+                    if job is None or payload.get("jobId") != job.snapshot()["id"]:
+                        self.reply(409, {"error": "현재 탐색의 결과만 저장할 수 있습니다."})
+                        return
+                    state = job.snapshot()
+                    if not state["finished"] or state["status"] != "found":
+                        self.reply(409, {"error": "탐색과 검증이 끝난 후 저장할 수 있습니다."})
+                        return
+                    state = job.save_result()
+                    if state["saveError"]:
+                        self.reply(503, {"job": state, "error": state["saveError"]})
+                    else:
+                        self.reply(200, {"job": state})
             else:
                 self.reply(404, {"error": "경로를 찾을 수 없습니다."})
         except (ValueError, TypeError, UnicodeError) as exc:
             self.reply(400, {"error": str(exc)})
 
 
-def create_server(host: str = "127.0.0.1", port: int = 9186, instance: str | None = None) -> LabServer:
+def create_server(host: str = "127.0.0.1", port: int = 9186, instance: str | None = None, data_dir: str | None = None) -> LabServer:
     if host != "127.0.0.1":
         raise ValueError("서버는 이 컴퓨터의 127.0.0.1에서만 실행합니다.")
-    return LabServer((host, port), instance)
+    return LabServer((host, port), instance, data_dir)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Standalone hashcash loopback server")
     parser.add_argument("--port", type=int, default=9186)
     parser.add_argument("--instance", default=None)
+    parser.add_argument("--data-dir", default=None, help="Directory for durable result history (or HASHCASH_DATA_DIR)")
     args = parser.parse_args()
     mp.freeze_support()
-    server = create_server(port=args.port, instance=args.instance)
+    server = create_server(port=args.port, instance=args.instance, data_dir=args.data_dir)
     print(f"Hashcash backend: http://127.0.0.1:{args.port}", flush=True)
     try:
         server.serve_forever()
