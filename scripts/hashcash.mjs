@@ -3,10 +3,13 @@ import { setTimeout as delay } from "node:timers/promises";
 import process from "node:process";
 import console from "node:console";
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 
 const { fetch, AbortSignal } = globalThis;
 
-const python = process.env.HASHCASH_PYTHON || "python";
+const projectPython = resolve(process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python");
+const python = process.env.HASHCASH_PYTHON || (existsSync(projectPython) ? projectPython : "python");
 const children = [];
 let stopping = false;
 let ownsBackend = false;
@@ -49,6 +52,7 @@ try {
   // Refuse to reuse another server's state on the fixed lab port.
   const check = await fetch("http://127.0.0.1:9186/api/hashcash/health", { signal: AbortSignal.timeout(500) }).catch(() => null);
   if (check) throw new Error("9186 포트가 사용 중입니다. 기존 해시캐시 서버를 종료한 후 실행하세요.");
+  console.log(`Hashcash Python: ${python}`);
   launch(python, ["-m", "hashcash_lab.server", "--port", "9186", "--instance", instance]);
   let ready = false;
   for (let attempt = 0; attempt < 100 && !stopping; attempt++) {

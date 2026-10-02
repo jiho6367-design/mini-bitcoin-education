@@ -21,7 +21,17 @@ from .cpu import scan_batch
 
 MAX_NONCE = (1 << 64) - 1
 CPU_BATCH = 50_000
-GPU_BATCH = 262_144
+GPU_BATCH = 8_388_608
+
+
+def gpu_batch_size(difficulty: int) -> int:
+    """Amortize CUDA launch/readback costs while keeping low targets small.
+
+    On the measured RTX 5070 Laptop, even the largest warmed batch takes only
+    a few milliseconds. Cancellation is checked between completed batches.
+    """
+    target = 262_144 if difficulty <= 4 else 4_194_304 if difficulty == 5 else 8_388_608
+    return min(GPU_BATCH, target)
 
 
 @dataclass(frozen=True)
@@ -164,7 +174,7 @@ class SearchJob:
                         return
                     self.update(status="running", backend=f"GPU · {gpu.name}", reason="CUDA 가용성·SHA-256 자체 검증 통과")
                     while base <= MAX_NONCE and not self.cancel.is_set():
-                        count = min(GPU_BATCH, MAX_NONCE - base + 1)
+                        count = min(gpu_batch_size(self.config.difficulty), MAX_NONCE - base + 1)
                         batch = gpu.scan_batch(base, count)
                         checked = batch.get("checked")
                         nonce = batch.get("nonce")

@@ -2,8 +2,9 @@
 
 No CuPy/NumPy import happens until an instance is created. The coordinator
 falls back to CPU on initialization, compilation, self-test, or scan failure.
-CUDA execution and performance are unverified on the development machine;
-its Windows application control prevented loading the optional dependency.
+CUDA execution, boundary tests, and fixed-work performance were verified on
+an RTX 5070 Laptop GPU with CuPy 14.2 and its CUDA 12.9 runtime wheels. See
+docs/hashcash-report.md for the environment and measured scope.
 
 The kernel specializes the fixed message, decimal nonce length, and target.
 Each thread hashes a contiguous range. Decimal division happens once at the

@@ -1,0 +1,333 @@
+{
+  "measured_at_utc": "2026-10-02T17:18:12.392489+00:00",
+  "environment": {
+    "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cupy": "14.2.0",
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "cuda_driver_version": 13010,
+    "cuda_runtime_version": 12090,
+    "multiprocessors": 36,
+    "compute_capability": [
+      12,
+      0
+    ]
+  },
+  "source": {
+    "source_file": "C:\\Users\\jiho\\.codex\\worktrees\\343d\\mini-bitcoin-education\\work\\source\\Nonce\\gpu_search.py",
+    "source_file_sha256": "645330ce35d50e40348ef9be07cf24e385415198f896801f09f343c68174cc60",
+    "source_commit": "1bca090c5b3796c96b7ac12834cc5f00a05a8892",
+    "source_url": "https://github.com/k9102/Nonce.git"
+  },
+  "method": "Same UTF-8 message, SHA-256(message+ASCII decimal nonce), leading hex-zero difficulty, stride1, identical fixed contiguous nonce range. All requested candidates are processed even after finding a proof. Unmodified original CUDA source (message-length placeholder substitution only). Warm compilation/self-tests excluded. Alternating order; wall time includes flag reset, launch, synchronization, original/full or candidate result readback, independent proof checks and Python calls. Candidate production imports the app's gpu_batch_size(difficulty) policy and uses its actual batches; candidate_interactive retains the previous262K batch for overhead comparison. Both also compute the real per-batch last-hash sample. GPU events measure kernel time separately.",
+  "message": "GPU hashcash comparison test",
+  "utf8_bytes": 28,
+  "difficulty": 5,
+  "start_nonce": 1000000000,
+  "count_per_run": 8388608,
+  "repeats": 7,
+  "primary_comparison": "candidate_production vs source_default_grid (faster measured original grid)",
+  "production_batch_size": 4194304,
+  "production_batch_policy": "Imported server.gpu_batch_size(difficulty); production_batch_size records its returned value.",
+  "initialization_seconds_excluded": 0.7870188999950187,
+  "warmup_seconds": 1.0087334000127157,
+  "warmup_rounds": 60,
+  "orders": [
+    [
+      "source",
+      "source_default_grid",
+      "candidate_bulk",
+      "candidate_production",
+      "candidate_interactive"
+    ],
+    [
+      "candidate_interactive",
+      "candidate_production",
+      "candidate_bulk",
+      "source_default_grid",
+      "source"
+    ],
+    [
+      "source",
+      "source_default_grid",
+      "candidate_bulk",
+      "candidate_production",
+      "candidate_interactive"
+    ],
+    [
+      "candidate_interactive",
+      "candidate_production",
+      "candidate_bulk",
+      "source_default_grid",
+      "source"
+    ],
+    [
+      "source",
+      "source_default_grid",
+      "candidate_bulk",
+      "candidate_production",
+      "candidate_interactive"
+    ],
+    [
+      "candidate_interactive",
+      "candidate_production",
+      "candidate_bulk",
+      "source_default_grid",
+      "source"
+    ],
+    [
+      "source",
+      "source_default_grid",
+      "candidate_bulk",
+      "candidate_production",
+      "candidate_interactive"
+    ]
+  ],
+  "launch_geometry": {
+    "source": {
+      "blocks": 128,
+      "threads": 256,
+      "per_thread": 256
+    },
+    "source_default_grid": {
+      "blocks": 1024,
+      "threads": 256,
+      "per_thread": 32
+    },
+    "candidate_bulk": {
+      "blocks": 2048,
+      "threads": 256,
+      "per_thread": 16,
+      "launches": 1
+    },
+    "candidate_production": {
+      "blocks_per_full_batch": 1024,
+      "threads": 256,
+      "per_thread": 16,
+      "batch_size": 4194304,
+      "launches": 2
+    },
+    "candidate_interactive": {
+      "blocks_per_full_batch": 64,
+      "threads": 256,
+      "per_thread": 16,
+      "batch_size": 262144,
+      "launches": 32
+    }
+  },
+  "measurements": {
+    "source": {
+      "wall_seconds": [
+        0.0026842000079341233,
+        0.0031152999872574583,
+        0.0029638999985763803,
+        0.002952399998321198,
+        0.0029137999954400584,
+        0.002866699986043386,
+        0.003104700008407235
+      ],
+      "kernel_seconds": [
+        0.0025670080184936523,
+        0.002801055908203125,
+        0.0027419838905334473,
+        0.0027061119079589842,
+        0.002705728054046631,
+        0.002708672046661377,
+        0.0027116799354553224
+      ],
+      "median_wall_seconds": 0.002952399998321198,
+      "median_kernel_seconds": 0.002708672046661377,
+      "hashes_per_second": 2841284380.4260783,
+      "min_wall_seconds": 0.0026842000079341233,
+      "max_wall_seconds": 0.0031152999872574583,
+      "sample": {
+        "checked": 8388608,
+        "nonce": 1003971997,
+        "hash": "000009623667e3d908649c12d667224ea0ca56720da83b08f9ec92e70a1424aa",
+        "last_nonce": 1008388607,
+        "kernel_seconds": 0.0027116799354553224
+      }
+    },
+    "source_default_grid": {
+      "wall_seconds": [
+        0.002635900003951974,
+        0.0026934999914374202,
+        0.002701399993384257,
+        0.002655500007676892,
+        0.002672499991604127,
+        0.002715199996600859,
+        0.002934200005256571
+      ],
+      "kernel_seconds": [
+        0.0024781761169433594,
+        0.0025284159183502197,
+        0.0024736640453338625,
+        0.0024675838947296144,
+        0.002481760025024414,
+        0.0025156800746917725,
+        0.0025022399425506593
+      ],
+      "median_wall_seconds": 0.0026934999914374202,
+      "median_kernel_seconds": 0.002481760025024414,
+      "hashes_per_second": 3114389465.9985924,
+      "min_wall_seconds": 0.002635900003951974,
+      "max_wall_seconds": 0.002934200005256571,
+      "sample": {
+        "checked": 8388608,
+        "nonce": 1007354771,
+        "hash": "00000b32e13e5e6671f375f1364c24c36befbe9fca30ef45ff7d148e0e82f94a",
+        "last_nonce": 1008388607,
+        "kernel_seconds": 0.0025022399425506593
+      }
+    },
+    "candidate_bulk": {
+      "wall_seconds": [
+        0.0021877999970456585,
+        0.0021198000031290576,
+        0.0022226000000955537,
+        0.0020915000059176236,
+        0.0020774000004166737,
+        0.0021425000013550743,
+        0.002287999988766387
+      ],
+      "kernel_seconds": [
+        0.0019182080030441283,
+        0.0019552639722824096,
+        0.00190665602684021,
+        0.001899392008781433,
+        0.001899392008781433,
+        0.0019493440389633178,
+        0.0019201279878616332
+      ],
+      "median_wall_seconds": 0.0021425000013550743,
+      "median_kernel_seconds": 0.0019182080030441283,
+      "hashes_per_second": 3915336286.905217,
+      "min_wall_seconds": 0.0020774000004166737,
+      "max_wall_seconds": 0.002287999988766387,
+      "sample": {
+        "checked": 8388608,
+        "launches": 1,
+        "proofs": [
+          {
+            "nonce": 1001331530,
+            "hash": "000004170b4e8b6796d6536d1968815ceb2431cb61db773152ffb62502104d52"
+          }
+        ],
+        "last_nonce": 1008388607,
+        "kernel_seconds": 0.0019201279878616332
+      }
+    },
+    "candidate_production": {
+      "wall_seconds": [
+        0.0025544999953126535,
+        0.0025345000030938536,
+        0.002534900006139651,
+        0.0024859000113792717,
+        0.0025483999925199896,
+        0.0025015999999595806,
+        0.0029061000095680356
+      ],
+      "kernel_seconds": [
+        0.002183840036392212,
+        0.0021813119649887087,
+        0.002144255995750427,
+        0.00213427197933197,
+        0.0020053120255470276,
+        0.002165984034538269,
+        0.0021767680644989014
+      ],
+      "median_wall_seconds": 0.002534900006139651,
+      "median_kernel_seconds": 0.002165984034538269,
+      "hashes_per_second": 3309246116.092305,
+      "min_wall_seconds": 0.0024859000113792717,
+      "max_wall_seconds": 0.0029061000095680356,
+      "sample": {
+        "checked": 8388608,
+        "launches": 2,
+        "proofs": [
+          {
+            "nonce": 1001331530,
+            "hash": "000004170b4e8b6796d6536d1968815ceb2431cb61db773152ffb62502104d52"
+          },
+          {
+            "nonce": 1005380604,
+            "hash": "0000033f7f9ed55fb6456c95072eb77effdd995913fde9b49d03badab7f0f10d"
+          }
+        ],
+        "last_nonce": 1008388607,
+        "kernel_seconds": 0.0021767680644989014
+      }
+    },
+    "candidate_interactive": {
+      "wall_seconds": [
+        0.0058640999923227355,
+        0.005447700008517131,
+        0.005148099997313693,
+        0.005102099996292964,
+        0.005354699998861179,
+        0.005303999991156161,
+        0.005931300009251572
+      ],
+      "kernel_seconds": [
+        0.0030152640119194985,
+        0.0028206079751253127,
+        0.002488224007189274,
+        0.002519231989979743,
+        0.0025762239992618563,
+        0.0025450559780001644,
+        0.00262339200079441
+      ],
+      "median_wall_seconds": 0.005354699998861179,
+      "median_kernel_seconds": 0.0025762239992618563,
+      "hashes_per_second": 1566587857.7294831,
+      "min_wall_seconds": 0.005102099996292964,
+      "max_wall_seconds": 0.005931300009251572,
+      "sample": {
+        "checked": 8388608,
+        "launches": 32,
+        "proofs": [
+          {
+            "nonce": 1001331530,
+            "hash": "000004170b4e8b6796d6536d1968815ceb2431cb61db773152ffb62502104d52"
+          },
+          {
+            "nonce": 1003971997,
+            "hash": "000009623667e3d908649c12d667224ea0ca56720da83b08f9ec92e70a1424aa"
+          },
+          {
+            "nonce": 1005380604,
+            "hash": "0000033f7f9ed55fb6456c95072eb77effdd995913fde9b49d03badab7f0f10d"
+          },
+          {
+            "nonce": 1007354771,
+            "hash": "00000b32e13e5e6671f375f1364c24c36befbe9fca30ef45ff7d148e0e82f94a"
+          }
+        ],
+        "last_nonce": 1008388607,
+        "kernel_seconds": 0.00262339200079441
+      }
+    }
+  },
+  "ratios": {
+    "source": {
+      "bulk_speedup": 1.3780163344008791,
+      "production_speedup": 1.164700773667735,
+      "interactive_speedup": 0.5513660894072694
+    },
+    "source_default_grid": {
+      "bulk_speedup": 1.2571761912410049,
+      "production_speedup": 1.0625665647219347,
+      "interactive_speedup": 0.5030160404897129
+    }
+  },
+  "proofs_independently_verified": true,
+  "limitations": [
+    "Single GPU and software environment; no claim for other devices.",
+    "Original default is1,073,741,824 attempts per launch; this fixed8M comparison retunes its per-thread count.",
+    "Both original grid sizes are reported to expose launch-geometry sensitivity.",
+    "Parallel valid nonces may differ; a matching minimum nonce is not required by the original GPU contract.",
+    "The primary production measurement uses the real difficulty5 policy: 2 batches of up to4194304 attempts.",
+    "candidate_interactive is the legacy262K policy, retained to disclose its launch/readback overhead.",
+    "Small interactive batches trade GPU throughput for progress updates and cancellation responsiveness."
+  ]
+}

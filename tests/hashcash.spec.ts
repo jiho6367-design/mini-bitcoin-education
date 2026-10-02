@@ -9,19 +9,27 @@ test("UTF-8 nonce search, independent verification, progress, cancel and restart
   await page.getByLabel("연산 장치").selectOption("auto");
   await page.getByRole("button", { name: "탐색 시작" }).click();
   await expect(page.getByText("조건을 만족하는 nonce 발견", { exact: true })).toBeVisible();
+  if (process.env.HASHCASH_EXPECT_GPU === "1") {
+    await expect(page.getByText(/^GPU · /)).toBeVisible();
+    await expect(page.getByText("CUDA 가용성·SHA-256 자체 검증 통과", { exact: true })).toBeVisible();
+  }
   await expect(page.getByTestId("display-hash")).toHaveText("00091f64964396f15d07238d0d352913789e1dea831702392b3ceb73d6ac99ad");
   await page.getByRole("button", { name: "해시 다시 검증" }).click();
   await expect(page.getByText("브라우저 SHA-256 재계산도 일치합니다.")).toBeVisible();
   await page.screenshot({ path: `work/hashcash-${test.info().project.name}-light.png`, fullPage: true });
   await page.getByLabel("목표 난이도", { exact: false }).fill("64");
-  await page.getByLabel("연산 장치").selectOption("cpu");
+  await page.getByLabel("연산 장치").selectOption(process.env.HASHCASH_EXPECT_GPU === "1" ? "auto" : "cpu");
   await page.getByRole("button", { name: "탐색 시작" }).click();
   await expect(page.getByText("조건을 찾는 중", { exact: true })).toBeVisible();
   await expect(page.getByTestId("display-hash")).not.toContainText("해시 결과가 여기에");
+  if (process.env.HASHCASH_EXPECT_GPU === "1") {
+    await expect(page.getByText(/^GPU · /)).toBeVisible();
+  }
   await page.getByRole("button", { name: "중지", exact: true }).click();
   await expect(page.getByText("탐색 중지됨", { exact: true })).toBeVisible();
   await page.getByLabel("메시지", { exact: false }).fill("Pyeongtaek University!");
   await page.getByLabel("목표 난이도", { exact: false }).fill("3");
+  await page.getByLabel("연산 장치").selectOption("cpu");
   await page.getByRole("button", { name: "탐색 시작" }).click();
   await expect(page.getByText("조건을 만족하는 nonce 발견", { exact: true })).toBeVisible();
   await expect(page.getByTestId("display-hash")).toHaveText("00028e62333a32b5b6bdf41418f42725f8c21d84dc0b7ff60e4480cc11a8677b");

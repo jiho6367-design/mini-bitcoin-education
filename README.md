@@ -4,6 +4,8 @@
 
 비교 원본: [k9102/Nonce](https://github.com/k9102/Nonce), commit `1bca090c5b3796c96b7ac12834cc5f00a05a8892`. 최신 CPU worker와 동일 조건으로 측정한 **16개 작업·800만 회·5회 중앙값은 16.095 → 26.368 MH/s, 약 1.64배**입니다. 계산 처리량 비교이며 GUI 시작 시간이나 GPU 속도 향상을 뜻하지 않습니다. [분석·측정 보고서](docs/hashcash-report.md), [원시 측정 결과](docs/hashcash-benchmark.json)를 참고하세요.
 
+RTX 5070 Laptop GPU의 실제 CUDA 실행도 검증했습니다. 난이도 5·고정 8,388,608회·7회 측정에서 **실제 서버 배치 크기의 scanner는 원본 3.114 → 새 코드 3.309 GH/s, 약 6.3% 개선**되었습니다. 초기 준비 시간을 제외한 계산 처리량이며 [GPU 측정 결과](docs/hashcash-gpu-benchmark.json)에 대량·작은 배치 차이도 기록했습니다.
+
 ## 실행 — Windows PowerShell
 
 Node.js **24.x**, Python **3.12 이상**이 필요합니다. CPU 연산은 Python 표준 라이브러리만 사용합니다. 다른 작업 중인 원래 프로젝트 폴더와 별도의 폴더에서 실행하세요.
@@ -17,7 +19,7 @@ npm.cmd run hashcash
 
 [http://127.0.0.1:5186](http://127.0.0.1:5186)을 Edge 또는 Chrome으로 엽니다. `Ctrl+C`로 웹·연산 서버·CPU 자식 프로세스를 종료합니다. 프런트엔드 `5186`, Python 백엔드 `9186`을 사용합니다. 이미 실행 중인 서버는 새 실행에서 재사용하지 않습니다.
 
-Python 경로를 따로 선택해야 할 때:
+실행기는 `HASHCASH_PYTHON` 환경 변수 → 프로젝트 `.venv` → PATH의 `python` 순서로 선택하며 선택한 경로를 출력합니다. Python 경로를 따로 선택해야 할 때:
 
 ```powershell
 $env:HASHCASH_PYTHON = 'C:\실제\Python\python.exe'
@@ -40,16 +42,15 @@ nonce는 정확한 10진수 문자열로 전달하며 0~**18446744073709551615 (
 
 ## 선택 사항: NVIDIA GPU 환경
 
-CPU에는 아래 설치가 필요 없습니다. 별도 가상환경에서 GPU 의존성을 설치할 수 있습니다.
+CPU에는 아래 설치가 필요 없습니다. 프로젝트 가상환경에 GPU 의존성을 설치하면 실행기가 자동으로 해당 Python을 사용합니다.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r hashcash_lab\requirements-gpu.txt
-$env:HASHCASH_PYTHON = (Resolve-Path .\.venv\Scripts\python.exe).Path
 npm.cmd run hashcash
 ```
 
-CuPy CUDA 12.x `[ctk]` 옵션이 CUDA 런타임·NVRTC 구성 요소를 설치하며 호환 NVIDIA 드라이버가 필요합니다. [CuPy 공식 설치 안내](https://docs.cupy.dev/en/stable/install.html)를 참고하세요. **개발 PC에서는 Windows Application Control이 의존성 로딩을 차단하여 GPU 실행·성능은 검증하지 못했습니다.** 정책은 우회하지 않았습니다. GPU 초기화·컴파일·검증·계산 실패 시 미확인 범위부터 CPU로 이어갑니다.
+CuPy CUDA 12.x `[ctk]` 옵션이 CUDA 런타임·NVRTC 구성 요소를 설치하며 호환 NVIDIA 드라이버가 필요합니다. [CuPy 공식 설치 안내](https://docs.cupy.dev/en/stable/install.html)를 참고하세요. **개발 PC의 RTX 5070 Laptop GPU에서 실제 CUDA 테스트 5개와 화면의 GPU 자동 선택·해시 재검증이 통과했습니다.** 이전 실패는 과거 의존성 로딩 차단, CUDA 구성요소 누락, 앱이 CuPy 없는 Python을 선택하던 실행 설정에서 발생했습니다. 보안 정책을 변경하지 않았으며 현재 환경에서 정상 실행했습니다. GPU 초기화·컴파일·검증·계산 실패 시 미확인 범위부터 CPU로 이어갑니다.
 
 ## 검증과 성능 재현
 
@@ -61,7 +62,16 @@ npm.cmd run test:hashcash:e2e -- --project=edge
 
 Chrome 설치 기기는 `--project=chrome`을 사용할 수 있습니다. 기존 UTXO E2E는 원래 화면을 대상으로 하므로 이 브랜치는 전용 해시캐시 E2E를 사용합니다.
 
-허용된 CUDA 환경에서 실제 GPU 검사를 실행할 때는 `$env:HASHCASH_TEST_GPU = '1'`을 설정하고 선택한 Python으로 테스트하세요. 기본 검사에서는 실제 GPU 테스트 5개를 건너뛰며 GPU 실행 성공으로 계산하지 않습니다.
+실제 CUDA 검사와 화면의 GPU 선택을 함께 확인할 때:
+
+```powershell
+$env:HASHCASH_TEST_GPU = '1'
+.\.venv\Scripts\python.exe -m unittest discover -s hashcash_lab/tests -v
+$env:HASHCASH_EXPECT_GPU = '1'
+npm.cmd run test:hashcash:e2e -- --project=edge
+```
+
+`HASHCASH_TEST_GPU`를 설정하지 않은 기본 검사에서는 실제 GPU 테스트 5개를 건너뜁니다. GPU 초기화·자체 검증·메시지별 컴파일 시간은 화면의 경과 시간에 포함됩니다.
 
 동일 계산량 비교 재현:
 
@@ -72,6 +82,14 @@ python -m hashcash_lab.benchmark --source work/source/Nonce --workers 16 --count
 ```
 
 두 방법은 같은 메시지·난이도·nonce 범위·프로세스 수를 사용합니다. 해답을 발견해도 고정 탐색량을 모두 계산하고 실행 순서를 번갈아 측정합니다. 프로세스 초기화·GUI·콘솔·디스크 출력은 제외합니다.
+
+같은 장치에서 원본 CUDA와 새 CUDA의 고정 계산량을 비교할 때:
+
+```powershell
+.\.venv\Scripts\python.exe -m hashcash_lab.gpu_benchmark --source work/source/Nonce --output work/gpu-benchmark.json
+```
+
+컴파일·자체 검증을 마친 뒤 같은 범위를 끝까지 계산합니다. 원본 커널 두 launch 구성, 새 커널의 대량 배치, 실제 서버 배치와 이전 작은 배치를 구분해 기록합니다. [GPU 원시 측정 결과](docs/hashcash-gpu-benchmark.json)를 참고하세요.
 
 ## 구성
 
