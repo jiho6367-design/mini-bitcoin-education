@@ -5,6 +5,10 @@
 @media(max-width:760px) { .hc-app { padding:0 18px; } .hc-header { height:80px; gap:10px; } .hc-header-right { gap:10px; } .hc-connection { display:none; } .hc-brand { font-size:12px; gap:7px; } .hc-brand .hc-muted { font-size:10px; } .hc-intro { display:block; padding:30px 0 26px; } .hc-formula { margin-top:25px; max-width:none; gap:10px; padding:18px 12px; font-size:11px; } .hc-workspace { grid-template-columns:1fr; } .hc-status { margin-left:0; } .hc-hash-title b { font-size:22px; } .hc-metrics strong { font-size:19px; } .hc-metrics { gap:9px; } .hc-samples li { grid-template-columns:70px minmax(0,1fr); } .hc-footer { flex-direction:column; gap:10px; } }
 @media(prefers-reduced-motion:reduce) { .hc-pulse { animation:none; } }
 .hc-save-state { margin-top:16px; padding:12px 15px; border:1px solid var(--hc-line); border-radius:9px; background:var(--hc-soft); }
+.hc-device-work { display:flex; flex-wrap:wrap; gap:8px 20px; padding:0 0 19px; color:var(--hc-muted); font-size:11px; }
+.hc-device-work p { margin:0; }
+.hc-device-work strong { color:var(--hc-ink); font-variant-numeric:tabular-nums; }
+.hc-device-work small { width:100%; line-height:1.7; font-size:9px; }
 .hc-save-state p { margin:0 0 5px; }
 .hc-save-state p:last-child { margin-bottom:0; }
 .hc-save-state.failed { background:var(--hc-input); }

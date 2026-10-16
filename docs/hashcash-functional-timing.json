@@ -1,0 +1,104 @@
+{
+  "measured_at_utc": "2026-10-16T14:07:19.467914+00:00",
+  "method": "Sequential fresh Python processes, one sample per mode, same Korean input/target/start nonce, one CPU worker. Existing CUDA disk caches retained. PhaseJob instruments the production accept() transition; no search algorithm changes. Functional phase timing, not a speedup comparison.",
+  "phase_definitions": {
+    "startup_elapsed": "Backend initialized and Pool object created; spawned workers may still be starting.",
+    "first_verified_proof_seconds": "Production accept() first returned a proof verified by SHA-256.",
+    "calculation_and_cleanup_elapsed": "Production frozen elapsed after device/worker cleanup, before storage.",
+    "total_wall_including_storage_seconds": "SearchJob.run returned after SQLite commit."
+  },
+  "samples": [
+    {
+      "mode": "cpu",
+      "backend": "CPU · 1개 작업",
+      "message": "한글🙂",
+      "difficulty": 3,
+      "cpu_workers": 1,
+      "startup_elapsed": 0.018307899998035282,
+      "first_verified_proof_seconds": 0.16082039999309927,
+      "calculation_and_cleanup_elapsed": 0.1653822000080254,
+      "total_wall_including_storage_seconds": 0.2247432000003755,
+      "checked": "981",
+      "cpu_checked": "981",
+      "gpu_checked": "0",
+      "proof": {
+        "nonce": "980",
+        "hash": "00091f64964396f15d07238d0d352913789e1dea831702392b3ceb73d6ac99ad",
+        "verified": true
+      },
+      "saved_records": 1,
+      "independent_sha256_verified": true,
+      "storage": "TemporaryDirectory; participant database unchanged"
+    },
+    {
+      "mode": "gpu",
+      "backend": "GPU · NVIDIA GeForce RTX 5070 Laptop GPU",
+      "message": "한글🙂",
+      "difficulty": 3,
+      "cpu_workers": 1,
+      "startup_elapsed": 1.0752383999933954,
+      "first_verified_proof_seconds": 1.0766663999820594,
+      "calculation_and_cleanup_elapsed": 1.0766700999811292,
+      "total_wall_including_storage_seconds": 1.1369150999817066,
+      "checked": "1000",
+      "cpu_checked": "0",
+      "gpu_checked": "1000",
+      "proof": {
+        "nonce": "980",
+        "hash": "00091f64964396f15d07238d0d352913789e1dea831702392b3ceb73d6ac99ad",
+        "verified": true
+      },
+      "saved_records": 1,
+      "independent_sha256_verified": true,
+      "storage": "TemporaryDirectory; participant database unchanged"
+    },
+    {
+      "mode": "hybrid",
+      "backend": "CPU + GPU · 1개 CPU 작업 + NVIDIA GeForce RTX 5070 Laptop GPU",
+      "message": "한글🙂",
+      "difficulty": 3,
+      "cpu_workers": 1,
+      "startup_elapsed": 0.3439208000199869,
+      "first_verified_proof_seconds": 0.34568990001571365,
+      "calculation_and_cleanup_elapsed": 0.46365370001876727,
+      "total_wall_including_storage_seconds": 0.5242466000199784,
+      "checked": "90971",
+      "cpu_checked": "971",
+      "gpu_checked": "90000",
+      "proof": {
+        "nonce": "93290",
+        "hash": "00084cbfde1594e692fc9821a24798bad910ab724d82c136565c08f5d7166693",
+        "verified": true
+      },
+      "saved_records": 1,
+      "independent_sha256_verified": true,
+      "storage": "TemporaryDirectory; participant database unchanged"
+    }
+  ],
+  "limitations": [
+    "One sample per mode is not a performance distribution or comparative speed guarantee.",
+    "Disk cache state is preexisting, not a cold compiler cache.",
+    "HTTP and browser polling are excluded."
+  ],
+  "actual_browser_application_example": {
+    "mode": "hybrid",
+    "message": "You are the best of best!!!!",
+    "difficulty": 8,
+    "checked": "3248606944",
+    "cpuChecked": "750000",
+    "gpuChecked": "3247856944",
+    "hybridKernelOverlapLowerBound": 0.6054361887201661,
+    "hybridTimingLimited": false,
+    "startupElapsed": 2.3628453999990597,
+    "elapsed": 7.430353900010232,
+    "result": {
+      "nonce": "3243428010",
+      "hash": "000000002414c5ac2781b41a79da1a3cda116fd3133f9767d362a169f45c1efa",
+      "verified": true
+    },
+    "browserVerified": true,
+    "nodeVerified": true,
+    "persistence_verified": true,
+    "notes": "Actual React/HTTP search with existing CUDA caches; lazy message/digit compilation included. Elapsed includes calculation cleanup, excludes SQLite commit. No baseline speedup claim."
+  }
+}

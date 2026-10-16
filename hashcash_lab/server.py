@@ -67,7 +67,7 @@ class SearchConfig:
             raise ValueError("시작 nonce는 18446744073709551615 이하여야 합니다.")
         if type(workers) is not int or not 1 <= workers <= min(64, os.cpu_count() or 1):
             raise ValueError("CPU 작업 수가 이 기기의 범위를 벗어났습니다.")
-        if mode not in ("auto", "cpu", "gpu"):
+        if mode not in ("auto", "cpu", "gpu", "hybrid"):
             raise ValueError("연산 모드가 올바르지 않습니다.")
         return cls(message, difficulty, nonce, workers, mode, participant_name)
 
@@ -95,12 +95,21 @@ class SearchJob:
             "message": config.message,
             "participantName": config.participant_name,
             "difficulty": config.difficulty,
+            "mode": config.mode,
             "startNonce": str(config.start_nonce),
             "checked": "0",
+            "cpuChecked": "0",
+            "gpuChecked": "0",
+            "hybridOverlapSeconds": 0.0,
+            "hybridKernelOverlapLowerBound": 0.0,
+            "hybridTimingLimited": False,
+            "hybridExecuted": False,
+            "startupElapsed": None,
             "lastNonce": None,
             "lastHash": None,
             "result": None,
             "error": None,
+            "cleanupWarning": None,
             "recordId": None,
             "saveError": None,
         }
@@ -151,12 +160,14 @@ class SearchJob:
                 self.update(recordId=record["id"], saveError=None)
             return self.snapshot()
 
-    def record(self, batch: dict):
+    def record(self, batch: dict, device: str = "cpu"):
         """Count only completed work and publish actual sampled hashes."""
         last = batch.get("last_nonce")
         with self.lock:
             self.checked += batch["checked"]
             self.state["checked"] = str(self.checked)
+            field = "gpuChecked" if device == "gpu" else "cpuChecked"
+            self.state[field] = str(int(self.state[field]) + batch["checked"])
             if last is not None:
                 self.state["lastNonce"] = str(last)
                 self.state["lastHash"] = batch.get("last_hash")
@@ -175,6 +186,7 @@ class SearchJob:
         self.update(status="running", backend=f"CPU · {self.config.workers}개 작업")
         pool = mp.get_context("spawn").Pool(self.config.workers)
         try:
+            self.update(startupElapsed=time.perf_counter() - self.started)
             while base <= MAX_NONCE and not self.cancel.is_set():
                 pending = []
                 for _ in range(self.config.workers):
@@ -197,6 +209,39 @@ class SearchJob:
             pool.terminate()
             pool.join()
 
+    def run_hybrid(self, gpu, base: int):
+        from .hybrid import HybridCoordinator
+
+        name = f"CPU + GPU · {self.config.workers}개 CPU 작업 + {gpu.name}"
+        self.update(status="running", backend=name,
+                    reason="CPU와 CUDA에 겹치지 않는 구간을 배정합니다. 동시 연산이 항상 더 빠르지는 않습니다.")
+
+        def completed(device, batch, _timing):
+            self.record(batch, device)
+            # Already-submitted CPU tasks are drained after a GPU/CPU proof.
+            # Keep the first independently verified result while counting all
+            # completed batches, so cleanup cannot change a saved proof.
+            if self.snapshot()["result"] is None:
+                self.accept(batch)
+
+        def gpu_failed(reason):
+            self.update(backend=f"CPU · {self.config.workers}개 작업 (동시 모드 GPU 전환)",
+                        reason=f"GPU 사용 불가 → 미완료 구간 CPU 재시도: {reason}")
+
+        runner = HybridCoordinator(self.config.message, self.config.difficulty, self.config.workers,
+                                   cpu_batch=min(CPU_BATCH, 10_000),
+                                   gpu_batch=gpu_batch_size(self.config.difficulty))
+        result = runner.run(gpu, base, cancel=self.cancel, on_batch=completed,
+                            on_gpu_failure=gpu_failed,
+                            on_ready=lambda: self.update(startupElapsed=time.perf_counter() - self.started))
+        self.update(hybridOverlapSeconds=result.overlap,
+                    hybridKernelOverlapLowerBound=result.kernel_overlap_lower_bound,
+                    hybridTimingLimited=result.timings_truncated,
+                    cleanupWarning=result.cleanup_warning,
+                    hybridExecuted=bool(result.cpu_checked and result.gpu_checked))
+        if not result.found:
+            self.update(status="stopped" if result.stopped else "exhausted")
+
     def run(self):
         base = self.config.start_nonce
         try:
@@ -207,7 +252,11 @@ class SearchJob:
                     if self.cancel.is_set():
                         self.update(status="stopped")
                         return
+                    if self.config.mode == "hybrid":
+                        self.run_hybrid(gpu, base)
+                        return
                     self.update(status="running", backend=f"GPU · {gpu.name}", reason="CUDA 가용성·SHA-256 자체 검증 통과")
+                    self.update(startupElapsed=time.perf_counter() - self.started)
                     while base <= MAX_NONCE and not self.cancel.is_set():
                         count = min(gpu_batch_size(self.config.difficulty), MAX_NONCE - base + 1)
                         batch = gpu.scan_batch(base, count)
@@ -219,13 +268,18 @@ class SearchJob:
                             raise ValueError("GPU 결과 nonce가 제출한 탐색 범위를 벗어났습니다.")
                         # Verify before advancing. A failing launch is retried on CPU.
                         found = self.accept(batch)
-                        self.record(batch)
+                        self.record(batch, "gpu")
                         base += batch["checked"]
                         if found:
                             return
                     self.update(status="stopped" if self.cancel.is_set() else "exhausted")
                     return
                 except Exception as exc:
+                    if self.config.mode == "hybrid" and gpu is not None:
+                        # The coordinator already retries individual CUDA
+                        # failures. CPU/protocol failures must stop the job;
+                        # restarting from the original base would count twice.
+                        raise
                     self.update(reason=f"GPU 사용 불가 → CPU 자동 전환: {type(exc).__name__}: {str(exc)[:700]}")
                 finally:
                     if gpu is not None and hasattr(gpu, "close"):
@@ -240,7 +294,11 @@ class SearchJob:
             else:
                 self.run_cpu(base)
         except Exception as exc:
-            self.update(status="error", error=f"{type(exc).__name__}: {exc}")
+            state = self.snapshot()
+            if state["result"] and state["result"].get("verified"):
+                self.update(status="found", cleanupWarning=f"작업 종료 중 오류: {type(exc).__name__}: {exc}")
+            else:
+                self.update(status="error", error=f"{type(exc).__name__}: {exc}")
         finally:
             self.update(elapsed=time.perf_counter() - self.started)
             if self.snapshot()["status"] == "found" and self.history is not None:
@@ -250,12 +308,16 @@ class SearchJob:
 class LabServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, address, instance: str | None = None, data_dir: str | None = None):
+    def __init__(self, address, instance: str | None = None, data_dir: str | None = None,
+                 frontend_port: int = 5186):
+        if type(frontend_port) is not int or not 1 <= frontend_port <= 65535:
+            raise ValueError("화면 포트는 1~65535 사이의 정수여야 합니다.")
         super().__init__(address, Handler)
         self.history = HistoryStore(data_dir)
         self.job: SearchJob | None = None
         self.job_lock = threading.Lock()
         self.instance = instance
+        self.frontend_port = frontend_port
 
     def server_close(self):
         if self.job:
@@ -325,7 +387,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         # The frontend is same-origin through Vite. Reject cross-origin writes.
-        allowed = {"http://127.0.0.1:5186", "http://localhost:5186", f"http://127.0.0.1:{self.server.server_port}"}
+        allowed = {f"http://{host}:{port}"
+                   for host in ("127.0.0.1", "localhost")
+                   for port in (self.server.frontend_port, self.server.server_port)}
         origin = self.headers.get("Origin")
         if origin and origin not in allowed:
             self.reply(403, {"error": "허용되지 않은 요청 출처입니다."})
@@ -380,20 +444,24 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(400, {"error": str(exc)})
 
 
-def create_server(host: str = "127.0.0.1", port: int = 9186, instance: str | None = None, data_dir: str | None = None) -> LabServer:
+def create_server(host: str = "127.0.0.1", port: int = 9186, instance: str | None = None,
+                  data_dir: str | None = None, frontend_port: int = 5186) -> LabServer:
     if host != "127.0.0.1":
         raise ValueError("서버는 이 컴퓨터의 127.0.0.1에서만 실행합니다.")
-    return LabServer((host, port), instance, data_dir)
+    return LabServer((host, port), instance, data_dir, frontend_port)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Standalone hashcash loopback server")
     parser.add_argument("--port", type=int, default=9186)
+    parser.add_argument("--frontend-port", type=int, default=5186,
+                        help="Allowed loopback frontend port for write requests")
     parser.add_argument("--instance", default=None)
     parser.add_argument("--data-dir", default=None, help="Directory for durable result history (or HASHCASH_DATA_DIR)")
     args = parser.parse_args()
     mp.freeze_support()
-    server = create_server(port=args.port, instance=args.instance, data_dir=args.data_dir)
+    server = create_server(port=args.port, instance=args.instance, data_dir=args.data_dir,
+                           frontend_port=args.frontend_port)
     print(f"Hashcash backend: http://127.0.0.1:{args.port}", flush=True)
     try:
         server.serve_forever()

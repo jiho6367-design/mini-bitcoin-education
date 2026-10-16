@@ -42,6 +42,53 @@ test("UTF-8 nonce search, independent verification, progress, cancel and restart
   await page.screenshot({ path: `work/hashcash-${test.info().project.name}-mobile.png`, fullPage: true });
 });
 
+test("real CPU and CUDA overlap, cancel, and save a verified hybrid proof", async ({ page }) => {
+  test.skip(process.env.HASHCASH_EXPECT_GPU !== "1", "Requires actual CUDA hardware");
+  const participant = `동시 검사 ${Date.now()}`;
+  await page.goto("/");
+  await expect(page.getByText("● 로컬 연산 서버 연결됨")).toBeVisible();
+  await page.getByLabel("기록 이름", { exact: true }).fill(participant);
+  await page.getByLabel("연산 장치").selectOption("hybrid");
+  await page.getByLabel("CPU 작업 수").fill("2");
+  await page.getByLabel("목표 난이도", { exact: false }).fill("64");
+  await page.getByRole("button", { name: "탐색 시작" }).click();
+  await expect.poll(async () => {
+    const { job } = await (await page.request.get("/api/hashcash/status")).json();
+    return job?.status === "running" && BigInt(job.cpuChecked ?? "0") > 0n &&
+      BigInt(job.gpuChecked ?? "0") > 0n && BigInt(job.checked) > 500_000_000n;
+  }, { timeout: 30000 }).toBeTruthy();
+  await expect(page.getByTestId("device-work")).toBeVisible();
+  await page.getByRole("button", { name: "중지", exact: true }).click();
+  await expect(page.getByText("탐색 중지됨", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "탐색 시작" })).toBeEnabled();
+  const { job: stopped } = await (await page.request.get("/api/hashcash/status")).json();
+  expect(stopped.mode).toBe("hybrid");
+  expect(stopped.backend).toContain("CPU + GPU");
+  expect(BigInt(stopped.cpuChecked) + BigInt(stopped.gpuChecked)).toBe(BigInt(stopped.checked));
+  expect(stopped.hybridKernelOverlapLowerBound).toBeGreaterThan(0);
+  expect(stopped.result).toBeNull();
+  await page.getByLabel("메시지", { exact: false }).fill("한글🙂");
+  await page.getByLabel("목표 난이도", { exact: false }).fill("3");
+  await page.getByRole("button", { name: "탐색 시작" }).click();
+  await expect(page.getByText("조건을 만족하는 nonce 발견", { exact: true })).toBeVisible();
+  await expect.poll(async () => {
+    const { job } = await (await page.request.get("/api/hashcash/status")).json();
+    return Boolean(job?.finished && job?.recordId);
+  }).toBeTruthy();
+  const { job: found } = await (await page.request.get("/api/hashcash/status")).json();
+  expect(found.backend).toContain("CPU + GPU");
+  const reference = createHash("sha256").update(found.message + found.result.nonce, "utf8").digest("hex");
+  expect(found.result.hash).toBe(reference);
+  expect(reference.startsWith("000")).toBeTruthy();
+  await page.getByRole("button", { name: "해시 다시 검증" }).click();
+  await expect(page.getByText("브라우저 SHA-256 재계산도 일치합니다.")).toBeVisible();
+  const history = page.getByTestId("history-panel");
+  await history.getByLabel("기록 이름 필터").selectOption(participant);
+  await expect(history.getByTestId("history-record-count")).toHaveText("총 1건");
+  await expect(history.getByTestId("history-nonce")).toHaveText(found.result.nonce);
+  await page.screenshot({ path: `work/hashcash-${test.info().project.name}-hybrid.png`, fullPage: true });
+});
+
 test("found proofs persist across reload with participant and difficulty filters", async ({ page }) => {
   const suffix = Date.now().toString();
   const alice = `기록 검사 가 ${suffix}`;

@@ -47,7 +47,7 @@ class SearchJobTests(unittest.TestCase):
             ImportError("CuPy unavailable"), RuntimeError("No CUDA device"),
             RuntimeError("NVRTC compile failed"), ValueError("Self-test hash mismatch"),
         )
-        for mode in ("auto", "gpu"):
+        for mode in ("auto", "gpu", "hybrid"):
             for failure in failures:
                 with self.subTest(mode=mode, failure=str(failure)):
                     def unavailable(*_, failure=failure):
@@ -223,6 +223,12 @@ class SearchConfigTests(unittest.TestCase):
             config = lab.SearchConfig.from_payload({"message": "test", "difficulty": 3})
         self.assertEqual(config.workers, 64)
 
+    def test_hybrid_mode_preserves_explicit_cpu_worker_count(self):
+        config = lab.SearchConfig.from_payload({"message": "test", "difficulty": 3,
+                                              "mode": "hybrid", "workers": 1})
+        self.assertEqual(config.mode, "hybrid")
+        self.assertEqual(config.workers, 1)
+
     def test_exact_message_and_large_decimal_nonce_survive_json(self):
         message = " \ud55c\uae00\U0001f642\n"
         for nonce in (2 ** 53 + 1, lab.MAX_NONCE):
@@ -333,6 +339,33 @@ class HashcashHTTPTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(verified, {"hash": expected, "valid": True})
 
+    def test_hybrid_http_with_unavailable_gpu_completes_and_saves_on_cpu(self):
+        real_job = lab.SearchJob
+
+        def unavailable(*_):
+            raise ImportError("test intentionally has no CUDA installation")
+
+        def factory(config, history):
+            return real_job(config, gpu_factory=unavailable, history=history)
+
+        with patch.object(lab, "SearchJob", side_effect=factory):
+            status, _ = self.request("/start", {"message": "한글🙂", "difficulty": 3,
+                                                "mode": "hybrid", "workers": 1,
+                                                "participantName": "HTTP fallback"})
+            self.assertEqual(status, 200)
+            found = self.wait_for(lambda job: job["finished"])
+        self.assertEqual(found["status"], "found", found)
+        self.assertEqual(found["result"]["nonce"], "980")
+        self.assertEqual(found["cpuChecked"], "981")
+        self.assertEqual(found["gpuChecked"], "0")
+        self.assertFalse(found["hybridExecuted"])
+        self.assertIn("CPU", found["backend"])
+        self.assertIn("no CUDA installation", found["reason"])
+        status, records = self.request("/history?participantName=HTTP%20fallback")
+        self.assertEqual(status, 200)
+        self.assertEqual(records["total"], 1)
+        self.assertEqual(records["records"][0]["jobId"], found["id"])
+
     def test_high_nonce_verification_preserves_every_decimal_digit(self):
         message = " exact\n\ud55c\uae00\U0001f642 "
         for nonce in (2 ** 53 + 1, lab.MAX_NONCE):
@@ -399,6 +432,46 @@ class HashcashHTTPTests(unittest.TestCase):
         status, _ = self.request("/start", {"message": "test", "difficulty": 1}, headers={"Origin": "https://other.example"})
         self.assertEqual(status, 403)
         self.assertIsNone(self.server.job)
+
+
+class ConfigurableOriginTests(unittest.TestCase):
+    def test_custom_frontend_port_accepts_only_configured_loopback_origin(self):
+        with tempfile.TemporaryDirectory() as directory:
+            server = lab.create_server(port=0, frontend_port=5187, data_dir=directory)
+            worker = threading.Thread(target=server.serve_forever, daemon=True)
+            worker.start()
+            try:
+                url = f"http://127.0.0.1:{server.server_port}/api/hashcash/stop"
+                origins = (
+                    ("http://127.0.0.1:5187", 200),
+                    ("http://localhost:5187", 200),
+                    (f"http://127.0.0.1:{server.server_port}", 200),
+                    (f"http://localhost:{server.server_port}", 200),
+                    ("http://127.0.0.1:5186", 403),
+                    ("http://localhost:5186", 403),
+                    ("https://evil.example:5187", 403),
+                    ("http://localhost.evil.example:5187", 403),
+                )
+                for origin, expected in origins:
+                    with self.subTest(origin=origin):
+                        request = Request(url, data=b"{}", headers={
+                            "Content-Type": "application/json", "Origin": origin,
+                        })
+                        try:
+                            response = urlopen(request, timeout=5)
+                        except HTTPError as error:
+                            response = error
+                        with response:
+                            self.assertEqual(response.status, expected)
+            finally:
+                server.shutdown()
+                server.server_close()
+                worker.join(timeout=5)
+
+    def test_frontend_port_validation_rejects_invalid_values_before_binding(self):
+        for port in (0, -1, 65536, True, 5187.0, "5187", None):
+            with self.subTest(port=port), self.assertRaises(ValueError):
+                lab.create_server(port=0, frontend_port=port)
 
 
 if __name__ == "__main__":

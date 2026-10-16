@@ -229,15 +229,25 @@ class CudaBackend:
         self._verified = False
         try:
             import cupy as cp
+            import numpy as np
             if cp.cuda.runtime.getDeviceCount() <= device_id:
                 raise GpuUnavailable("사용할 CUDA 장치를 찾지 못했습니다.")
             self.cp = cp
             self._device = cp.cuda.Device(device_id)
             with self._device:
                 self._stream = cp.cuda.Stream(non_blocking=True)
-                self._found = cp.zeros(1, dtype=cp.uint32)
-                self._nonce = cp.zeros(1, dtype=cp.uint64)
-                self._digest = cp.zeros(8, dtype=cp.uint32)
+                # Keep the existing CUDA argument types, but share one aligned
+                # allocation so each completed batch needs one host readback.
+                # Word 1 is padding; the uint64 nonce begins at byte offset 8.
+                self._result = cp.zeros(12, dtype=cp.uint32)
+                self._found = self._result[:1]
+                self._nonce = self._result[2:4].view(cp.uint64)
+                self._digest = self._result[4:12]
+                self._pinned_result = cp.cuda.alloc_pinned_memory(self._result.nbytes)
+                self._host_result = np.frombuffer(self._pinned_result, dtype=np.uint32, count=12)
+                # A backend already owns mutable result buffers and processes
+                # one launch at a time. Its event pair can be reused as well.
+                self._begin_event, self._end_event = cp.cuda.Event(), cp.cuda.Event()
                 props = cp.cuda.runtime.getDeviceProperties(device_id)
                 label = props.get("name", "CUDA GPU")
                 self.name = label.decode("utf-8", errors="replace") if isinstance(label, bytes) else str(label)
@@ -357,17 +367,24 @@ class CudaBackend:
                 # Compile before the timer; report initialization separately.
                 kernel.compile()
                 blocks = (count + self.threads * self.per_thread - 1) // (self.threads * self.per_thread)
-                begin, end = cp.cuda.Event(), cp.cuda.Event()
+                begin, end = self._begin_event, self._end_event
                 started = time.perf_counter()
                 self._found.fill(0)
                 begin.record(self._stream)
                 kernel((blocks,), (self.threads,),
                        (cp.uint64(start), cp.uint64(count), self._found, self._nonce, self._digest))
                 end.record(self._stream)
-                end.synchronize()
-                found = bool(int(cp.asnumpy(self._found)[0]))
-                nonce = int(cp.asnumpy(self._nonce)[0]) if found else None
-                digest = "".join(f"{int(word):08x}" for word in cp.asnumpy(self._digest)) if found else None
+                # The blocking copy on the same stream waits for the recorded
+                # end event as well. A preceding event synchronization would
+                # add a second host/driver round trip to every small launch.
+                self._result.get(out=self._host_result, stream=self._stream, blocking=True)
+                host = self._host_result
+                flag = int(host[0])
+                if flag not in (0, 1):
+                    raise GpuVerificationError("CUDA 발견 플래그가 올바르지 않습니다.")
+                found = bool(flag)
+                nonce = int(host[2]) | (int(host[3]) << 32) if found else None
+                digest = "".join(f"{int(word):08x}" for word in host[4:12]) if found else None
                 seconds = time.perf_counter() - started
                 kernel_seconds = cp.cuda.get_elapsed_time(begin, end) / 1000
             if found:

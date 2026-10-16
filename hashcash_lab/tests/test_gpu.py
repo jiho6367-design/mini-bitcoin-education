@@ -156,6 +156,37 @@ class CudaHardwareTests(unittest.TestCase):
         self.assertTrue(expected.startswith("0"))
         self.assertEqual(result["last_nonce"], 1511)
 
+    def test_shared_result_buffer_clears_a_previous_proof(self):
+        payload = self.message.encode("utf-8")
+        hashes = {nonce: hashlib.sha256(payload + str(nonce).encode("ascii")).hexdigest()
+                  for nonce in range(1000, 1512)}
+        positive = next(nonce for nonce, digest in hashes.items() if digest.startswith("0"))
+        negative = next(nonce for nonce, digest in hashes.items() if not digest.startswith("0"))
+        found = self.backend.scan_batch(positive, 1)
+        self.assertEqual(found["nonce"], positive)
+        self.assertEqual(found["hash"], hashes[positive])
+        missing = self.backend.scan_batch(negative, 1)
+        self.assertIsNone(missing["nonce"])
+        self.assertIsNone(missing["hash"])
+        self.assertEqual(missing["last_hash"], hashes[negative])
+        # Reusing the same pinned memory and event pair must still allow the
+        # next successful launch to return fresh output.
+        again = self.backend.scan_batch(positive, 1)
+        self.assertEqual(again["nonce"], positive)
+        self.assertEqual(again["hash"], hashes[positive])
+
+    def test_shared_result_buffer_preserves_both_uint64_nonce_words(self):
+        first, count = UINT64_MAX - 1023, 1024
+        result = self.backend.scan_batch(first, count)
+        self.assertEqual(result["checked"], count)
+        self.assertIsNotNone(result["nonce"])
+        self.assertGreaterEqual(result["nonce"], first)
+        self.assertLessEqual(result["nonce"], UINT64_MAX)
+        reference = hashlib.sha256(self.message.encode("utf-8")
+                                   + str(result["nonce"]).encode("ascii")).hexdigest()
+        self.assertEqual(result["hash"], reference)
+        self.assertTrue(reference.startswith("0"))
+
     def test_negative_scan_and_uint64_end_do_not_wrap(self):
         result = self.negative.scan_batch(UINT64_MAX, 128)
         self.assertEqual(result["checked"], 1)
