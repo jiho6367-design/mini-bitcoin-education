@@ -24,16 +24,19 @@ from .history import HistoryStore, PROTOCOL, utc_now, validate_participant_name
 
 MAX_NONCE = (1 << 64) - 1
 CPU_BATCH = 50_000
-GPU_BATCH = 8_388_608
+GPU_BATCH = 67_108_864
 
 
 def gpu_batch_size(difficulty: int) -> int:
     """Amortize CUDA launch/readback costs while keeping low targets small.
 
-    On the measured RTX 5070 Laptop, even the largest warmed batch takes only
-    a few milliseconds. Cancellation is checked between completed batches.
+    Keep easy proofs responsive; amortize host round trips for harder targets.
+    Proof-search and batch-latency measurements are recorded separately in
+    docs/hashcash-bottleneck-20261016.md. Cancellation is checked between
+    completed batches, so larger launches also increase polling granularity.
     """
-    target = 262_144 if difficulty <= 4 else 4_194_304 if difficulty == 5 else 8_388_608
+    target = (262_144 if difficulty <= 4 else 4_194_304 if difficulty == 5 else
+              8_388_608 if difficulty == 6 else 16_777_216 if difficulty == 7 else 67_108_864)
     return min(GPU_BATCH, target)
 
 

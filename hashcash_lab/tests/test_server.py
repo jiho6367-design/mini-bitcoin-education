@@ -33,6 +33,15 @@ def complete_batch(message, start, count):
 
 
 class SearchJobTests(unittest.TestCase):
+    def test_batch_policy_preserves_easy_search_latency_and_caps_hard_batches(self):
+        self.assertEqual([lab.gpu_batch_size(d) for d in (1, 3, 4, 5, 6)],
+                         [262_144, 262_144, 262_144, 4_194_304, 8_388_608])
+        self.assertEqual(lab.gpu_batch_size(7), 16_777_216)
+        self.assertEqual(lab.gpu_batch_size(8), 67_108_864)
+        self.assertEqual(lab.gpu_batch_size(64), 67_108_864)
+        with patch.object(lab, "GPU_BATCH", 100):
+            self.assertTrue(all(lab.gpu_batch_size(d) == 100 for d in (1, 5, 7, 8, 64)))
+
     def test_cpu_mode_does_not_initialize_optional_gpu(self):
         def forbidden_gpu(*_):
             self.fail("Explicit CPU mode initialized the GPU")
