@@ -8,6 +8,8 @@ RTX 5070 Laptop GPU의 실제 CUDA 실행도 검증했습니다. 난이도 5·�
 
 **2026-10-16 추가 개선:** 위 버전(`0daf95a`)보다 GPU 결과 전송·동기화 비용을 줄여, 이 PC의 5개 입력 조건에서 warmed 계산 처리량이 **약 6.1~29.3% 개선**됐습니다. **CPU + GPU 동시 모드**도 추가했고 실제 커널 중첩을 검증했습니다. 현재 Python CPU·CUDA 조합의 실측에서는 GPU 단독이 더 빨랐습니다. [최신 비교·한계·재현 방법](docs/hashcash-performance-20261016.md)을 참고하세요.
 
+**후속 병목 조사:** CPU 결과 대기 루프의 지연을 수정했습니다. 난이도 7·8의 GPU 배치를 조정해 `8cd2e73` 대비 warmed 고정 처리량이 이 PC에서 각각 **약 8%, 18% 개선**됐습니다. C/OpenSSL CPU와 process/thread 동시 모드도 비교했지만 GPU 단독을 확실히 이기지는 못했습니다. [최신 병목·전력 상태·실제 발견 시간·원시 근거](docs/hashcash-bottleneck-20261016.md)를 참고하세요.
+
 ## 실행 — Windows PowerShell
 
 Node.js **24.x**, Python **3.12 이상**이 필요합니다. CPU 연산은 Python 표준 라이브러리만 사용합니다. 다른 작업 중인 원래 프로젝트 폴더와 별도의 폴더에서 실행하세요.

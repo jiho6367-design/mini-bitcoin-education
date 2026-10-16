@@ -289,7 +289,10 @@ class HybridCoordinator:
                 receive_cpu()
                 if gpu_span is None and not pending and not retries and cursor >= stop:
                     break
-                if gpu is None and pending and not result.found:
+                # CUDA may still be healthy after the finite range is fully
+                # reserved. Yield while only CPU results remain, otherwise
+                # this loop starves the Pool result-handler under the GIL.
+                if gpu_span is None and pending and not result.found:
                     cancel.wait(0.001)
             # On success all already-submitted finite CPU batches are drained,
             # verified and counted. The first accepted proof remains the result.

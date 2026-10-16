@@ -187,6 +187,42 @@ class CoordinatorTests(unittest.TestCase):
         self.assertTrue(result.stopped)
         self.assertEqual(result.checked, 0)
 
+    def test_finite_gpu_exhaustion_yields_until_result_delivery_and_allows_cancel(self):
+        # Deliberately hold a completed worker result until the coordinator
+        # yields. This models a Pool result-handler waiting for the GIL.
+        class DelayedResult:
+            ready_checks = 0
+
+            def ready(self):
+                self.ready_checks += 1
+                if self.ready_checks > 10:
+                    raise AssertionError("busy-spinning prevented result delivery")
+                return released.is_set()
+
+            def get(self):
+                return hybrid.timed_cpu_scan("message", 64, 107, 3, False)
+
+        class Pool:
+            def apply_async(self, _worker, _args):
+                return DelayedResult()
+
+        for stop in (False, True):
+            with self.subTest(cancel=stop):
+                released = threading.Event()
+                cancel = threading.Event()
+
+                def yield_control(_timeout):
+                    released.set()
+                    if stop:
+                        cancel.set()
+
+                with patch.object(cancel, "wait", side_effect=yield_control) as wait:
+                    result = self.coordinator(workers=1, cpu_batch=3, gpu_batch=7).run(
+                        ReferenceGPU(), 100, 10, search=False, cancel=cancel, pool=Pool())
+                self.assertTrue(wait.called)
+                self.assertEqual(result.stopped, stop)
+                self.assert_exact_coverage(result, 100, 10)
+
     def test_cpu_worker_failure_is_not_hidden_as_gpu_fallback(self):
         def broken_worker(*_):
             raise RuntimeError("CPU worker failed")
