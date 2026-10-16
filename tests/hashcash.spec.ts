@@ -89,6 +89,114 @@ test("real CPU and CUDA overlap, cancel, and save a verified hybrid proof", asyn
   await page.screenshot({ path: `work/hashcash-${test.info().project.name}-hybrid.png`, fullPage: true });
 });
 
+test("native mode selects four CPU workers and shows the actual fallback device", async ({ page }) => {
+  let started = false;
+  const fallbackJob = {
+    id: "native-fallback-job", status: "stopped", backend: "CPU · 4작업",
+    reason: "C 스케줄러 DLL을 사용할 수 없어 CPU로 전환했습니다.",
+    mode: "native", message: "You are the best of best!!!!", difficulty: 3,
+    participantName: "나", startNonce: "0", checked: "37", cpuChecked: "37", gpuChecked: "0",
+    lastNonce: null, lastHash: null, elapsed: 0.2, hashesPerSecond: 185,
+    finished: true, error: null, result: null, recordId: null, saveError: null,
+    hybridKernelOverlapLowerBound: 0, hybridTimingLimited: true,
+  };
+  await page.route("**/api/hashcash/health", (route) => route.fulfill({ json: { cpuCount: 8 } }));
+  await page.route("**/api/hashcash/status", (route) => route.fulfill({ json: { job: started ? fallbackJob : null } }));
+  await page.route(/\/api\/hashcash\/history(?:\?.*)?$/, (route) => route.fulfill({
+    json: { participants: [], total: 0, records: [] },
+  }));
+  await page.route("**/api/hashcash/start", (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({ mode: "native", workers: 4, startNonce: "0" });
+    started = true;
+    return route.fulfill({ json: { job: fallbackJob } });
+  });
+  await page.goto("/");
+  await expect(page.getByText("● 로컬 연산 서버 연결됨")).toBeVisible();
+  await page.getByLabel("연산 장치").selectOption("native");
+  await expect(page.getByLabel("CPU 작업 수")).toHaveValue("4");
+  await page.getByRole("button", { name: "탐색 시작" }).click();
+  const observation = page.getByRole("region", { name: "탐색 관찰" });
+  await expect(observation.getByText(fallbackJob.backend, { exact: true })).toBeVisible();
+  await expect(observation.getByText(fallbackJob.reason, { exact: true })).toBeVisible();
+  await expect(page.getByTestId("device-work")).toBeVisible();
+  await expect(page.getByTestId("cpu-checked")).toHaveText("37");
+  await expect(page.getByTestId("gpu-checked")).toHaveText("0");
+  await expect(page.getByTestId("device-work")).toContainText("처음 기록된 완료 배치 일부 기준입니다.");
+});
+
+test("native C CPU and CUDA progress, cancel, restart, and persist a verified proof", async ({ page }) => {
+  test.skip(process.env.HASHCASH_EXPECT_NATIVE !== "1", "Requires the native C scheduler and actual CUDA hardware");
+  test.setTimeout(120_000);
+  const participant = `C 동시 검사 ${Date.now()}`;
+  const message = " C \n한글🙂 ";
+  const startNonce = "9007199254740993";
+  await page.goto("/");
+  await expect(page.getByText("● 로컬 연산 서버 연결됨")).toBeVisible();
+  const health = await (await page.request.get("/api/hashcash/health")).json();
+  await page.getByLabel("기록 이름", { exact: true }).fill(participant);
+  await page.getByLabel("메시지", { exact: false }).fill(message);
+  await page.getByLabel("연산 장치").selectOption("native");
+  await expect(page.getByLabel("CPU 작업 수")).toHaveValue(String(Math.min(4, health.cpuCount)));
+  await page.getByLabel("시작 nonce").fill(startNonce);
+  await page.getByLabel("목표 난이도", { exact: false }).fill("64");
+  await page.getByRole("button", { name: "탐색 시작" }).click();
+  await expect.poll(async () => {
+    const { job } = await (await page.request.get("/api/hashcash/status")).json();
+    return job?.status === "running" && BigInt(job.cpuChecked ?? "0") > 0n &&
+      BigInt(job.gpuChecked ?? "0") > 0n && BigInt(job.checked) > 500_000_000n;
+  }, { timeout: 60_000 }).toBeTruthy();
+  await expect(page.getByRole("region", { name: "탐색 관찰" }).getByText(/^C · CPU \+ GPU/)).toBeVisible();
+  await expect(page.getByTestId("device-work")).toBeVisible();
+  await page.getByRole("button", { name: "중지", exact: true }).click();
+  await expect(page.getByText("탐색 중지됨", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "탐색 시작" })).toBeEnabled();
+  const { job: stopped } = await (await page.request.get("/api/hashcash/status")).json();
+  expect(stopped.mode).toBe("native");
+  expect(stopped.backend).toContain("C · CPU + GPU");
+  expect(stopped.message).toBe(message);
+  expect(stopped.startNonce).toBe(startNonce);
+  expect(BigInt(stopped.cpuChecked) + BigInt(stopped.gpuChecked)).toBe(BigInt(stopped.checked));
+  expect(stopped.hybridKernelOverlapLowerBound).toBeGreaterThan(0);
+  expect(stopped.result).toBeNull();
+  expect(stopped.lastNonce).not.toBeNull();
+  expect(BigInt(stopped.lastNonce)).toBeGreaterThanOrEqual(BigInt(startNonce));
+  expect(stopped.lastHash).toBe(createHash("sha256").update(message + stopped.lastNonce, "utf8").digest("hex"));
+
+  await page.getByLabel("메시지", { exact: false }).fill("한글🙂");
+  await page.getByLabel("시작 nonce").fill("0");
+  await page.getByLabel("목표 난이도", { exact: false }).fill("3");
+  await page.getByRole("button", { name: "탐색 시작" }).click();
+  await expect(page.getByText("조건을 만족하는 nonce 발견", { exact: true })).toBeVisible();
+  await expect.poll(async () => {
+    const { job } = await (await page.request.get("/api/hashcash/status")).json();
+    return Boolean(job?.finished && job?.recordId);
+  }).toBeTruthy();
+  const { job: found } = await (await page.request.get("/api/hashcash/status")).json();
+  expect(found.id).not.toBe(stopped.id);
+  expect(found.mode).toBe("native");
+  expect(found.backend).toContain("C · CPU + GPU");
+  expect(typeof found.result.nonce).toBe("string");
+  const reference = createHash("sha256").update(found.message + found.result.nonce, "utf8").digest("hex");
+  expect(found.result.hash).toBe(reference);
+  expect(reference.startsWith("000")).toBeTruthy();
+  await page.getByRole("button", { name: "해시 다시 검증" }).click();
+  await expect(page.getByText("브라우저 SHA-256 재계산도 일치합니다.")).toBeVisible();
+  const history = page.getByTestId("history-panel");
+  await history.getByLabel("기록 이름 필터").selectOption(participant);
+  await expect(history.getByTestId("history-record-count")).toHaveText("총 1건");
+  await expect(history.getByTestId("history-nonce")).toHaveText(found.result.nonce);
+  await page.screenshot({ path: `work/hashcash-${test.info().project.name}-native.png`, fullPage: true });
+  await page.reload();
+  await expect(page.getByLabel("기록 이름", { exact: true })).toHaveValue(participant);
+  await history.getByLabel("기록 이름 필터").selectOption(participant);
+  await expect(history.getByTestId("history-record-count")).toHaveText("총 1건");
+  await expect(history.getByTestId("history-nonce")).toHaveText(found.result.nonce);
+  await page.getByLabel("화면 테마").selectOption("dark");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
+  await page.screenshot({ path: `work/hashcash-${test.info().project.name}-native-mobile.png`, fullPage: true });
+});
+
 test("found proofs persist across reload with participant and difficulty filters", async ({ page }) => {
   const suffix = Date.now().toString();
   const alice = `기록 검사 가 ${suffix}`;

@@ -70,7 +70,7 @@ class SearchConfig:
             raise ValueError("시작 nonce는 18446744073709551615 이하여야 합니다.")
         if type(workers) is not int or not 1 <= workers <= min(64, os.cpu_count() or 1):
             raise ValueError("CPU 작업 수가 이 기기의 범위를 벗어났습니다.")
-        if mode not in ("auto", "cpu", "gpu", "hybrid"):
+        if mode not in ("auto", "cpu", "gpu", "hybrid", "native"):
             raise ValueError("연산 모드가 올바르지 않습니다.")
         return cls(message, difficulty, nonce, workers, mode, participant_name)
 
@@ -80,10 +80,18 @@ def make_gpu(message: str, difficulty: int):
     return CudaBackend(message, difficulty)
 
 
+def make_native(*args, **kwargs):
+    # Optional local build: never compile code or import CuPy on server startup.
+    from .native_scheduler_experiment import NativeScheduler
+    return NativeScheduler(*args, **kwargs)
+
+
 class SearchJob:
-    def __init__(self, config: SearchConfig, gpu_factory: Callable = make_gpu, history: HistoryStore | None = None):
+    def __init__(self, config: SearchConfig, gpu_factory: Callable = make_gpu,
+                 history: HistoryStore | None = None, native_factory: Callable = make_native):
         self.config = config
         self.gpu_factory = gpu_factory
+        self.native_factory = native_factory
         self.history = history
         self.save_lock = threading.Lock()
         self.lock = threading.Lock()
@@ -245,9 +253,166 @@ class SearchJob:
         if not result.found:
             self.update(status="stopped" if result.stopped else "exhausted")
 
+    def run_native(self, gpu, base: int):
+        """Keep scheduling/CUDA/readback in C; observe totals at 10 Hz only.
+
+        All resource creation, native runs, and destruction stay on this job's
+        owner thread. The observer may only snapshot/cancel and must be joined
+        before reset or destruction. A failed run never restarts its range.
+        """
+        from .hybrid import BatchTiming, kernel_overlap_lower_bound, overlap_seconds
+
+        if self.cancel.is_set():
+            self.update(status="stopped")
+            return
+
+        def create():
+            return self.native_factory(self.config.message, self.config.difficulty,
+                                       workers=self.config.workers, cpu_batch=64_000,
+                                       gpu_batch=gpu_batch_size(self.config.difficulty),
+                                       trace_capacity=8192)
+
+        try:
+            runner = create()
+        except Exception as exc:
+            self.update(reason=f"C 연산 준비 불가 → Python CPU 전환: {type(exc).__name__}: {str(exc)[:700]}")
+            if self.cancel.is_set():
+                self.update(status="stopped")
+            else:
+                self.run_cpu(base)
+            return
+
+        try:
+            if gpu is not None:
+                try:
+                    runner.attach_gpu(gpu)
+                except Exception as exc:
+                    # No range has run yet. Discard any partial CUDA adapter.
+                    runner.close()
+                    runner = create()
+                    gpu = None
+                    self.update(reason=f"C CUDA 준비 불가 → C CPU 전환: {type(exc).__name__}: {str(exc)[:700]}")
+            if self.cancel.is_set():
+                self.update(status="stopped")
+                return
+            if gpu is not None:
+                self.update(backend=f"C · CPU + GPU · {self.config.workers}개 CPU 작업 + {gpu.name}",
+                            reason="작업 배분·해시 계산·CUDA 호출·결과 수집을 C에서 수행합니다.")
+            else:
+                self.update(backend=f"C · CPU · {self.config.workers}개 작업")
+            self.update(status="running", startupElapsed=time.perf_counter() - self.started)
+            cpu_offset = gpu_offset = 0
+            host_overlap = kernel_overlap = 0.0
+            timing_limited = False
+            while base <= MAX_NONCE and not self.cancel.is_set():
+                # C accepts uint64 count, so the 2^64 domain needs two runs.
+                count = min(MAX_NONCE, MAX_NONCE - base + 1)
+                runner.reset(base, count, search=True)
+                observer_done = threading.Event()
+                observer_errors = []
+
+                def publish(stats):
+                    cpu, cuda, checked = stats["cpu_checked"], stats["gpu_checked"], stats["checked"]
+                    if (any(type(n) is not int or n < 0 for n in (cpu, cuda, checked)) or
+                            checked != cpu + cuda or checked > count):
+                        raise ValueError("C 장치별 완료 계산 수가 올바르지 않습니다.")
+                    nonce = stats.get("nonce")
+                    if nonce is not None and not base <= int(nonce) < base + count:
+                        raise ValueError("C 결과 nonce가 제출한 탐색 범위를 벗어났습니다.")
+                    with self.lock:
+                        self.checked = cpu_offset + gpu_offset + checked
+                        self.state.update(checked=str(self.checked),
+                                          cpuChecked=str(cpu_offset + cpu),
+                                          gpuChecked=str(gpu_offset + cuda),
+                                          hybridExecuted=bool(cpu_offset + cpu and gpu_offset + cuda))
+                        if stats.get("last_nonce") is not None:
+                            self.state.update(lastNonce=str(stats["last_nonce"]), lastHash=stats.get("last_hash"))
+                        has_proof = self.state["result"] is not None
+                    if nonce is not None and not has_proof:
+                        self.accept(stats)
+                    if stats.get("gpu_failed"):
+                        detail = stats.get("gpu_error") or "CUDA 배치 실패"
+                        self.update(backend=f"C · CPU · {self.config.workers}개 작업 (GPU 전환)",
+                                    reason=f"GPU 사용 불가 → 미완료 구간 C CPU 재시도: {str(detail)[:700]}")
+                    if stats.get("cleanup_warning"):
+                        self.update(cleanupWarning=str(stats["cleanup_warning"])[:1000])
+
+                def observe():
+                    while not observer_done.is_set():
+                        try:
+                            # hc_cancel before hc_run is a no-op. Repeat it so
+                            # a stop during the transition cannot be lost.
+                            if self.cancel.is_set() or observer_errors:
+                                runner.cancel()
+                            if not observer_errors:
+                                publish(runner.stats())
+                        except Exception as exc:
+                            if not observer_errors:
+                                observer_errors.append(exc)
+                        observer_done.wait(0.1)
+
+                observer = threading.Thread(target=observe, daemon=True)
+                observer.start()
+                try:
+                    try:
+                        stats = runner.run()
+                    finally:
+                        observer_done.set()
+                        observer.join()
+                except Exception:
+                    # Native errors can arrive between observer ticks. Keep
+                    # completed totals/proofs if the final snapshot validates,
+                    # then propagate the original failure without a restart.
+                    try:
+                        publish(runner.stats())
+                    except Exception:
+                        pass
+                    raise
+                publish(stats)
+                if observer_errors:
+                    raise observer_errors[0]
+                timings = [BatchTiming("cpu" if item["kind"] == 1 else "gpu",
+                                       int(item["start"]), item["count"], item["checked"],
+                                       item["begin"], item["end"], item["kernel_seconds"])
+                           for item in runner.traces() if not item["status"] and item["checked"]]
+                host_overlap += overlap_seconds(timings)
+                frequency = stats.get("qpc_frequency", 0)
+                uncertainty = (sum(item.device == "gpu" for item in timings) * 2 / frequency
+                               if frequency > 0 else float("inf"))
+                kernel_overlap += max(0.0, kernel_overlap_lower_bound(timings) - uncertainty)
+                timing_limited |= bool(stats.get("trace_dropped"))
+                self.update(hybridOverlapSeconds=host_overlap,
+                            hybridKernelOverlapLowerBound=kernel_overlap,
+                            hybridTimingLimited=timing_limited)
+                if self.snapshot()["result"] is not None:
+                    return
+                if self.cancel.is_set() or stats.get("cancelled"):
+                    self.update(status="stopped")
+                    return
+                if stats.get("status") or stats["checked"] != count:
+                    raise RuntimeError(stats.get("error") or "C 탐색이 미완료 구간을 남겼습니다.")
+                cpu_offset += stats["cpu_checked"]
+                gpu_offset += stats["gpu_checked"]
+                base += count
+            self.update(status="stopped" if self.cancel.is_set() else "exhausted")
+        finally:
+            runner.close()
+
     def run(self):
         base = self.config.start_nonce
         try:
+            if self.config.mode == "native":
+                gpu = None
+                try:
+                    try:
+                        gpu = self.gpu_factory(self.config.message, self.config.difficulty)
+                    except Exception as exc:
+                        self.update(reason=f"GPU 사용 불가 → C CPU 사용: {type(exc).__name__}: {str(exc)[:700]}")
+                    self.run_native(gpu, base)
+                finally:
+                    if gpu is not None and hasattr(gpu, "close"):
+                        gpu.close()
+                return
             if self.config.mode != "cpu":
                 gpu = None
                 try:
@@ -395,7 +560,25 @@ class Handler(BaseHTTPRequestHandler):
                    for port in (self.server.frontend_port, self.server.server_port)}
         origin = self.headers.get("Origin")
         if origin and origin not in allowed:
-            self.reply(403, {"error": "허용되지 않은 요청 출처입니다."})
+            # On Windows, closing a socket with unread POST bytes can reset it
+            # before the browser receives 403. Discard only a bounded body;
+            # origin rejection never parses or acts on that request.
+            try:
+                rejected_length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                rejected_length = 0
+            if 0 < rejected_length <= 100_000:
+                previous_timeout = self.connection.gettimeout()
+                try:
+                    self.connection.settimeout(1)
+                    self.rfile.read(rejected_length)
+                except OSError:
+                    pass
+                finally:
+                    self.connection.settimeout(previous_timeout)
+            self.close_connection = True
+            self.reply(403, {"error": "허용되지 않은 요청 출처입니다."},
+                       headers={"Connection": "close"})
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))

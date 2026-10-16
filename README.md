@@ -10,7 +10,7 @@ RTX 5070 Laptop GPU의 실제 CUDA 실행도 검증했습니다. 난이도 5·�
 
 **후속 병목 조사:** CPU 결과 대기 루프의 지연을 수정했습니다. 난이도 7·8의 GPU 배치를 조정해 `8cd2e73` 대비 warmed 고정 처리량이 이 PC에서 각각 **약 8%, 18% 개선**됐습니다. C/OpenSSL CPU와 process/thread 동시 모드도 비교했지만 GPU 단독을 확실히 이기지는 못했습니다. [최신 병목·전력 상태·실제 발견 시간·원시 근거](docs/hashcash-bottleneck-20261016.md)를 참고하세요.
 
-**2026-10-17 C 관리 실험:** 작업 배분·결과 전달·CUDA 호출까지 C로 옮긴 별도 실험 경로에서 CPU4+GPU가 이 PC의 기존 GPU 단독보다 **약 3.6~4.3%** 높은 warmed 처리량을 보였습니다. 세 입력을 각각 13회 비교했고, 실제 기본 메시지 탐색 반복도 확인했습니다. [측정·한계·실험 실행 방법](docs/hashcash-native-scheduler-20261017.md)을 참고하세요.
+**2026-10-17 C 관리 실험:** 작업 배분·결과 전달·CUDA 호출까지 C로 옮긴 경로에서 CPU4+GPU가 이 PC의 기존 GPU 단독보다 **약 3.6~4.3%** 높은 warmed 처리량을 보였습니다. 세 입력을 각각 13회 비교했고, 실제 기본 메시지 탐색 반복도 확인했습니다. 이 경로는 이제 웹의 **C · CPU + GPU 동시 연산**으로 선택할 수 있습니다. 위 수치는 별도 실험의 결과이며 웹 초기 준비 시간을 포함한 성능 수치는 아닙니다. [측정·한계·실험 실행 방법](docs/hashcash-native-scheduler-20261017.md), [웹 적용·검증](docs/hashcash-native-web-20261017.md)을 참고하세요.
 
 ## 실행 — Windows PowerShell
 
@@ -42,7 +42,8 @@ npm.cmd run hashcash
 4. 발견 nonce와 해시를 확인하고 **해시 다시 검증**으로 브라우저 Web Crypto의 SHA-256과 대조합니다.
 5. **중지** 후 조건을 바꾸고 다시 시작할 수 있습니다. CPU 작업 수를 줄이면 다른 작업에 여유를 남길 수 있습니다.
 6. **기록 이름**에 이름·별칭을 입력합니다. 유효한 해답을 찾으면 해당 이름으로 자동 저장되며, 아래 **발견 기록**에서 이름·난이도별로 조회하고 원래 메시지의 해시를 다시 검증할 수 있습니다.
-7. **CPU + GPU 동시 연산**을 선택하면 CPU 작업 1개부터 시작합니다. 장치별 완료 계산 수와 CPU·GPU 커널이 실제로 겹친 시간의 하한을 확인할 수 있습니다. CPU 작업 수는 변경할 수 있으며, 동시 모드가 항상 빠르지는 않습니다. 자동 모드는 기존과 같이 CUDA를 우선 사용합니다.
+7. **Python · CPU + GPU 동시 연산**을 선택하면 CPU 작업 1개부터 시작합니다. 장치별 완료 계산 수와 CPU·GPU 커널이 실제로 겹친 시간의 하한을 확인할 수 있습니다. CPU 작업 수는 변경할 수 있으며, 동시 모드가 항상 빠르지는 않습니다. 자동 모드는 기존과 같이 CUDA를 우선 사용합니다.
+8. **C · CPU + GPU 동시 연산**은 C 엔진이 작업 배분·해시 계산·CUDA 실행·결과 집계를 담당합니다. 이 PC에서 측정한 CPU 작업 4개가 기본이며 작업 수를 바꿀 수 있습니다. 진행률·중지·재시작·해시 재검증·이름별 자동 저장을 같은 화면에서 사용합니다. CUDA 준비가 불가능하면 C CPU로, C 라이브러리를 사용할 수 없으면 Python CPU로 전환하고 실제 연산 장치와 이유를 표시합니다.
 
 입력은 **SHA256(UTF8(message) || ASCII(decimal_nonce))**입니다. 구분자·공백·0 채움을 추가하지 않으며 메시지의 공백·줄바꿈을 보존합니다. 단일 SHA-256이고 실제 Bitcoin 블록 헤더 채굴과 구분됩니다.
 
@@ -79,6 +80,19 @@ npm.cmd run hashcash
 
 CuPy CUDA 12.x `[ctk]` 옵션이 CUDA 런타임·NVRTC 구성 요소를 설치하며 호환 NVIDIA 드라이버가 필요합니다. [CuPy 공식 설치 안내](https://docs.cupy.dev/en/stable/install.html)를 참고하세요. **개발 PC의 RTX 5070 Laptop GPU에서 실제 CUDA 테스트 7개와 화면의 GPU 자동 선택·해시 재검증이 통과했습니다.** 이전 실패는 과거 의존성 로딩 차단, CUDA 구성요소 누락, 앱이 CuPy 없는 Python을 선택하던 실행 설정에서 발생했습니다. 보안 정책을 변경하지 않았으며 현재 환경에서 정상 실행했습니다. GPU 초기화·컴파일·검증·계산 실패 시 미확인 범위부터 CPU로 이어갑니다.
 
+## 선택 사항: C 동시 연산 환경
+
+현재 C 엔진은 Windows용입니다. 위 GPU 환경에 더해 GCC와 OpenSSL 개발 파일로 로컬 DLL을 한 번 빌드해야 합니다. 이 개발 PC에는 이미 빌드되어 있으며, 새로 clone한 폴더에는 포함되지 않습니다. MSYS2 UCRT64 도구 경로를 실제 설치 위치로 지정한 예시입니다.
+
+```powershell
+$nativeToolchainRoot = 'C:\Users\사용자\AppData\Local\Programs\msys64\ucrt64'
+.\.venv\Scripts\python.exe -m hashcash_lab.native_scheduler_experiment --build --compiler "$nativeToolchainRoot\bin\gcc.exe" --openssl-root $nativeToolchainRoot
+```
+
+`work/native_scheduler/native_scheduler.dll`과 빌드 메타데이터를 함께 사용합니다. C 소스가 바뀌면 서버를 종료하고 다시 빌드하세요. 서버는 DLL의 소스·바이너리 해시를 확인하며 자동 설치나 자동 빌드는 하지 않습니다. 필요하면 `HASHCASH_SCHEDULER_DLL`로 다른 빌드 위치를 지정할 수 있습니다.
+
+C 모드는 탐색 전에 1~20자리 nonce용 CUDA 함수를 준비하므로 쉬운 난이도에서는 준비 시간이 계산 시간보다 길 수 있습니다. 화면의 경과 시간과 평균 속도에는 이 시간이 포함됩니다. 자동 모드는 GPU 우선을 유지하며, 사용자가 C 모드를 선택할 때만 이 경로를 사용합니다.
+
 ## 검증과 성능 재현
 
 ```powershell
@@ -100,7 +114,7 @@ $env:HASHCASH_EXPECT_GPU = '1'
 npm.cmd run test:hashcash:e2e -- --project=edge
 ```
 
-`HASHCASH_TEST_GPU`를 설정하지 않은 기본 검사에서는 실제 GPU 테스트 7개를 건너뜁니다. GPU 초기화·자체 검증·메시지별 컴파일 시간은 화면의 경과 시간에 포함됩니다.
+로컬 C DLL이 준비된 PC에서 C/CUDA 검사와 웹의 실제 C 동시 모드도 확인하려면 `HASHCASH_TEST_NATIVE_CUDA='1'`, `HASHCASH_EXPECT_NATIVE='1'`을 각각 추가합니다. GPU 관련 환경 변수가 없는 기본 검사에서는 실제 GPU 검사를 건너뜁니다. GPU 초기화·자체 검증·메시지별 컴파일 시간은 화면의 경과 시간에 포함됩니다.
 
 동일 계산량 비교 재현:
 
