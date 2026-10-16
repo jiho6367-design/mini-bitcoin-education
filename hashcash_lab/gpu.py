@@ -213,6 +213,7 @@ class CudaBackend:
 
     def __init__(self, message: str, difficulty: int, *, threads: int = 256,
                  per_thread: int = 16, device_id: int = 0):
+        self._closed = False
         self.message = message.encode("utf-8")
         if len(self.message) > MAX_MESSAGE_BYTES:
             raise GpuUnavailable("CUDA 경로는 UTF-8 메시지 35바이트까지 지원합니다. CPU로 계산합니다.")
@@ -226,6 +227,11 @@ class CudaBackend:
         self.threads = threads
         self.per_thread = per_thread
         self._kernels: dict[tuple[bytes, int, int, bool], Any] = {}
+        # RawKernel.compile() clears CuPy's cached Function. Keep each compiled
+        # search Function alive and never compile that RawKernel a second time:
+        # native schedulers borrow its driver handle across sequential jobs.
+        self._search_functions: dict[int, Any] = {}
+        self._native_functions: tuple[Any, ...] | None = None
         self._verified = False
         self.search_preparation_seconds = 0.0
         self._search_prepared_digits = set()
@@ -254,6 +260,14 @@ class CudaBackend:
                 label = props.get("name", "CUDA GPU")
                 self.name = label.decode("utf-8", errors="replace") if isinstance(label, bytes) else str(label)
             self.self_test()
+            # A later web job may lease this backend from a fresh Python
+            # thread. Its current driver context need not be initialized yet;
+            # retain the real context owning our buffers, events and modules.
+            from cupy_backends.cuda.api import driver
+            with self._device:
+                self._cuda_context = driver.ctxGetCurrent()
+            if not self._cuda_context:
+                raise GpuUnavailable("CUDA 소유 컨텍스트를 확인할 수 없습니다.")
         except GpuUnavailable:
             raise
         except Exception as exc:
@@ -263,8 +277,45 @@ class CudaBackend:
     def self_test_passed(self) -> bool:
         return self._verified
 
+    def _require_open(self) -> None:
+        if self._closed:
+            raise GpuUnavailable("CUDA 연산 장치가 이미 해제되었습니다.")
+
+    def close(self) -> None:
+        """Drain and release this idle backend after native borrowers close.
+
+        Only references owned by this backend are released. CuPy's process
+        caches and memory pools, and the device primary context, are untouched.
+        The exclusive owner must stop all scans and destroy attached native
+        schedulers before calling this method.
+        """
+        if self._closed:
+            return
+        self._closed = True
+        self._verified = False
+        try:
+            with self._device:
+                try:
+                    # Device.__enter__ may skip setDevice on a fresh thread
+                    # numerically assigned device 0. Explicit use activates its
+                    # primary context before shutdown driver operations.
+                    self._device.use()
+                    self._stream.synchronize()
+                finally:
+                    self._native_functions = None
+                    self._search_functions.clear()
+                    self._kernels.clear()
+                    self._search_prepared_digits.clear()
+                    self._found = self._nonce = self._digest = self._result = None
+                    self._host_result = self._pinned_result = None
+                    self._begin_event = self._end_event = self._stream = None
+                    self._cuda_context = None
+        except Exception as exc:
+            raise GpuUnavailable(f"CUDA 자원 해제 실패: {exc}") from exc
+
     def _kernel(self, digits: int, *, dump: bool = False, message: bytes | None = None,
                 difficulty: int | None = None) -> Any:
+        self._require_open()
         payload = self.message if message is None else message
         threshold = self.difficulty if difficulty is None else difficulty
         key = (payload, threshold, digits, dump)
@@ -273,7 +324,42 @@ class CudaBackend:
             self._kernels[key] = self.cp.RawKernel(source, "hashcash_dump" if dump else "hashcash_candidates", options=())
         return self._kernels[key]
 
+    def _prepare_search_kernel(self, digits: int) -> Any:
+        """Compile a specialization once and retain its module owner."""
+        raw = self._kernel(digits)
+        if digits not in self._search_functions:
+            raw.compile()
+            self._search_functions[digits] = raw.kernel
+            self._search_prepared_digits.add(digits)
+        return raw
+
+    def prepare_native_kernels(self) -> tuple[Any, ...]:
+        """Return stable CUDA Function owners for all twenty nonce lengths.
+
+        The server must hold an exclusive backend lease while preparing or
+        executing it. Preparation is idempotent; releasing a job preserves the
+        functions, stream, buffers and successful self-test for the next lease.
+        Eager native preparation is timed by the native caller, separately from
+        lazy GPU-only preparation recorded in search_preparation_seconds.
+        """
+        self._require_open()
+        if not self._verified:
+            raise GpuUnavailable("CUDA SHA-256 자체 검증을 통과하지 못했습니다.")
+        if self._native_functions is None:
+            with self._device:
+                for digits in range(1, 21):
+                    self._prepare_search_kernel(digits)
+                self._native_functions = tuple(self._search_functions[digits]
+                                               for digits in range(1, 21))
+        return self._native_functions
+
+    def reset_search_metrics(self) -> None:
+        """Begin an idle backend lease without discarding prepared kernels."""
+        self._require_open()
+        self.search_preparation_seconds = 0.0
+
     def _dump_range(self, start: int, count: int, *, message: bytes | None = None) -> list[str]:
+        self._require_open()
         cp = self.cp
         digests: list[str] = []
         current = start
@@ -324,6 +410,7 @@ class CudaBackend:
                     raise GpuVerificationError("CUDA 발견 nonce/해시 전달 자체 검증 실패")
 
     def self_test(self) -> None:
+        self._require_open()
         self._verified = False
         # These spans exercise 0, ASCII carries, decimal-length transitions,
         # a non-divisible thread tail, values above u32, and the u64 limit.
@@ -350,16 +437,16 @@ class CudaBackend:
         # Compile the search entry point as well as the digest-test entry point
         # before advertising the backend as available.
         with self._device:
-            self._kernel(1).compile()
-            self._kernel(20).compile()
+            self._prepare_search_kernel(1)
+            self._prepare_search_kernel(20)
         # Validate target decisions, the atomic winner, and digest transfer by
         # executing both a known positive and a known negative search span.
         self._test_search_predicate(1)
         self._test_search_predicate(64)
         self._verified = True
-        self._search_prepared_digits.update((1, 20))
 
     def _search_batch(self, start: int, requested: int) -> BatchResult:
+        self._require_open()
         if not self._verified:
             raise GpuUnavailable("CUDA SHA-256 자체 검증을 통과하지 못했습니다.")
         count = batch_count(start, requested)
@@ -369,13 +456,9 @@ class CudaBackend:
                 digits = len(str(start))
                 first_preparation = digits not in self._search_prepared_digits
                 preparation_started = time.perf_counter() if first_preparation else 0.0
-                kernel = self._kernel(digits)
-                # Keep first source construction/compilation separate. Repeat
-                # lookups and compile calls remain normal per-batch overhead.
-                kernel.compile()
+                kernel = self._prepare_search_kernel(digits)
                 if first_preparation:
                     self.search_preparation_seconds += time.perf_counter() - preparation_started
-                    self._search_prepared_digits.add(digits)
                 blocks = (count + self.threads * self.per_thread - 1) // (self.threads * self.per_thread)
                 begin, end = self._begin_event, self._end_event
                 started = time.perf_counter()

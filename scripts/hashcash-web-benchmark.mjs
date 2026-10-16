@@ -37,6 +37,7 @@ const usage = `Usage: node scripts/hashcash-web-benchmark.mjs [options]
   --cases IDS         Comma separated finite case IDs: easy,ascii,unicode,fixed
   --first-mode MODE   First pair order: gpu or native (default gpu)
   --no-warmups        Record measured pairs immediately; first sample is marked
+  --expect-reuse      Require prepared resource hits in measured samples
   --plan              Print the finite plan without contacting a server or GPU
   --help              Show this help
 
@@ -54,6 +55,7 @@ function options(argv) {
     if (key === "--help") { result.help = true; continue; }
     if (key === "--plan") { result.plan = true; continue; }
     if (key === "--no-warmups") { result.warmups = false; continue; }
+    if (key === "--expect-reuse") { result.expectReuse = true; continue; }
     const value = argv[++index];
     if (!value || value.startsWith("--")) throw new Error(`Missing value for ${key}`);
     if (key === "--base-url") result.baseUrl = value;
@@ -104,7 +106,7 @@ async function gpuState() {
 async function fingerprints() {
   const files = [
     fileURLToPath(import.meta.url),
-    "scripts/hashcash-web-benchmark.mjs", "hashcash_lab/server.py", "hashcash_lab/gpu.py",
+    "scripts/hashcash-web-benchmark.mjs", "hashcash_lab/server.py", "hashcash_lab/gpu.py", "hashcash_lab/gpu_resources.py",
     "hashcash_lab/native_scheduler_experiment.py", "experiments/native_scheduler.c", "experiments/native_scheduler.h",
     "experiments/native_cuda_driver.c", "experiments/native_cuda_driver.h", "src/hashcash/HashcashApp.tsx",
     "work/native_scheduler/native_scheduler.dll", "work/native_scheduler/native_scheduler.build.json",
@@ -369,6 +371,11 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
     assert(final?.id === expectedJobId, "Another search replaced the finished sample before verification");
     sample.final = final;
     checkFinal(final, item, mode, participantName);
+    if (config.expectReuse && phase === "measured") {
+      assert(final.gpuCacheEnabled && final.gpuResourcesReused && final.nativeKernelsReused,
+        "Measured sample did not reuse its prepared CUDA resources");
+      if (mode === "native") assert(final.nativeResourcesReused, "Measured native sample rebuilt its C owner");
+    }
     sample.metrics = {
       serverStartupSeconds: final.startupElapsed,
       serverSearchPreparationSeconds: final.searchPreparationElapsed,

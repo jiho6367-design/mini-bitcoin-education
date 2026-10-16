@@ -199,8 +199,10 @@ def _bounded_int(value, minimum: int, maximum: int, name: str) -> int:
 class NativeScheduler:
     """Own persistent C CPU workers and optional borrowed verified CUDA objects.
 
-    Control reset/attach/run/close from one owner. cancel() and stats() can be
-    called while that owner's native run is active. Schedulers borrowing the
+    Control reset/attach/run/close from one exclusive owner at a time. Idle
+    schedulers may transfer to a later owning thread after observers join.
+    cancel() and stats() can be called while an owner's native run is active.
+    Schedulers borrowing the
     same backend must run sequentially: its stream, events, result buffer and
     compiled functions must not be reused/compiled concurrently by Python.
     """
@@ -242,15 +244,26 @@ class NativeScheduler:
             raise RuntimeError("Cannot replace GPU resources while running")
         if not backend.self_test_passed or backend.message != self.payload or backend.difficulty != self.difficulty:
             raise ValueError("GPU backend must have matching input and pass its independent self-test")
-        from cupy_backends.cuda.api import driver
-        functions = []
         with backend._device:
-            for digits in range(1, 21):
-                raw = backend._kernel(digits)
-                raw.compile()
-                functions.append(raw.kernel)
+            prepare = getattr(backend, "prepare_native_kernels", None)
+            if prepare is not None:
+                functions = tuple(prepare())
+            else:
+                # Compatibility for independently supplied experimental
+                # backends. Production CudaBackend retains these owners and
+                # compiles each specialization only once across web jobs.
+                functions = []
+                for digits in range(1, 21):
+                    raw = backend._kernel(digits)
+                    raw.compile()
+                    functions.append(raw.kernel)
+            if len(functions) != 20:
+                raise ValueError("Native CUDA needs twenty prepared nonce-length functions")
             handles = (ct.c_void_p * 20)(*(function.ptr for function in functions))
-            context = driver.ctxGetCurrent()
+            context = getattr(backend, "_cuda_context", None)
+            if not context:
+                from cupy_backends.cuda.api import driver
+                context = driver.ctxGetCurrent()
             native = self._library.nc_create(context, backend._stream.ptr, handles,
                 backend._result.data.ptr, backend._host_result.ctypes.data,
                 backend._begin_event.ptr, backend._end_event.ptr,
