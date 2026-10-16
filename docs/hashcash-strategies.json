@@ -1,0 +1,1901 @@
+{
+  "measured_at_utc": "2026-10-16T13:44:30.712240+00:00",
+  "environment": {
+    "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel(R) Core(TM) Ultra 7 356H",
+    "logical_processors": 16,
+    "baseline_commit": "0daf95a59172ac92219d51f3033d6c667c5c4f68"
+  },
+  "benchmark_source_sha256": "3f8c4233789cd64e7563fa520e804d170fe5be91227a8b2c59b5ee44550ac56c",
+  "command_arguments": [
+    "--workers",
+    "4",
+    "--count",
+    "2000000",
+    "--start",
+    "1000000000",
+    "--difficulty",
+    "5",
+    "--repeats",
+    "7",
+    "--proof-trials",
+    "12",
+    "--proof-difficulty",
+    "3",
+    "--proof-count",
+    "100000",
+    "--measurement-notes",
+    "Exclusive CPU measurement window allocated by root after GPU benchmark release; root and sibling agents paused heavy CPU/GPU work; static review/report editing only; no GPU kernels launched by this tool.",
+    "--output",
+    "docs/hashcash-strategies.json"
+  ],
+  "finite_candidate_set": [
+    "forward",
+    "reverse",
+    "front_back_middle",
+    "strided"
+  ],
+  "method": "Identical finite nonce set, message, difficulty and worker count; fixed full work; alternating order; same warmed process pool; independent proof validation outside timing",
+  "assumption": "If distinct SHA-256 inputs behave like independent uniform 256-bit outputs, each unique nonce has success probability 16^(-difficulty). Expected attempts are 16^difficulty and expected seconds are approximately 16^difficulty / aggregate_unique_hashes_per_second in an unbounded-trial approximation. A finite nonce window may contain no proof. Visiting a different region gives no guaranteed advantage.",
+  "measurement_notes": "Exclusive CPU measurement window allocated by root after GPU benchmark release; root and sibling agents paused heavy CPU/GPU work; static review/report editing only; no GPU kernels launched by this tool.",
+  "gpu_work_launched_by_this_tool": false,
+  "fixed_work": {
+    "message": "You are the best of best!!!!",
+    "utf8_bytes": 28,
+    "difficulty": 5,
+    "start_nonce": "1000000000",
+    "end_nonce_inclusive": "1001999999",
+    "nonce_decimal_digits": 10,
+    "count": 2000000,
+    "workers": 4,
+    "repeats": 7,
+    "setup_and_warmup_seconds_excluded": 0.5270829999935813,
+    "plans": {
+      "forward": [
+        {
+          "start": "1000000000",
+          "count": 500000,
+          "step": 1
+        },
+        {
+          "start": "1000500000",
+          "count": 500000,
+          "step": 1
+        },
+        {
+          "start": "1001000000",
+          "count": 500000,
+          "step": 1
+        },
+        {
+          "start": "1001500000",
+          "count": 500000,
+          "step": 1
+        }
+      ],
+      "reverse": [
+        {
+          "start": "1001999999",
+          "count": 500000,
+          "step": -1
+        },
+        {
+          "start": "1001499999",
+          "count": 500000,
+          "step": -1
+        },
+        {
+          "start": "1000999999",
+          "count": 500000,
+          "step": -1
+        },
+        {
+          "start": "1000499999",
+          "count": 500000,
+          "step": -1
+        }
+      ],
+      "front_back_middle": [
+        {
+          "start": "1000000000",
+          "count": 500000,
+          "step": 1
+        },
+        {
+          "start": "1001999999",
+          "count": 500000,
+          "step": -1
+        },
+        {
+          "start": "1001000000",
+          "count": 500000,
+          "step": 1
+        },
+        {
+          "start": "1000999999",
+          "count": 500000,
+          "step": -1
+        }
+      ],
+      "strided": [
+        {
+          "start": "1000000000",
+          "count": 500000,
+          "step": 4
+        },
+        {
+          "start": "1000000001",
+          "count": 500000,
+          "step": 4
+        },
+        {
+          "start": "1000000002",
+          "count": 500000,
+          "step": 4
+        },
+        {
+          "start": "1000000003",
+          "count": 500000,
+          "step": 4
+        }
+      ]
+    },
+    "summaries": {
+      "forward": {
+        "seconds": [
+          0.4356460999988485,
+          0.6718032000062522,
+          0.6467511000228114,
+          0.6304634000116494,
+          0.5978837000147905,
+          0.5763694999914151,
+          0.5627053000207525
+        ],
+        "median_seconds": 0.5978837000147905,
+        "min_seconds": 0.4356460999988485,
+        "max_seconds": 0.6718032000062522,
+        "sample_stdev_seconds": 0.0778436268249928,
+        "median_hashes_per_second": 3345132.1719433456,
+        "speedup_vs_forward": 1.0,
+        "paired_speedups_vs_forward": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "repetitions_faster_than_forward": 0
+      },
+      "reverse": {
+        "seconds": [
+          0.5766527999949176,
+          0.6106739999959245,
+          0.6500561999855563,
+          0.5977655000169761,
+          0.5702561000071,
+          0.5546639999956824,
+          0.549055400013458
+        ],
+        "median_seconds": 0.5766527999949176,
+        "min_seconds": 0.549055400013458,
+        "max_seconds": 0.6500561999855563,
+        "sample_stdev_seconds": 0.03541484793558717,
+        "median_hashes_per_second": 3468291.4918953436,
+        "speedup_vs_forward": 1.036817474952103,
+        "paired_speedups_vs_forward": [
+          0.7554738310516972,
+          1.1001011996756627,
+          0.9949156704253904,
+          1.0547002126983651,
+          1.048447706227687,
+          1.0391327001498234,
+          1.0248606971299434
+        ],
+        "repetitions_faster_than_forward": 5
+      },
+      "front_back_middle": {
+        "seconds": [
+          0.5163319999992382,
+          0.6946349999925587,
+          0.6281646999996156,
+          0.5543993999890517,
+          0.6186592000012752,
+          0.6151338999916334,
+          0.5803420000011101
+        ],
+        "median_seconds": 0.6151338999916334,
+        "min_seconds": 0.5163319999992382,
+        "max_seconds": 0.6946349999925587,
+        "sample_stdev_seconds": 0.057422446728314626,
+        "median_hashes_per_second": 3251324.6303401627,
+        "speedup_vs_forward": 0.9719569999684987,
+        "paired_speedups_vs_forward": [
+          0.8437325209351566,
+          0.9671312272106197,
+          1.0295884184883475,
+          1.137200725729681,
+          0.9664185063659575,
+          0.936982175749466,
+          0.969609816314649
+        ],
+        "repetitions_faster_than_forward": 2
+      },
+      "strided": {
+        "seconds": [
+          0.5053981999808457,
+          0.46728949999669567,
+          0.5951050999865402,
+          0.6319340000045486,
+          0.6057848999917042,
+          0.5826174000103492,
+          0.5936400999780744
+        ],
+        "median_seconds": 0.5936400999780744,
+        "min_seconds": 0.46728949999669567,
+        "max_seconds": 0.6319340000045486,
+        "sample_stdev_seconds": 0.05941080141133955,
+        "median_hashes_per_second": 3369044.645187999,
+        "speedup_vs_forward": 1.007148438990009,
+        "paired_speedups_vs_forward": [
+          0.8619858559356944,
+          1.437659523723522,
+          1.0867846705354052,
+          0.9976728582527785,
+          0.9869570866209741,
+          0.9892761527224845,
+          0.9478896389269112
+        ],
+        "repetitions_faster_than_forward": 2
+      }
+    },
+    "raw_runs": [
+      {
+        "repeat": 1,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "forward",
+        "seconds": 0.4356460999988485,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          21468,
+          11704,
+          21612
+        ],
+        "worker_seconds": [
+          0.43283320000045933,
+          0.42205620001186617,
+          0.4118665999849327,
+          0.43434749997686595
+        ]
+      },
+      {
+        "repeat": 1,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "reverse",
+        "seconds": 0.5766527999949176,
+        "checked": 2000000,
+        "worker_pids": [
+          11704,
+          21468,
+          34920,
+          21612
+        ],
+        "worker_seconds": [
+          0.5281331000151113,
+          0.5754040000028908,
+          0.4739707999979146,
+          0.5505936999979895
+        ]
+      },
+      {
+        "repeat": 1,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "front_back_middle",
+        "seconds": 0.5163319999992382,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          11704,
+          21612,
+          21468
+        ],
+        "worker_seconds": [
+          0.504302799992729,
+          0.5149433000187855,
+          0.5035374999861233,
+          0.5108474000007845
+        ]
+      },
+      {
+        "repeat": 1,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "strided",
+        "seconds": 0.5053981999808457,
+        "checked": 2000000,
+        "worker_pids": [
+          21612,
+          34920,
+          21468,
+          11704
+        ],
+        "worker_seconds": [
+          0.46249900001566857,
+          0.4774901000200771,
+          0.4590953000006266,
+          0.503919600014342
+        ]
+      },
+      {
+        "repeat": 2,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "strided",
+        "seconds": 0.46728949999669567,
+        "checked": 2000000,
+        "worker_pids": [
+          21468,
+          21612,
+          34920,
+          11704
+        ],
+        "worker_seconds": [
+          0.4439458000124432,
+          0.4597496999776922,
+          0.4656744000094477,
+          0.46178720000898466
+        ]
+      },
+      {
+        "repeat": 2,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "front_back_middle",
+        "seconds": 0.6946349999925587,
+        "checked": 2000000,
+        "worker_pids": [
+          21468,
+          21612,
+          11704,
+          34920
+        ],
+        "worker_seconds": [
+          0.6290978000033647,
+          0.6341813000035472,
+          0.5957280999864452,
+          0.6929579999996349
+        ]
+      },
+      {
+        "repeat": 2,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "reverse",
+        "seconds": 0.6106739999959245,
+        "checked": 2000000,
+        "worker_pids": [
+          11704,
+          21468,
+          21612,
+          34920
+        ],
+        "worker_seconds": [
+          0.6093627999944147,
+          0.6049474000174087,
+          0.577029300009599,
+          0.5952767000126187
+        ]
+      },
+      {
+        "repeat": 2,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "forward",
+        "seconds": 0.6718032000062522,
+        "checked": 2000000,
+        "worker_pids": [
+          21612,
+          34920,
+          21468,
+          11704
+        ],
+        "worker_seconds": [
+          0.6704922999779228,
+          0.6301927999884356,
+          0.5806499999889638,
+          0.649778699997114
+        ]
+      },
+      {
+        "repeat": 3,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "forward",
+        "seconds": 0.6467511000228114,
+        "checked": 2000000,
+        "worker_pids": [
+          21468,
+          34920,
+          11704,
+          21612
+        ],
+        "worker_seconds": [
+          0.6452081000024918,
+          0.6257779999868944,
+          0.5658641000045463,
+          0.533536400005687
+        ]
+      },
+      {
+        "repeat": 3,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "reverse",
+        "seconds": 0.6500561999855563,
+        "checked": 2000000,
+        "worker_pids": [
+          21612,
+          11704,
+          34920,
+          21468
+        ],
+        "worker_seconds": [
+          0.5830815999943297,
+          0.6297188000171445,
+          0.5495845999976154,
+          0.6483810999779962
+        ]
+      },
+      {
+        "repeat": 3,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "front_back_middle",
+        "seconds": 0.6281646999996156,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          21612,
+          11704,
+          21468
+        ],
+        "worker_seconds": [
+          0.6269812000100501,
+          0.6232441999891307,
+          0.5848573999828659,
+          0.5998182999901474
+        ]
+      },
+      {
+        "repeat": 3,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "strided",
+        "seconds": 0.5951050999865402,
+        "checked": 2000000,
+        "worker_pids": [
+          11704,
+          21468,
+          21612,
+          34920
+        ],
+        "worker_seconds": [
+          0.5691225999908056,
+          0.5670258000027388,
+          0.5937318000069354,
+          0.5508788000151981
+        ]
+      },
+      {
+        "repeat": 4,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "strided",
+        "seconds": 0.6319340000045486,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          21468,
+          11704,
+          21612
+        ],
+        "worker_seconds": [
+          0.5684591000026558,
+          0.6303671000059694,
+          0.5735579000029247,
+          0.5660229999921285
+        ]
+      },
+      {
+        "repeat": 4,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "front_back_middle",
+        "seconds": 0.5543993999890517,
+        "checked": 2000000,
+        "worker_pids": [
+          21612,
+          34920,
+          11704,
+          21468
+        ],
+        "worker_seconds": [
+          0.5288279000087641,
+          0.54381070000818,
+          0.5529151999799069,
+          0.5446968000032939
+        ]
+      },
+      {
+        "repeat": 4,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "reverse",
+        "seconds": 0.5977655000169761,
+        "checked": 2000000,
+        "worker_pids": [
+          21612,
+          34920,
+          21468,
+          11704
+        ],
+        "worker_seconds": [
+          0.5630561000143643,
+          0.509835299977567,
+          0.5704989000223577,
+          0.5962743999843951
+        ]
+      },
+      {
+        "repeat": 4,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "forward",
+        "seconds": 0.6304634000116494,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          21612,
+          21468,
+          11704
+        ],
+        "worker_seconds": [
+          0.5635959999926854,
+          0.6156087999988813,
+          0.6291951000166591,
+          0.593466599995736
+        ]
+      },
+      {
+        "repeat": 5,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "forward",
+        "seconds": 0.5978837000147905,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          11704,
+          21612,
+          21468
+        ],
+        "worker_seconds": [
+          0.533427100017434,
+          0.5225787999806926,
+          0.5959743999992497,
+          0.5840967000112869
+        ]
+      },
+      {
+        "repeat": 5,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "reverse",
+        "seconds": 0.5702561000071,
+        "checked": 2000000,
+        "worker_pids": [
+          11704,
+          34920,
+          21468,
+          21612
+        ],
+        "worker_seconds": [
+          0.5366830000129994,
+          0.5522133999911603,
+          0.5689917999843601,
+          0.5669017999898642
+        ]
+      },
+      {
+        "repeat": 5,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "front_back_middle",
+        "seconds": 0.6186592000012752,
+        "checked": 2000000,
+        "worker_pids": [
+          11704,
+          34920,
+          21612,
+          21468
+        ],
+        "worker_seconds": [
+          0.5433388000237755,
+          0.5880228000169154,
+          0.5272560000012163,
+          0.6167703999963123
+        ]
+      },
+      {
+        "repeat": 5,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "strided",
+        "seconds": 0.6057848999917042,
+        "checked": 2000000,
+        "worker_pids": [
+          21612,
+          11704,
+          34920,
+          21468
+        ],
+        "worker_seconds": [
+          0.564043499995023,
+          0.6039651000173762,
+          0.5250286999798845,
+          0.559473600005731
+        ]
+      },
+      {
+        "repeat": 6,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "strided",
+        "seconds": 0.5826174000103492,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          21468,
+          21612,
+          11704
+        ],
+        "worker_seconds": [
+          0.5186178000003565,
+          0.5810644000011962,
+          0.5368525999947451,
+          0.556964399991557
+        ]
+      },
+      {
+        "repeat": 6,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "front_back_middle",
+        "seconds": 0.6151338999916334,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          21612,
+          11704,
+          21468
+        ],
+        "worker_seconds": [
+          0.5528230000054464,
+          0.5676858000224456,
+          0.6138371000124607,
+          0.5374781000136863
+        ]
+      },
+      {
+        "repeat": 6,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "reverse",
+        "seconds": 0.5546639999956824,
+        "checked": 2000000,
+        "worker_pids": [
+          21468,
+          34920,
+          21612,
+          11704
+        ],
+        "worker_seconds": [
+          0.5534459000045899,
+          0.5290562000009231,
+          0.5361798999947496,
+          0.5498239000153262
+        ]
+      },
+      {
+        "repeat": 6,
+        "order": [
+          "strided",
+          "front_back_middle",
+          "reverse",
+          "forward"
+        ],
+        "strategy": "forward",
+        "seconds": 0.5763694999914151,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          21612,
+          11704,
+          21468
+        ],
+        "worker_seconds": [
+          0.5689008999906946,
+          0.5458771999983583,
+          0.5750370000023395,
+          0.5740783000073861
+        ]
+      },
+      {
+        "repeat": 7,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "forward",
+        "seconds": 0.5627053000207525,
+        "checked": 2000000,
+        "worker_pids": [
+          21612,
+          34920,
+          21468,
+          11704
+        ],
+        "worker_seconds": [
+          0.5461950000026263,
+          0.5365406000055373,
+          0.5457840999879409,
+          0.5613841000013053
+        ]
+      },
+      {
+        "repeat": 7,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "reverse",
+        "seconds": 0.549055400013458,
+        "checked": 2000000,
+        "worker_pids": [
+          34920,
+          21468,
+          21612,
+          11704
+        ],
+        "worker_seconds": [
+          0.5380426000047009,
+          0.5304696999955922,
+          0.532492700003786,
+          0.5477452000195626
+        ]
+      },
+      {
+        "repeat": 7,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "front_back_middle",
+        "seconds": 0.5803420000011101,
+        "checked": 2000000,
+        "worker_pids": [
+          21468,
+          21612,
+          34920,
+          11704
+        ],
+        "worker_seconds": [
+          0.5469165999966208,
+          0.5789233999967109,
+          0.554135700018378,
+          0.5656939999898896
+        ]
+      },
+      {
+        "repeat": 7,
+        "order": [
+          "forward",
+          "reverse",
+          "front_back_middle",
+          "strided"
+        ],
+        "strategy": "strided",
+        "seconds": 0.5936400999780744,
+        "checked": 2000000,
+        "worker_pids": [
+          21468,
+          34920,
+          11704,
+          21612
+        ],
+        "worker_seconds": [
+          0.5923065000097267,
+          0.5584953000070527,
+          0.5821385000017472,
+          0.5873830000055023
+        ]
+      }
+    ],
+    "verified_worker_results": {
+      "forward": [
+        {
+          "lane": {
+            "start": "1000000000",
+            "count": 500000,
+            "step": 1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": "1000235159",
+            "hash": "00000c1221eb4c822320cc8a0e4e3c5c919341fcef0745c2fb80809b3017adcf",
+            "last_nonce": "1000499999",
+            "last_hash": "69969f338b859a1a286daafe325caac9da6e148788be798fa6598d318a92b801"
+          }
+        },
+        {
+          "lane": {
+            "start": "1000500000",
+            "count": 500000,
+            "step": 1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": null,
+            "hash": null,
+            "last_nonce": "1000999999",
+            "last_hash": "557ae6bbed27f27dcafc6d0bbe1850d1c2afefd727d3a0a3284645e2be47e45a"
+          }
+        },
+        {
+          "lane": {
+            "start": "1001000000",
+            "count": 500000,
+            "step": 1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": "1001317119",
+            "hash": "0000091649ea311bed58e1c7c08d21909cb14e423a6e71f902b0ec34968de053",
+            "last_nonce": "1001499999",
+            "last_hash": "7bdc830cad96888e2234ce864e01cb8b28d733e7b24e77e980c9d6fa3a7acf79"
+          }
+        },
+        {
+          "lane": {
+            "start": "1001500000",
+            "count": 500000,
+            "step": 1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": null,
+            "hash": null,
+            "last_nonce": "1001999999",
+            "last_hash": "37681958188c05cd7739fc3dcc402ae99faea28fd6d57f8fe4e6dcbd960e414e"
+          }
+        }
+      ],
+      "reverse": [
+        {
+          "lane": {
+            "start": "1001999999",
+            "count": 500000,
+            "step": -1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": null,
+            "hash": null,
+            "last_nonce": "1001500000",
+            "last_hash": "dd2435434524dfd3253e6febc3ee9e1c109046cda577c965d1bcac16f90fe4bf"
+          }
+        },
+        {
+          "lane": {
+            "start": "1001499999",
+            "count": 500000,
+            "step": -1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": "1001317119",
+            "hash": "0000091649ea311bed58e1c7c08d21909cb14e423a6e71f902b0ec34968de053",
+            "last_nonce": "1001000000",
+            "last_hash": "bcaf45ac8953c4bc0eb54b1b088648e2fe4954486a72e935a0f05730a74f3e30"
+          }
+        },
+        {
+          "lane": {
+            "start": "1000999999",
+            "count": 500000,
+            "step": -1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": null,
+            "hash": null,
+            "last_nonce": "1000500000",
+            "last_hash": "0d5f372de8285ab5ba02e311455284ae74b826905413ff6cf9b387ca6ddc9665"
+          }
+        },
+        {
+          "lane": {
+            "start": "1000499999",
+            "count": 500000,
+            "step": -1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": "1000235159",
+            "hash": "00000c1221eb4c822320cc8a0e4e3c5c919341fcef0745c2fb80809b3017adcf",
+            "last_nonce": "1000000000",
+            "last_hash": "fcf3c3837413bfca7e56991f14cbc2135c14296b89eb64f08cfdf993354a3af5"
+          }
+        }
+      ],
+      "front_back_middle": [
+        {
+          "lane": {
+            "start": "1000000000",
+            "count": 500000,
+            "step": 1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": "1000235159",
+            "hash": "00000c1221eb4c822320cc8a0e4e3c5c919341fcef0745c2fb80809b3017adcf",
+            "last_nonce": "1000499999",
+            "last_hash": "69969f338b859a1a286daafe325caac9da6e148788be798fa6598d318a92b801"
+          }
+        },
+        {
+          "lane": {
+            "start": "1001999999",
+            "count": 500000,
+            "step": -1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": null,
+            "hash": null,
+            "last_nonce": "1001500000",
+            "last_hash": "dd2435434524dfd3253e6febc3ee9e1c109046cda577c965d1bcac16f90fe4bf"
+          }
+        },
+        {
+          "lane": {
+            "start": "1001000000",
+            "count": 500000,
+            "step": 1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": "1001317119",
+            "hash": "0000091649ea311bed58e1c7c08d21909cb14e423a6e71f902b0ec34968de053",
+            "last_nonce": "1001499999",
+            "last_hash": "7bdc830cad96888e2234ce864e01cb8b28d733e7b24e77e980c9d6fa3a7acf79"
+          }
+        },
+        {
+          "lane": {
+            "start": "1000999999",
+            "count": 500000,
+            "step": -1
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": null,
+            "hash": null,
+            "last_nonce": "1000500000",
+            "last_hash": "0d5f372de8285ab5ba02e311455284ae74b826905413ff6cf9b387ca6ddc9665"
+          }
+        }
+      ],
+      "strided": [
+        {
+          "lane": {
+            "start": "1000000000",
+            "count": 500000,
+            "step": 4
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": null,
+            "hash": null,
+            "last_nonce": "1001999996",
+            "last_hash": "d741429fbd252556d8c2ebccc65a762ce96e3c6c5eb21d0b494df678a884107a"
+          }
+        },
+        {
+          "lane": {
+            "start": "1000000001",
+            "count": 500000,
+            "step": 4
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": null,
+            "hash": null,
+            "last_nonce": "1001999997",
+            "last_hash": "bfda1ec90af82e9bdd1cf11c43d05cc251e5a6d9e355750507762ecd56fe0eab"
+          }
+        },
+        {
+          "lane": {
+            "start": "1000000002",
+            "count": 500000,
+            "step": 4
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": null,
+            "hash": null,
+            "last_nonce": "1001999998",
+            "last_hash": "943104ba50321aaeb9cd63383e3472b5720d400243038cab56dbb52771bdec85"
+          }
+        },
+        {
+          "lane": {
+            "start": "1000000003",
+            "count": 500000,
+            "step": 4
+          },
+          "result": {
+            "checked": 500000,
+            "nonce": "1000235159",
+            "hash": "00000c1221eb4c822320cc8a0e4e3c5c919341fcef0745c2fb80809b3017adcf",
+            "last_nonce": "1001999999",
+            "last_hash": "37681958188c05cd7739fc3dcc402ae99faea28fd6d57f8fe4e6dcbd960e414e"
+          }
+        }
+      ]
+    },
+    "proofs_and_last_hashes_independently_verified": true,
+    "partition_check": "Contiguous intervals tile the window, or residue classes exactly partition it"
+  },
+  "proof_visit_order_trials": {
+    "method": "Actual SHA-256 scans; equal-rate simultaneous-worker visit-count model, not elapsed time",
+    "message_selection": "Deterministic numbered suffixes fixed before any proof scan",
+    "difficulty": 3,
+    "count_per_trial": 100000,
+    "trials": 12,
+    "sole_wins_by_visits": {
+      "forward": 0,
+      "reverse": 8,
+      "front_back_middle": 0,
+      "strided": 2
+    },
+    "ties": 2,
+    "rows": [
+      {
+        "trial": 1,
+        "message": "You are the best of best!!!! [strategy trial 01]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 890,
+        "first_proof_nonce": "1000075889",
+        "first_proof_hash": "000e0cc7866f2f2154e8c32c1500b9717d4c3c0b06ae320f25f99f817acc8c19",
+        "worker_visits_until_first_proof_or_end": [
+          4811,
+          13130,
+          2389,
+          890
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 1,
+        "message": "You are the best of best!!!! [strategy trial 01]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 280,
+        "first_proof_nonce": "1000024720",
+        "first_proof_hash": "000929adf8a9064f90810e8a7fdd58e9d780de3b8637c76a5b4e05fa302578b5",
+        "worker_visits_until_first_proof_or_end": [
+          1160,
+          678,
+          759,
+          280
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 1,
+        "message": "You are the best of best!!!! [strategy trial 01]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 759,
+        "first_proof_nonce": "1000049241",
+        "first_proof_hash": "0003eb3ceb1211bc7f106a50cb2deb039e0130a6c5537b74139bdc2fa91cfdbf",
+        "worker_visits_until_first_proof_or_end": [
+          4811,
+          1160,
+          2389,
+          759
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 1,
+        "message": "You are the best of best!!!! [strategy trial 01]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 1203,
+        "first_proof_nonce": "1000004810",
+        "first_proof_hash": "00085bd36d4a083600ff1997bf42ea7b0a5a909fe0f60109275ba3693f38cd9f",
+        "worker_visits_until_first_proof_or_end": [
+          1206,
+          3450,
+          1203,
+          5472
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 2,
+        "message": "You are the best of best!!!! [strategy trial 02]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 45,
+        "first_proof_nonce": "1000050044",
+        "first_proof_hash": "000322acf2ec4067488ba24763195512b6d63c588722206bac28e06daa34b48a",
+        "worker_visits_until_first_proof_or_end": [
+          12759,
+          207,
+          45,
+          3691
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 2,
+        "message": "You are the best of best!!!! [strategy trial 02]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 503,
+        "first_proof_nonce": "1000024497",
+        "first_proof_hash": "0009f8134fc0d376880b5b58538c99553558081fe39bb3aa4b3592c5f2659594",
+        "worker_visits_until_first_proof_or_end": [
+          14634,
+          1935,
+          9192,
+          503
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 2,
+        "message": "You are the best of best!!!! [strategy trial 02]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 45,
+        "first_proof_nonce": "1000050044",
+        "first_proof_hash": "000322acf2ec4067488ba24763195512b6d63c588722206bac28e06daa34b48a",
+        "worker_visits_until_first_proof_or_end": [
+          12759,
+          14634,
+          45,
+          9192
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 2,
+        "message": "You are the best of best!!!! [strategy trial 02]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 3190,
+        "first_proof_nonce": "1000012758",
+        "first_proof_hash": "000b1bc1e50ca92db693a0594501d821d9358080dbe2d596af6a7218547425b8",
+        "worker_visits_until_first_proof_or_end": [
+          3301,
+          6125,
+          3190,
+          7909
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 3,
+        "message": "You are the best of best!!!! [strategy trial 03]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 1800,
+        "first_proof_nonce": "1000001799",
+        "first_proof_hash": "000aba6d20b33f1d2afc6c317d3aa990f4ef6e7176c2d94733af6d42b590557f",
+        "worker_visits_until_first_proof_or_end": [
+          1800,
+          2254,
+          2608,
+          6917
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 3,
+        "message": "You are the best of best!!!! [strategy trial 03]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 357,
+        "first_proof_nonce": "1000074643",
+        "first_proof_hash": "00024861bbcfc15a2ad3caa0586e1f3d7a2bfddc41d1235f94d3e23ff57fa3b8",
+        "worker_visits_until_first_proof_or_end": [
+          10327,
+          357,
+          4760,
+          554
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 3,
+        "message": "You are the best of best!!!! [strategy trial 03]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 1800,
+        "first_proof_nonce": "1000001799",
+        "first_proof_hash": "000aba6d20b33f1d2afc6c317d3aa990f4ef6e7176c2d94733af6d42b590557f",
+        "worker_visits_until_first_proof_or_end": [
+          1800,
+          10327,
+          2608,
+          4760
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 3,
+        "message": "You are the best of best!!!! [strategy trial 03]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 450,
+        "first_proof_nonce": "1000001799",
+        "first_proof_hash": "000aba6d20b33f1d2afc6c317d3aa990f4ef6e7176c2d94733af6d42b590557f",
+        "worker_visits_until_first_proof_or_end": [
+          4888,
+          1926,
+          1214,
+          450
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 4,
+        "message": "You are the best of best!!!! [strategy trial 04]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 104,
+        "first_proof_nonce": "1000000103",
+        "first_proof_hash": "0003d34411b1e20f8e2ab74a65307174f3109136f43001ddc97e95a479974ede",
+        "worker_visits_until_first_proof_or_end": [
+          104,
+          149,
+          2255,
+          1507
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 4,
+        "message": "You are the best of best!!!! [strategy trial 04]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 13,
+        "first_proof_nonce": "1000024987",
+        "first_proof_hash": "000833fcf975a76bec309d4b8b55067d7f3c69732faa5b41d9d7a287d895dc6d",
+        "worker_visits_until_first_proof_or_end": [
+          7957,
+          962,
+          3673,
+          13
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 4,
+        "message": "You are the best of best!!!! [strategy trial 04]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 104,
+        "first_proof_nonce": "1000000103",
+        "first_proof_hash": "0003d34411b1e20f8e2ab74a65307174f3109136f43001ddc97e95a479974ede",
+        "worker_visits_until_first_proof_or_end": [
+          104,
+          7957,
+          2255,
+          3673
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 4,
+        "message": "You are the best of best!!!! [strategy trial 04]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 26,
+        "first_proof_nonce": "1000000103",
+        "first_proof_hash": "0003d34411b1e20f8e2ab74a65307174f3109136f43001ddc97e95a479974ede",
+        "worker_visits_until_first_proof_or_end": [
+          6288,
+          4886,
+          13064,
+          26
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 5,
+        "message": "You are the best of best!!!! [strategy trial 05]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 322,
+        "first_proof_nonce": "1000050321",
+        "first_proof_hash": "000e1d0660527b717bc61a99afeb3995eca4c8b7ae7d1931ba6dad1ae1ae8ad8",
+        "worker_visits_until_first_proof_or_end": [
+          1643,
+          1531,
+          322,
+          740
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 5,
+        "message": "You are the best of best!!!! [strategy trial 05]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 291,
+        "first_proof_nonce": "1000024709",
+        "first_proof_hash": "0007ac97308bbe4f0085ed02ff26a56807ecb185da13a06e0c7b2eee92c08735",
+        "worker_visits_until_first_proof_or_end": [
+          668,
+          7808,
+          5790,
+          291
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 5,
+        "message": "You are the best of best!!!! [strategy trial 05]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 322,
+        "first_proof_nonce": "1000050321",
+        "first_proof_hash": "000e1d0660527b717bc61a99afeb3995eca4c8b7ae7d1931ba6dad1ae1ae8ad8",
+        "worker_visits_until_first_proof_or_end": [
+          1643,
+          668,
+          322,
+          5790
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 5,
+        "message": "You are the best of best!!!! [strategy trial 05]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 411,
+        "first_proof_nonce": "1000001642",
+        "first_proof_hash": "0002f5868f67fcfca5b5c7fc9536219a3a598a141695af849124dd6d664aeb9c",
+        "worker_visits_until_first_proof_or_end": [
+          7117,
+          6178,
+          411,
+          1075
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 6,
+        "message": "You are the best of best!!!! [strategy trial 06]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 1207,
+        "first_proof_nonce": "1000001206",
+        "first_proof_hash": "000fc51d21eacf7ce4f187e51076ed0adf38e72f23f35415ec16de919b06ade6",
+        "worker_visits_until_first_proof_or_end": [
+          1207,
+          1711,
+          13943,
+          6048
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 6,
+        "message": "You are the best of best!!!! [strategy trial 06]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 202,
+        "first_proof_nonce": "1000024798",
+        "first_proof_hash": "000dd3253d8384495e5017dbda327f3a00f4fdb0faf4f186469dc0ed8a6d67fc",
+        "worker_visits_until_first_proof_or_end": [
+          3013,
+          572,
+          374,
+          202
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 6,
+        "message": "You are the best of best!!!! [strategy trial 06]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 374,
+        "first_proof_nonce": "1000049626",
+        "first_proof_hash": "000c59b959c6efe524febb3e704a870be2a5edc633aa22670258fd08f0b4dd67",
+        "worker_visits_until_first_proof_or_end": [
+          1207,
+          3013,
+          13943,
+          374
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 6,
+        "message": "You are the best of best!!!! [strategy trial 06]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 302,
+        "first_proof_nonce": "1000001206",
+        "first_proof_hash": "000fc51d21eacf7ce4f187e51076ed0adf38e72f23f35415ec16de919b06ade6",
+        "worker_visits_until_first_proof_or_end": [
+          10073,
+          9820,
+          302,
+          8179
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 7,
+        "message": "You are the best of best!!!! [strategy trial 07]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 752,
+        "first_proof_nonce": "1000075751",
+        "first_proof_hash": "0003aeb7174c04f7e99d4bd04deb70344f6ddc3a36caaf35b1a7f4a8481cbf11",
+        "worker_visits_until_first_proof_or_end": [
+          2912,
+          5338,
+          1768,
+          752
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 7,
+        "message": "You are the best of best!!!! [strategy trial 07]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 2083,
+        "first_proof_nonce": "1000047917",
+        "first_proof_hash": "000e08706bc898602117b6942c780b949b35c64281aed17b40f5c45f0af473a2",
+        "worker_visits_until_first_proof_or_end": [
+          2445,
+          10900,
+          2083,
+          9622
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 7,
+        "message": "You are the best of best!!!! [strategy trial 07]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 1768,
+        "first_proof_nonce": "1000051767",
+        "first_proof_hash": "000cbffe7071520af62bd02314750a9fe3aee9c752bf0b21ade31eb239c8dbc8",
+        "worker_visits_until_first_proof_or_end": [
+          2912,
+          2445,
+          1768,
+          2083
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 7,
+        "message": "You are the best of best!!!! [strategy trial 07]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 728,
+        "first_proof_nonce": "1000002911",
+        "first_proof_hash": "000b1f315621d861dfced7e4f73ff310b8c6ca07f1c7036c46988e18291492c9",
+        "worker_visits_until_first_proof_or_end": [
+          3796,
+          979,
+          3845,
+          728
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 8,
+        "message": "You are the best of best!!!! [strategy trial 08]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 1074,
+        "first_proof_nonce": "1000026073",
+        "first_proof_hash": "000a87fd754970b5165e92a2ae293e3f7c88ec3c8288e33be26243bc0b109a27",
+        "worker_visits_until_first_proof_or_end": [
+          7165,
+          1074,
+          3853,
+          7445
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 8,
+        "message": "You are the best of best!!!! [strategy trial 08]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 71,
+        "first_proof_nonce": "1000024929",
+        "first_proof_hash": "0003c17043ed46a44ba402b545626b8ac6d290d50325220e94873daa9faf1142",
+        "worker_visits_until_first_proof_or_end": [
+          17556,
+          10305,
+          1698,
+          71
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 8,
+        "message": "You are the best of best!!!! [strategy trial 08]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 1698,
+        "first_proof_nonce": "1000048302",
+        "first_proof_hash": "00031f24f684e1f4b2c3566bc8d0344011cfa8889df594f2c532c1ba2ad77b1d",
+        "worker_visits_until_first_proof_or_end": [
+          7165,
+          17556,
+          3853,
+          1698
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 8,
+        "message": "You are the best of best!!!! [strategy trial 08]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 1792,
+        "first_proof_nonce": "1000007164",
+        "first_proof_hash": "0001a44bc01c2572aaefa22ec36a0acd64f9ee51791f17cfa378f59512c6b121",
+        "worker_visits_until_first_proof_or_end": [
+          1792,
+          4023,
+          1959,
+          5849
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 9,
+        "message": "You are the best of best!!!! [strategy trial 09]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 1701,
+        "first_proof_nonce": "1000051700",
+        "first_proof_hash": "000123d9747e79a87863ef738e2a3f8754ef851f05208bf550483b4ccbb6acbe",
+        "worker_visits_until_first_proof_or_end": [
+          2244,
+          2343,
+          1701,
+          8541
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 9,
+        "message": "You are the best of best!!!! [strategy trial 09]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 3826,
+        "first_proof_nonce": "1000071174",
+        "first_proof_hash": "000b7f46e7a4100471cfdaa8602a279496180d293c542c2bbf91cc64e56b3d43",
+        "worker_visits_until_first_proof_or_end": [
+          11199,
+          3826,
+          9251,
+          4852
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 9,
+        "message": "You are the best of best!!!! [strategy trial 09]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 1701,
+        "first_proof_nonce": "1000051700",
+        "first_proof_hash": "000123d9747e79a87863ef738e2a3f8754ef851f05208bf550483b4ccbb6acbe",
+        "worker_visits_until_first_proof_or_end": [
+          2244,
+          11199,
+          1701,
+          9251
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 9,
+        "message": "You are the best of best!!!! [strategy trial 09]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 561,
+        "first_proof_nonce": "1000002243",
+        "first_proof_hash": "000ee5fa865fa728b08af0e389f02469d849cc11a94957b31b079bcaaf20f534",
+        "worker_visits_until_first_proof_or_end": [
+          1794,
+          8251,
+          6836,
+          561
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 10,
+        "message": "You are the best of best!!!! [strategy trial 10]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 1533,
+        "first_proof_nonce": "1000051532",
+        "first_proof_hash": "000877513fe3b881ac1ec95647f8a1470460ddb699916738fe2cb30f54690e4d",
+        "worker_visits_until_first_proof_or_end": [
+          4342,
+          6755,
+          1533,
+          9564
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 10,
+        "message": "You are the best of best!!!! [strategy trial 10]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 316,
+        "first_proof_nonce": "1000024684",
+        "first_proof_hash": "000377b36ccce2949b4c9bd3259240964dc11008e3d4124012ffe29ca56fe7d4",
+        "worker_visits_until_first_proof_or_end": [
+          5049,
+          2790,
+          3521,
+          316
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 10,
+        "message": "You are the best of best!!!! [strategy trial 10]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 1533,
+        "first_proof_nonce": "1000051532",
+        "first_proof_hash": "000877513fe3b881ac1ec95647f8a1470460ddb699916738fe2cb30f54690e4d",
+        "worker_visits_until_first_proof_or_end": [
+          4342,
+          5049,
+          1533,
+          3521
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 10,
+        "message": "You are the best of best!!!! [strategy trial 10]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 1086,
+        "first_proof_nonce": "1000004341",
+        "first_proof_hash": "000c853f4953f683e9b980efad305bdbef16e70619726008dfb2a55422dd1e0d",
+        "worker_visits_until_first_proof_or_end": [
+          4394,
+          1086,
+          1795,
+          4358
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 11,
+        "message": "You are the best of best!!!! [strategy trial 11]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 1241,
+        "first_proof_nonce": "1000051240",
+        "first_proof_hash": "000b53302428d7ddb49dea46a1b706f373a03505a9e955e5cfb336ee32586d6e",
+        "worker_visits_until_first_proof_or_end": [
+          6787,
+          2850,
+          1241,
+          3858
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 11,
+        "message": "You are the best of best!!!! [strategy trial 11]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 2436,
+        "first_proof_nonce": "1000072564",
+        "first_proof_hash": "000670ebf5f02e4dd224cca3f637661e3a33634bca4f74186aacb49b75cf824b",
+        "worker_visits_until_first_proof_or_end": [
+          6317,
+          2436,
+          13051,
+          3933
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 11,
+        "message": "You are the best of best!!!! [strategy trial 11]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 1241,
+        "first_proof_nonce": "1000051240",
+        "first_proof_hash": "000b53302428d7ddb49dea46a1b706f373a03505a9e955e5cfb336ee32586d6e",
+        "worker_visits_until_first_proof_or_end": [
+          6787,
+          6317,
+          1241,
+          13051
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 11,
+        "message": "You are the best of best!!!! [strategy trial 11]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 1697,
+        "first_proof_nonce": "1000006786",
+        "first_proof_hash": "0005b04c4dfeb9a6c1378cdcddc4f82752d931c52cffdd390b1d3b80673008ed",
+        "worker_visits_until_first_proof_or_end": [
+          7598,
+          4625,
+          1697,
+          4782
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 12,
+        "message": "You are the best of best!!!! [strategy trial 12]",
+        "strategy": "forward",
+        "ideal_equal_rate_rounds_to_first_proof": 1322,
+        "first_proof_nonce": "1000051321",
+        "first_proof_hash": "00011ec143bd8fc49f9232f858aa65b658c536736cc6cd4cc4e3a491f58fd42c",
+        "worker_visits_until_first_proof_or_end": [
+          7536,
+          6046,
+          1322,
+          2271
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 12,
+        "message": "You are the best of best!!!! [strategy trial 12]",
+        "strategy": "reverse",
+        "ideal_equal_rate_rounds_to_first_proof": 617,
+        "first_proof_nonce": "1000074383",
+        "first_proof_hash": "000feb178d1432790eddd8ef24c03edacfd617351d56d27d425c9a11244680b7",
+        "worker_visits_until_first_proof_or_end": [
+          4741,
+          617,
+          1271,
+          1419
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 12,
+        "message": "You are the best of best!!!! [strategy trial 12]",
+        "strategy": "front_back_middle",
+        "ideal_equal_rate_rounds_to_first_proof": 1271,
+        "first_proof_nonce": "1000048729",
+        "first_proof_hash": "000a07225e8777a154ca92e780df16cc6f43090e2cdc099401641b9c892cf580",
+        "worker_visits_until_first_proof_or_end": [
+          7536,
+          4741,
+          1322,
+          1271
+        ],
+        "all_reported_proofs_independently_verified": true
+      },
+      {
+        "trial": 12,
+        "message": "You are the best of best!!!! [strategy trial 12]",
+        "strategy": "strided",
+        "ideal_equal_rate_rounds_to_first_proof": 1884,
+        "first_proof_nonce": "1000007535",
+        "first_proof_hash": "000d48e84517b293afdcbeefaa0e258efb6beac63553e015d5dbab7c42a58023",
+        "worker_visits_until_first_proof_or_end": [
+          2684,
+          4528,
+          10108,
+          1884
+        ],
+        "all_reported_proofs_independently_verified": true
+      }
+    ]
+  }
+}
