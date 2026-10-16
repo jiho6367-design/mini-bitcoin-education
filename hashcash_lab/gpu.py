@@ -69,6 +69,26 @@ class BatchResult:
         return self.count / self.seconds if self.seconds > 0 else 0.0
 
 
+class _BundledKernel:
+    """Retain a compiled module, its launch wrapper and its driver Function."""
+
+    def __init__(self, module: Any, raw: Any, name: str):
+        self.module = module
+        self.raw = raw
+        # RawModule.get_function returns RawKernel; the native scheduler needs
+        # the Function object owning its actual CUfunction handle.
+        self.kernel = raw.kernel
+        self.name = name
+
+    def compile(self, log_stream=None):
+        # The containing module was compiled before this wrapper is published.
+        # Recompiling RawKernel would invalidate the retained Function owner.
+        return None
+
+    def __call__(self, *args, **kwargs):
+        return self.raw(*args, **kwargs)
+
+
 def _word_layout(message: bytes, nonce_digits: int) -> tuple[list[int], list[tuple[int, int]]]:
     """Return padded constants and the (word, bit shift) of each nonce byte."""
     if not 1 <= nonce_digits <= 20:
@@ -227,6 +247,9 @@ class CudaBackend:
         self.threads = threads
         self.per_thread = per_thread
         self._kernels: dict[tuple[bytes, int, int, bool], Any] = {}
+        self._bundle_modules: dict[int, Any] = {}
+        self._bundle_members: dict[tuple[bytes, int, int, bool], _BundledKernel] = {}
+        self.bundle_preparation_trace: list[dict[str, float | int]] = []
         # RawKernel.compile() clears CuPy's cached Function. Keep each compiled
         # search Function alive and never compile that RawKernel a second time:
         # native schedulers borrow its driver handle across sequential jobs.
@@ -305,6 +328,8 @@ class CudaBackend:
                     self._native_functions = None
                     self._search_functions.clear()
                     self._kernels.clear()
+                    self._bundle_members.clear()
+                    self._bundle_modules.clear()
                     self._search_prepared_digits.clear()
                     self._found = self._nonce = self._digest = self._result = None
                     self._host_result = self._pinned_result = None
@@ -313,13 +338,88 @@ class CudaBackend:
         except Exception as exc:
             raise GpuUnavailable(f"CUDA 자원 해제 실패: {exc}") from exc
 
+    def _stage_keys(self, stage: int) -> list[tuple[bytes, int, int, bool]]:
+        """Separate mandatory self-tests from native-only eager preparation."""
+        first = [(self.message, self.difficulty, digits, True)
+                 for digits in (1, 2, 3, 4, 5, 7, 10, 20)]
+        first += [(payload, self.difficulty, 20, True) for payload in (
+            b"x" * 33, b"x" * 34, ("가" * 11 + "ab").encode("utf-8"))]
+        first += [(b"CUDA proof self-test", difficulty, 4, False)
+                  for difficulty in (1, 64)]
+        first += [(self.message, self.difficulty, digits, False)
+                  for digits in (1, 20)]
+        first = list(dict.fromkeys(first))
+        if stage == 1:
+            return first
+        if stage != 2:
+            raise ValueError("Compilation stage must be 1 or 2")
+        # A message equal to a predicate self-test can already have its
+        # four-digit entry point in stage one. Do not compile that key twice.
+        return [(self.message, self.difficulty, digits, False)
+                for digits in range(2, 20)
+                if (self.message, self.difficulty, digits, False) not in first]
+
+    def _ensure_bundle(self, stage: int) -> None:
+        """Compile unchanged kernel bodies together, then publish all owners."""
+        self._require_open()
+        if stage in self._bundle_modules:
+            return
+        started = time.perf_counter()
+        keys = self._stage_keys(stage)
+        sources, names = [], []
+        for index, (payload, threshold, digits, dump) in enumerate(keys):
+            name = f"hashcash_stage_{stage}_{index:02d}"
+            original = "hashcash_dump" if dump else "hashcash_candidates"
+            source = _build_cuda(payload, threshold, digits, self.per_thread, dump=dump)
+            signature = f"void {original}("
+            if source.count(signature) != 1:
+                raise RuntimeError("Unexpected generated CUDA entry point")
+            source = source.replace(signature, f"void {name}(", 1)
+            if index:
+                # All functions use the generator's same SHA-256 macros.
+                source = source[source.index('extern "C"'):]
+            sources.append(source)
+            names.append(name)
+        code = "\n".join(sources)
+        trace = {"stage": stage, "entry_count": len(keys),
+                 "source_bytes": len(code.encode("utf-8")),
+                 "source_generation_seconds": time.perf_counter() - started}
+        module = self.cp.RawModule(code=code, options=())
+        started = time.perf_counter()
+        module.compile()
+        trace["module_compile_seconds"] = time.perf_counter() - started
+        started = time.perf_counter()
+        members = {key: _BundledKernel(module, module.get_function(name), name)
+                   for key, name in zip(keys, names)}
+        trace["function_lookup_seconds"] = time.perf_counter() - started
+        kernels = dict(self._kernels)
+        for key, member in members.items():
+            payload, threshold, digits, dump = key
+            already_prepared = (not dump and payload == self.message
+                                and threshold == self.difficulty
+                                and digits in self._search_functions)
+            # A GPU-only job may have lazily prepared this digit before the
+            # first native job. Keep its existing RawKernel and Function
+            # together; native users retain that exact same Function owner.
+            if not already_prepared:
+                kernels[key] = member
+        modules = {**self._bundle_modules, stage: module}
+        all_members = {**self._bundle_members, **members}
+        # Compilation and every lookup must succeed before any stage state is
+        # published. The server's exclusive lease prevents concurrent scans.
+        self._bundle_modules, self._bundle_members, self._kernels = modules, all_members, kernels
+        self.bundle_preparation_trace.append(trace)
+
     def _kernel(self, digits: int, *, dump: bool = False, message: bytes | None = None,
                 difficulty: int | None = None) -> Any:
         self._require_open()
         payload = self.message if message is None else message
         threshold = self.difficulty if difficulty is None else difficulty
         key = (payload, threshold, digits, dump)
+        self._ensure_bundle(1)
         if key not in self._kernels:
+            # GPU-only searches prepare only the decimal lengths they reach.
+            # Stage two is compiled solely by prepare_native_kernels().
             source = _build_cuda(payload, threshold, digits, self.per_thread, dump=dump)
             self._kernels[key] = self.cp.RawKernel(source, "hashcash_dump" if dump else "hashcash_candidates", options=())
         return self._kernels[key]
@@ -347,6 +447,7 @@ class CudaBackend:
             raise GpuUnavailable("CUDA SHA-256 자체 검증을 통과하지 못했습니다.")
         if self._native_functions is None:
             with self._device:
+                self._ensure_bundle(2)
                 for digits in range(1, 21):
                     self._prepare_search_kernel(digits)
                 self._native_functions = tuple(self._search_functions[digits]
