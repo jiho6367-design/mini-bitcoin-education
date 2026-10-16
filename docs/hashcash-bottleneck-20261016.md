@@ -1,5 +1,8 @@
 # CPU·GPU 병목 조사와 추가 개선
 
+> 후속으로 작업 관리까지 C로 옮긴 별도 실험에서 CPU+GPU의 이득을 확인했습니다.
+> 이 보고서는 당시 Python 관리 경로의 결과이며, [전체 C 관리 실험](hashcash-native-scheduler-20261017.md)을 함께 참고하세요.
+
 측정: 2026-10-16 KST, 정리·회귀 확인: 2026-10-17 KST.
 기준선: `8cd2e73f1f18323a6257e0d329c42218bca6a1d5`.
 Intel Core Ultra 7 356H / RTX 5070 Laptop, Python 3.13.15 / CuPy 14.2.0.
