@@ -59,6 +59,7 @@ class FakeNative:
         self.attached = None
         self.trace_rows = []
         self.current = {}
+        self.began = time.perf_counter()
 
     def attach_gpu(self, gpu):
         self.attached = gpu
@@ -89,8 +90,9 @@ class FakeNative:
             "last_nonce": str(last_nonce) if last_nonce is not None else None,
             "assigned": checked, "range_start": start, "range_count": count,
             "cpu_batches": int(bool(cpu)), "gpu_batches": int(bool(gpu)),
-            "retries": 0, "begin": 10.0, "end": 11.0, "elapsed": 1.0,
-            "first_proof_seconds": 0.5 if nonce is not None else 0.0,
+            "retries": 0, "begin": self.began, "end": time.perf_counter(),
+            "elapsed": time.perf_counter() - self.began,
+            "first_proof_seconds": time.perf_counter() - self.began if nonce is not None else 0.0,
             "cpu_seconds": 1.0 if cpu else 0.0, "gpu_seconds": 1.0 if gpu else 0.0,
             "gpu_kernel_seconds": 0.9 if gpu else 0.0,
             "qpc_frequency": 10_000_000.0,
@@ -108,6 +110,7 @@ class FakeNative:
         if self.before_running:
             self.before_running(self)
         self.active.set()
+        self.began = time.perf_counter()
         with self.lock:
             self.current["running"] = 1
         try:
