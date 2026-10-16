@@ -1,4 +1,4 @@
-"""Optional C scheduler experiment; production search does not import this module.
+"""Optional C scheduler shared by native experiments and the web's C mode.
 
 The fixed-work loop, CPU worker threads, allocation, and CUDA Driver API calls
 run inside one ctypes.CDLL call. Python prepares verified CuPy resources before
@@ -91,7 +91,7 @@ def _source_hashes() -> dict[str, str]:
 
 
 def build_native(*, compiler=None, openssl_root=None, dll_path=None) -> dict:
-    """Build this experiment without installing packages or changing production."""
+    """Build the optional native path without installing packages."""
     compiler = str(Path(compiler or shutil.which("gcc") or "gcc").resolve())
     openssl_root = _openssl_root(openssl_root)
     if not (openssl_root / "include" / "openssl" / "sha.h").is_file():

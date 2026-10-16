@@ -444,6 +444,29 @@ class HashcashHTTPTests(unittest.TestCase):
 
 
 class ConfigurableOriginTests(unittest.TestCase):
+    def test_rejected_post_body_is_discarded_without_starting_a_job(self):
+        with tempfile.TemporaryDirectory() as directory:
+            server = lab.create_server(port=0, data_dir=directory)
+            worker = threading.Thread(target=server.serve_forever, daemon=True)
+            worker.start()
+            try:
+                url = f"http://127.0.0.1:{server.server_port}/api/hashcash/start"
+                body = json.dumps({"message": "x" * 50_000, "difficulty": 64}).encode("ascii")
+                for _ in range(8):
+                    request = Request(url, data=body, headers={
+                        "Content-Type": "application/json", "Origin": "https://evil.example",
+                    })
+                    with self.assertRaises(HTTPError) as denied:
+                        urlopen(request, timeout=5)
+                    with denied.exception as response:
+                        self.assertEqual(response.status, 403)
+                        self.assertIn("error", json.loads(response.read()))
+                self.assertIsNone(server.job)
+            finally:
+                server.shutdown()
+                server.server_close()
+                worker.join(timeout=5)
+
     def test_custom_frontend_port_accepts_only_configured_loopback_origin(self):
         with tempfile.TemporaryDirectory() as directory:
             server = lab.create_server(port=0, frontend_port=5187, data_dir=directory)
