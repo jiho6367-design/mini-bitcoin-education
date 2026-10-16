@@ -472,6 +472,11 @@ class ConfigurableOriginTests(unittest.TestCase):
                             response = error
                         with response:
                             self.assertEqual(response.status, expected)
+                            # Drain the complete response before closing the
+                            # loopback socket, including rejected POST bodies.
+                            payload = json.loads(response.read())
+                            if expected == 403:
+                                self.assertIn("error", payload)
             finally:
                 server.shutdown()
                 server.server_close()
