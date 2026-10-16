@@ -29,19 +29,32 @@ const allCases = [
     startNonce: ((1n << 64n) - (1n << 32n)).toString(),
     count: (1n << 32n).toString(), expectedStatus: "exhausted",
   },
+  { id: "proof9", message: defaultMessage, difficulty: 9, startNonce: "0", expectedStatus: "found" },
+  {
+    id: "fixed9", message: defaultMessage, difficulty: 9,
+    startNonce: ((1n << 64n) - (1n << 28n)).toString(),
+    count: (1n << 28n).toString(), expectedStatus: "exhausted",
+  },
 ];
+const allowedModes = ["gpu", "native", "hybrid", "cpu"];
 const usage = `Usage: node scripts/hashcash-web-benchmark.mjs [options]
   --base-url URL       Isolated loopback web server (default http://127.0.0.1:5188)
   --out FILE          Raw JSON result (default work/hashcash-web-benchmark/<run-id>.json)
-  --repeats N         Alternating GPU/native pairs per case, 1..31 (default 9)
-  --cases IDS         Comma separated finite case IDs: easy,ascii,unicode,fixed
-  --first-mode MODE   First pair order: gpu or native (default gpu)
+  --repeats N         Balanced mode rounds per case, 1..31 (default 9)
+  --cases IDS         IDs: easy,ascii,unicode,fixed,proof9,fixed9 (default first four)
+  --modes IDS         Unique modes: gpu,native,hybrid,cpu (default gpu,native)
+  --first-mode MODE   Rotate first round to this selected mode (default first selected)
+  --workers N         CPU input for every mode, 1..64 (default 4)
+  --mode-workers MAP  Per-mode overrides, e.g. cpu=16,hybrid=1,native=4
+  --timeout-seconds N Per-search hard failure deadline, 1..3600 (default 90)
+  --stop-after-seconds N  Click this tool's search's web Stop at N seconds;
+                         retain unfinished proof searches as censored, not failures
   --no-warmups        Record measured pairs immediately; first sample is marked
   --expect-reuse      Require prepared resource hits in measured samples
   --plan              Print the finite plan without contacting a server or GPU
   --help              Show this help
 
-This tool never starts a server or stops an existing search. Use an isolated
+This tool never starts a server or stops a preexisting search. Use an isolated
 HASHCASH_DATA_DIR. Ports 5186 and 5187 are reserved for existing user previews.
 Each search is started by an actual Edge web-form click. Only the screen's
 existing 350 ms status responses are observed during the timed search.
@@ -49,7 +62,10 @@ The first sample in this process is NOT proof of a cold OS CUDA/disk cache.
 `;
 
 function options(argv) {
-  const result = { baseUrl: "http://127.0.0.1:5188", repeats: 9, cases: allCases.map((item) => item.id), firstMode: "gpu", warmups: true };
+  const result = {
+    baseUrl: "http://127.0.0.1:5188", repeats: 9, cases: ["easy", "ascii", "unicode", "fixed"],
+    modes: ["gpu", "native"], workers: 4, modeWorkers: {}, timeoutSeconds: 90, warmups: true,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const key = argv[index];
     if (key === "--help") { result.help = true; continue; }
@@ -64,13 +80,39 @@ function options(argv) {
       if (!/^\d+$/.test(value)) throw new Error("--repeats must be an integer");
       result.repeats = Number(value);
     } else if (key === "--cases") result.cases = value.split(",");
+    else if (key === "--modes") result.modes = value.split(",");
     else if (key === "--first-mode") result.firstMode = value;
+    else if (key === "--workers") result.workers = Number(value);
+    else if (key === "--mode-workers") {
+      for (const entry of value.split(",")) {
+        const [mode, workers, extra] = entry.split("=");
+        if (!allowedModes.includes(mode) || !/^\d+$/.test(workers ?? "") || extra !== undefined || Object.hasOwn(result.modeWorkers, mode)) {
+          throw new Error("--mode-workers requires unique mode=integer entries");
+        }
+        result.modeWorkers[mode] = Number(workers);
+      }
+    } else if (key === "--timeout-seconds") result.timeoutSeconds = Number(value);
+    else if (key === "--stop-after-seconds") result.stopAfterSeconds = Number(value);
     else throw new Error(`Unknown argument: ${key}`);
   }
   if (!Number.isInteger(result.repeats) || result.repeats < 1 || result.repeats > 31) throw new Error("--repeats must be 1..31");
-  if (!["gpu", "native"].includes(result.firstMode)) throw new Error("--first-mode must be gpu or native");
+  if (!result.modes.length || new Set(result.modes).size !== result.modes.length || result.modes.some((mode) => !allowedModes.includes(mode))) {
+    throw new Error("--modes requires unique IDs from gpu,native,hybrid,cpu");
+  }
+  result.firstMode ??= result.modes[0];
+  if (!result.modes.includes(result.firstMode)) throw new Error("--first-mode must be a selected mode");
+  if ([result.workers, ...Object.values(result.modeWorkers)].some((value) => !Number.isInteger(value) || value < 1 || value > 64)) {
+    throw new Error("CPU workers must be integers from 1..64");
+  }
+  if (!Number.isFinite(result.timeoutSeconds) || result.timeoutSeconds < 1 || result.timeoutSeconds > 3600) throw new Error("--timeout-seconds must be 1..3600");
+  if (result.stopAfterSeconds !== undefined && (!Number.isFinite(result.stopAfterSeconds) || result.stopAfterSeconds <= 0 || result.stopAfterSeconds + 5 >= result.timeoutSeconds)) {
+    throw new Error("--stop-after-seconds must be positive and leave at least five seconds before the failure deadline");
+  }
   if (!result.cases.length || new Set(result.cases).size !== result.cases.length || result.cases.some((id) => !allCases.some((item) => item.id === id))) {
-    throw new Error("--cases must contain unique IDs from easy,ascii,unicode,fixed");
+    throw new Error("--cases must contain unique IDs from easy,ascii,unicode,fixed,proof9,fixed9");
+  }
+  if (result.stopAfterSeconds !== undefined && result.cases.some((id) => allCases.find((item) => item.id === id).expectedStatus !== "found")) {
+    throw new Error("--stop-after-seconds applies only to proof-search cases; fixed-work cases must finish their entire range");
   }
   const address = new URL(result.baseUrl);
   if (address.protocol !== "http:" || !["127.0.0.1", "localhost"].includes(address.hostname) ||
@@ -136,19 +178,22 @@ const metricNames = [
   "serverProofSeconds", "serverProofAfterReadySeconds", "serverActiveProofSeconds", "serverLifecycleSeconds",
   "serverFixedActiveSeconds", "serverCleanupAfterProofSeconds", "domTerminalSeconds", "domReadySeconds",
   "applicationStatusResponseProofObservedSeconds", "applicationStatusResponseFinishedObservedSeconds", "postResponseSeconds",
+  "serverObservedActiveSeconds",
 ];
 
-function aggregate(samples, cases) {
+function aggregate(samples, cases, modes) {
   return cases.map((item) => {
-    const selected = samples.filter((sample) => sample.phase === "measured" && sample.caseId === item.id && sample.ok);
+    const successful = samples.filter((sample) => sample.phase === "measured" && sample.caseId === item.id && sample.ok);
+    const selected = successful.filter((sample) => !sample.proofSearchCensored);
+    const censored = successful.filter((sample) => sample.proofSearchCensored);
     const metrics = {};
     for (const metric of metricNames) {
       const byMode = {};
-      for (const mode of ["gpu", "native"]) {
+      for (const mode of modes) {
         byMode[mode] = distribution(selected.filter((sample) => sample.mode === mode)
           .map((sample) => sample.metrics[metric]).filter((value) => Number.isFinite(value)));
       }
-      if (!byMode.gpu && !byMode.native) continue;
+      if (!Object.values(byMode).some(Boolean)) continue;
       const pairs = [];
       for (let repetition = 0; repetition < 31; repetition += 1) {
         const gpu = selected.find((sample) => sample.mode === "gpu" && sample.repetition === repetition)?.metrics[metric];
@@ -163,19 +208,44 @@ function aggregate(samples, cases) {
         gpuWins: pairs.filter((pair) => pair.gpu < pair.native).length,
         ties: pairs.filter((pair) => pair.gpu === pair.native).length,
         pairedChangePercent: distribution(pairs.map((pair) => pair.nativeChangePercent).filter((value) => Number.isFinite(value))),
+        comparisonsToGpu: Object.fromEntries(modes.filter((mode) => mode !== "gpu").map((mode) => {
+          const modePairs = [];
+          for (let repetition = 0; repetition < 31; repetition += 1) {
+            const gpu = selected.find((sample) => sample.mode === "gpu" && sample.repetition === repetition)?.metrics[metric];
+            const value = selected.find((sample) => sample.mode === mode && sample.repetition === repetition)?.metrics[metric];
+            if (Number.isFinite(gpu) && Number.isFinite(value)) modePairs.push({ repetition, gpu, value, deltaSeconds: value - gpu, changePercent: gpu ? (value / gpu - 1) * 100 : null });
+          }
+          return [mode, {
+            changeOfMediansPercent: byMode.gpu?.median && byMode[mode] ? (byMode[mode].median / byMode.gpu.median - 1) * 100 : null,
+            pairs: modePairs, modeWins: modePairs.filter((pair) => pair.value < pair.gpu).length,
+            gpuWins: modePairs.filter((pair) => pair.gpu < pair.value).length,
+            ties: modePairs.filter((pair) => pair.gpu === pair.value).length,
+            pairedChangePercent: distribution(modePairs.map((pair) => pair.changePercent).filter((value) => Number.isFinite(value))),
+          }];
+        })),
       };
     }
     return {
       caseId: item.id, metrics,
-      proofNonces: Object.fromEntries(["gpu", "native"].map((mode) => [mode, [...new Set(selected.filter((sample) => sample.mode === mode).map((sample) => sample.final?.result?.nonce).filter(Boolean))]])),
-      checked: Object.fromEntries(["gpu", "native"].map((mode) => [mode, selected.filter((sample) => sample.mode === mode).map((sample) => sample.final.checked)])),
+      proofNonces: Object.fromEntries(modes.map((mode) => [mode, [...new Set(selected.filter((sample) => sample.mode === mode).map((sample) => sample.final?.result?.nonce).filter(Boolean))]])),
+      checked: Object.fromEntries(modes.map((mode) => [mode, selected.filter((sample) => sample.mode === mode).map((sample) => sample.final.checked)])),
+      censoredProofSearches: Object.fromEntries(modes.map((mode) => {
+        const values = censored.filter((sample) => sample.mode === mode);
+        return [mode, {
+          count: values.length, observationSeconds: distribution(values.map((sample) => sample.final.elapsed)),
+          observedActiveSeconds: distribution(values.map((sample) => sample.metrics.serverObservedActiveSeconds)),
+          observedHashesPerSecond: distribution(values.map((sample) => sample.metrics.serverObservedHashesPerSecond)),
+          checked: values.map((sample) => sample.final.checked),
+          note: "No proof observed before the predeclared web Stop; these are right-censored observations, not proof discovery times",
+        }];
+      })),
     };
   });
 }
 
 // Runs in the browser. Mutation events measure rendered results independently
 // from backend clocks and keep the app's polling interval intact.
-function installDomObserver({ expectedStatus }) {
+function installDomObserver({ expectedStatus, allowStopped }) {
   const { document, performance, MutationObserver } = globalThis;
   globalThis.__hashcashWebBenchmark?.observer?.disconnect();
   if (globalThis.__hashcashWebBenchmark?.listener) document.removeEventListener("click", globalThis.__hashcashWebBenchmark.listener, true);
@@ -186,12 +256,13 @@ function installDomObserver({ expectedStatus }) {
     const proof = document.querySelector(".hc-proof");
     const status = document.querySelector(".hc-status");
     if (button?.disabled || !proof || !status?.classList.contains("found")) sample.sawNewSearch = true;
-    const terminal = sample.expectedStatus === "found"
+    const stopped = allowStopped && status?.classList.contains("stopped");
+    const terminal = stopped || (sample.expectedStatus === "found"
       ? Boolean(proof && status?.classList.contains("found") && document.querySelector(".hc-hash-label span")?.textContent === "서버 재검증 통과")
-      : status?.classList.contains("exhausted");
+      : status?.classList.contains("exhausted"));
     if (!sample.sawNewSearch || !terminal || !status.getClientRects().length) return;
     if (sample.terminalAt === null) sample.terminalAt = performance.now();
-    const saved = sample.expectedStatus !== "found" || document.querySelector(".hc-save-state")?.textContent.includes("기록으로 저장 완료했습니다.");
+    const saved = stopped || sample.expectedStatus !== "found" || document.querySelector(".hc-save-state")?.textContent.includes("기록으로 저장 완료했습니다.");
     if (button && !button.disabled && saved && sample.readyAt === null) {
       sample.readyAt = performance.now();
       sample.observer.disconnect();
@@ -227,23 +298,36 @@ function checkInput(job, item, mode, participantName) {
     "Observed job inputs changed or another search replaced this sample");
 }
 
-function checkFinal(job, item, mode, participantName) {
+function checkFinal(job, item, mode, participantName, { workers, censored = false }) {
   checkInput(job, item, mode, participantName);
-  assert(job.finished && job.status === item.expectedStatus, `Expected ${item.expectedStatus}, got ${job.status}: ${job.error ?? ""}`);
+  const expectedStatus = censored ? "stopped" : item.expectedStatus;
+  assert(job.finished && job.status === expectedStatus, `Expected ${expectedStatus}, got ${job.status}: ${job.error ?? ""}`);
   assert(!job.error && !job.saveError && !job.cleanupWarning, `Job failure, save failure, or cleanup warning: ${JSON.stringify(job)}`);
-  assert(mode === "gpu" ? job.backend.startsWith("GPU · ") : job.backend.startsWith("C · CPU + GPU · "), `Unexpected fallback device: ${job.backend}`);
+  const backendPrefixes = {
+    gpu: "GPU · ", native: `C · CPU + GPU · ${workers}개 CPU 작업 + `,
+    hybrid: `CPU + GPU · ${workers}개 CPU 작업 + `, cpu: `CPU · ${workers}개 작업`,
+  };
+  assert(mode === "cpu" ? job.backend === backendPrefixes.cpu : job.backend.startsWith(backendPrefixes[mode]), `Unexpected fallback device or worker count: ${job.backend}`);
   const checked = BigInt(job.checked), cpu = BigInt(job.cpuChecked), gpu = BigInt(job.gpuChecked);
   assert(checked === cpu + gpu && checked > 0n, "Completed device counts do not add up or no work was completed");
   if (mode === "gpu") assert(cpu === 0n && gpu > 0n, "GPU-only search did not complete exclusively GPU work");
-  if (mode === "native" && item.id !== "easy") {
-    assert(cpu > 0n && gpu > 0n && job.hybridExecuted, "Native search did not execute both devices");
-    assert(job.hybridKernelOverlapLowerBound > 0, "No demonstrated actual CPU/CUDA overlap");
+  if (mode === "cpu") assert(gpu === 0n && cpu > 0n, "CPU-only search did not complete exclusively CPU work");
+  if (["native", "hybrid"].includes(mode) && item.id !== "easy") {
+    assert(cpu > 0n && gpu > 0n && job.hybridExecuted, "Combined mode did not execute both devices");
+    // A short, fixed web search can finish its CUDA work before Python's
+    // spawned CPU workers begin. Preserve that observed lack of concurrency.
+    if (mode === "native" || item.expectedStatus === "found") {
+      assert(job.hybridKernelOverlapLowerBound > 0, "No demonstrated actual CPU/CUDA overlap");
+    }
   }
   assert(Number.isFinite(job.startupElapsed) && job.startupElapsed >= 0 && Number.isFinite(job.elapsed) && job.elapsed >= job.startupElapsed, "Missing or inconsistent startup/lifecycle timing");
   assert(Number.isFinite(job.searchPreparationElapsed) && job.searchPreparationElapsed >= 0 &&
     Number.isFinite(job.preparationElapsed) && job.preparationElapsed >= job.startupElapsed && job.preparationElapsed <= job.elapsed,
   "Missing or inconsistent preparationElapsed/searchPreparationElapsed; restart the instrumented benchmark server");
-  if (item.expectedStatus === "exhausted") {
+  if (censored) {
+    assert(item.expectedStatus === "found" && job.result === null && job.recordId === null, "A censored search must have no proof or saved proof");
+    assert(job.proofElapsed === null && job.proofSearchElapsed === null, "Censored search unexpectedly has a proof discovery time");
+  } else if (item.expectedStatus === "exhausted") {
     assert(checked === BigInt(item.count), "Fixed-work case skipped or duplicated a nonce");
     assert(job.result === null && job.recordId === null, "Fixed-work exhaustion unexpectedly returned or saved a proof");
   } else {
@@ -262,10 +346,12 @@ function checkFinal(job, item, mode, participantName) {
 }
 
 async function runSample({ page, config, item, mode, participantName, phase, repetition, ordinal, outDir }) {
+  const workers = config.modeWorkers[mode] ?? config.workers;
   const sample = {
     ordinal, phase, repetition, caseId: item.id, mode, participantName,
-    processFirstSample: ordinal === 0, inputs: { ...item, mode, workers: 4, participantName },
+    processFirstSample: ordinal === 0, inputs: { ...item, mode, workers, participantName },
     startedAt: new Date().toISOString(), ok: false, statusObservations: [],
+    proofSearchCensored: false,
   };
   const current = await jsonGet(config.baseUrl, "status");
   assert(!current.job || current.job.finished, "Existing search is still running; refusing to stop or replace it");
@@ -275,10 +361,10 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
   await page.getByLabel("메시지", { exact: false }).fill(item.message);
   await page.getByLabel("목표 난이도", { exact: false }).fill(String(item.difficulty));
   await page.getByLabel("연산 장치").selectOption(mode);
-  await page.getByLabel("CPU 작업 수").fill("4");
+  await page.getByLabel("CPU 작업 수").fill(String(workers));
   await page.getByLabel("시작 nonce").fill(item.startNonce);
   sample.gpuBefore = await gpuState();
-  await page.evaluate(installDomObserver, { expectedStatus: item.expectedStatus });
+  await page.evaluate(installDomObserver, { expectedStatus: item.expectedStatus, allowStopped: config.stopAfterSeconds !== undefined });
   let resolveFinished;
   let rejectFinished;
   let expectedJobId;
@@ -286,9 +372,11 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
   let proofObservedAt = null;
   let finishedObservedAt = null;
   let observerClosed = false;
+  let stopTimer;
+  let stopTask;
   const buffered = [];
   const finishedResponse = new Promise((accept, reject) => { resolveFinished = accept; rejectFinished = reject; });
-  // Attach a rejection handler immediately: the 90 s deadline may fire while
+  // Attach a rejection handler immediately: the deadline may fire while
   // Playwright is still waiting for an unusually slow POST response.
   void finishedResponse.catch(() => {});
   function observeJob(job, observedAt, source) {
@@ -334,9 +422,11 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
     }
   };
   page.on("response", observeStatusResponse);
-  const startedResponse = page.waitForResponse((response) => response.url() === `${config.baseUrl}/api/hashcash/start` && response.request().method() === "POST", { timeout: 90_000 });
+  const timeoutMs = config.timeoutSeconds * 1000;
+  const startedResponse = page.waitForResponse((response) => response.url() === `${config.baseUrl}/api/hashcash/start` && response.request().method() === "POST", { timeout: timeoutMs });
+  void startedResponse.catch(() => {});
   clickedAt = performance.now();
-  const deadlineTimer = scheduleTimeout(() => rejectFinished(new Error(`Search exceeded 90 seconds: ${sample.jobId ?? "awaiting POST"}; the tool leaves the search intact`)), 90_000);
+  const deadlineTimer = scheduleTimeout(() => rejectFinished(new Error(`Search exceeded ${config.timeoutSeconds} seconds: ${sample.jobId ?? "awaiting POST"}; the tool leaves the search intact`)), timeoutMs);
   try {
     await page.getByRole("button", { name: "탐색 시작" }).click();
     const response = await startedResponse;
@@ -348,16 +438,38 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
     const initial = sample.initialResponse.job;
     assert(initial?.id, "Start response did not identify a job");
     checkInput(initial, item, mode, participantName);
-    assert(sample.startRequest.workers === 4, "Browser did not submit four CPU workers");
+    assert(sample.startRequest.workers === workers, "Browser did not submit the planned CPU worker count");
     sample.jobId = initial.id;
     expectedJobId = initial.id;
     observeJob(initial, clickedAt + sample.postResponseSeconds * 1000, "initial-post-response");
     for (const observation of buffered) observeJob(observation.job, observation.observedAt, observation.source);
     buffered.length = 0;
+    if (config.stopAfterSeconds !== undefined) {
+      sample.censorPlan = { stopAfterSeconds: config.stopAfterSeconds, origin: "web Start click", action: "actual web Stop button; no extra timed status GET" };
+      stopTimer = scheduleTimeout(() => {
+        if (observerClosed || finishedObservedAt !== null || proofObservedAt !== null) return;
+        stopTask = (async () => {
+          const button = page.getByRole("button", { name: "중지", exact: true });
+          if (!await button.isEnabled()) return;
+          sample.stopRequestedAtSeconds = (performance.now() - clickedAt) / 1000;
+          const stoppedResponse = page.waitForResponse((entry) => entry.url() === `${config.baseUrl}/api/hashcash/stop` && entry.request().method() === "POST", { timeout: 10_000 });
+          void stoppedResponse.catch(() => {});
+          await button.click({ timeout: 5_000 });
+          sample.stopWebClickCompletedSeconds = (performance.now() - clickedAt) / 1000;
+          const stopped = await stoppedResponse;
+          sample.stopResponse = { status: stopped.status(), body: await stopped.json(), observedSeconds: (performance.now() - clickedAt) / 1000 };
+          assert(stopped.ok(), `Web Stop failed: ${stopped.status()}`);
+        })();
+        void stopTask.catch(rejectFinished);
+      }, Math.max(0, config.stopAfterSeconds * 1000 - (performance.now() - clickedAt)));
+    }
     const observedFinal = await finishedResponse;
+    cancelTimeout(stopTimer);
+    if (stopTask) await stopTask;
     cancelTimeout(deadlineTimer);
     sample.finalApplicationResponse = observedFinal;
-    checkFinal(observedFinal, item, mode, participantName);
+    sample.proofSearchCensored = Boolean(sample.stopResponse?.status === 200 && observedFinal.status === "stopped" && !observedFinal.result);
+    checkFinal(observedFinal, item, mode, participantName, { workers, censored: sample.proofSearchCensored });
     await page.waitForFunction(() => globalThis.__hashcashWebBenchmark?.readyAt != null, undefined, { timeout: 10_000 });
     sample.dom = await page.evaluate(readDomTiming);
     assert(sample.dom?.clickAt !== null && sample.dom?.terminalSeconds >= 0 && sample.dom?.readySeconds >= sample.dom?.terminalSeconds,
@@ -370,11 +482,11 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
     const { job: final } = await jsonGet(config.baseUrl, "status");
     assert(final?.id === expectedJobId, "Another search replaced the finished sample before verification");
     sample.final = final;
-    checkFinal(final, item, mode, participantName);
-    if (config.expectReuse && phase === "measured") {
-      assert(final.gpuCacheEnabled && final.gpuResourcesReused && final.nativeKernelsReused,
+    checkFinal(final, item, mode, participantName, { workers, censored: sample.proofSearchCensored });
+    if (config.expectReuse && phase === "measured" && mode !== "cpu") {
+      assert(final.gpuCacheEnabled && final.gpuResourcesReused,
         "Measured sample did not reuse its prepared CUDA resources");
-      if (mode === "native") assert(final.nativeResourcesReused, "Measured native sample rebuilt its C owner");
+      if (mode === "native") assert(final.nativeResourcesReused && final.nativeKernelsReused, "Measured native sample rebuilt its C owner or CUDA kernels");
     }
     sample.metrics = {
       serverStartupSeconds: final.startupElapsed,
@@ -384,7 +496,9 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
       serverProofAfterReadySeconds: final.result ? final.proofElapsed - final.startupElapsed : null,
       serverActiveProofSeconds: final.result ? final.proofSearchElapsed : null,
       serverLifecycleSeconds: final.elapsed,
-      serverFixedActiveSeconds: item.id === "fixed" ? final.elapsed - final.preparationElapsed : null,
+      serverFixedActiveSeconds: item.count && item.expectedStatus === "exhausted" ? final.elapsed - final.preparationElapsed : null,
+      serverObservedActiveSeconds: final.elapsed - final.preparationElapsed,
+      serverObservedHashesPerSecond: final.elapsed > final.preparationElapsed ? Number(final.checked) / (final.elapsed - final.preparationElapsed) : null,
       serverCleanupAfterProofSeconds: final.result ? final.elapsed - final.proofElapsed : null,
       domTerminalSeconds: sample.dom.terminalSeconds, domReadySeconds: sample.dom.readySeconds,
       applicationStatusResponseProofObservedSeconds: proofObservedAt === null ? null : (proofObservedAt - clickedAt) / 1000,
@@ -392,6 +506,7 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
       postResponseSeconds: sample.postResponseSeconds,
     };
     sample.actualBothDevicesExecuted = BigInt(final.cpuChecked) > 0n && BigInt(final.gpuChecked) > 0n;
+    sample.actualConcurrentDevicesDemonstrated = sample.actualBothDevicesExecuted && final.hybridKernelOverlapLowerBound > 0;
     sample.gpuAfter = await gpuState();
     const query = new URLSearchParams({ participantName, message: item.message, difficulty: String(item.difficulty), limit: "100" });
     sample.history = await jsonGet(config.baseUrl, `history?${query}`);
@@ -402,7 +517,7 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
       await page.getByRole("button", { name: "해시 다시 검증", exact: true }).click();
       await page.getByText("브라우저 SHA-256 재계산도 일치합니다.", { exact: true }).waitFor({ state: "visible" });
       sample.browserSha256Verified = true;
-    } else assert(!stored, "Exhausted fixed-work search unexpectedly wrote history");
+    } else assert(!stored, "Search without a proof unexpectedly wrote history");
     if (phase === "measured" && repetition === 0) {
       sample.screenshot = join(outDir, `${basename(config.out, ".json")}-${item.id}-${mode}.png`);
       await page.screenshot({ path: sample.screenshot, fullPage: true });
@@ -421,6 +536,7 @@ async function runSample({ page, config, item, mode, participantName, phase, rep
   } finally {
     observerClosed = true;
     cancelTimeout(deadlineTimer);
+    cancelTimeout(stopTimer);
     page.off("response", observeStatusResponse);
   }
 }
@@ -429,12 +545,20 @@ async function main() {
   const config = options(process.argv.slice(2));
   if (config.help) { console.log(usage); return; }
   const cases = config.cases.map((id) => allCases.find((item) => item.id === id));
-  const firstOrder = config.firstMode === "gpu" ? ["gpu", "native"] : ["native", "gpu"];
+  const firstIndex = config.modes.indexOf(config.firstMode);
+  const firstOrder = [...config.modes.slice(firstIndex), ...config.modes.slice(0, firstIndex)];
   const plan = [];
   for (const [caseIndex, item] of cases.entries()) {
     if (config.warmups) for (const mode of firstOrder) plan.push({ caseId: item.id, mode, phase: "warmup", repetition: 0 });
     for (let repetition = 0; repetition < config.repeats; repetition += 1) {
-      const order = (repetition + caseIndex) % 2 ? [...firstOrder].reverse() : firstOrder;
+      let order;
+      if (firstOrder.length <= 2) order = (repetition + caseIndex) % 2 ? [...firstOrder].reverse() : firstOrder;
+      else {
+        const position = repetition + caseIndex;
+        const offset = position % firstOrder.length;
+        order = [...firstOrder.slice(offset), ...firstOrder.slice(0, offset)];
+        if (Math.floor(position / firstOrder.length) % 2) order.reverse();
+      }
       for (const mode of order) plan.push({ caseId: item.id, mode, phase: "measured", repetition });
     }
   }
@@ -444,21 +568,25 @@ async function main() {
   const outDir = dirname(config.out);
   await mkdir(outDir, { recursive: true });
   const [health, current] = await Promise.all([jsonGet(config.baseUrl, "health"), jsonGet(config.baseUrl, "status")]);
-  assert(health.ok && health.cpuCount >= 4, "This comparison requires the local server and at least four CPU workers");
+  assert(health.ok && config.modes.every((mode) => (config.modeWorkers[mode] ?? config.workers) <= health.cpuCount), "This comparison requires the local server and all planned CPU worker counts to be available");
   assert(!current.job || current.job.finished, "Existing search is running; refusing to replace or stop it");
   const report = {
-    schema: "hashcash-web-benchmark-v2", runId, startedAt: new Date().toISOString(), config, cases, plan,
+    schema: "hashcash-web-benchmark-v3", runId, startedAt: new Date().toISOString(), config, cases, plan,
     method: {
       browser: "Installed Microsoft Edge, Playwright chromium channel msedge, headless",
       initiation: "Actual web form selection and button click; no injected API start",
-      addedTimedHttpStatusRequests: 0, applicationStatusPollMs: 350, cpuWorkers: 4,
+      addedTimedHttpStatusRequests: 0, applicationStatusPollMs: 350, cpuWorkers: config.workers,
+      cpuWorkersPerMode: Object.fromEntries(config.modes.map((mode) => [mode, config.modeWorkers[mode] ?? config.workers])),
+      modeOrder: "Two modes alternate forward/reverse per round; three or four modes rotate first position then reverse every complete rotation; one mode is allowed for isolated first-use measurements",
       statusObservation: "Observe only the page's existing GET /status responses and initial POST response during the timed search; a verification GET runs only after DOM finished/saved readiness",
       preparation: "startupElapsed measures backend creation/self-tests/current native kernel preparation; searchPreparationElapsed separately measures GPU-only first preparation (kernel lookup/construction/source generation and compile) of new decimal digit kernels during search; preparationElapsed is their sum",
       activeProof: "proofSearchElapsed = proofElapsed - preparationElapsed: winning-batch completion, excluding dynamic preparation and observer/UI delay; native uses the C first-proof clock; not a per-thread exact instruction timestamp",
-      fixedActive: "elapsed - preparationElapsed: exact 2^32 nonces through UINT64_MAX, including post-computation cleanup",
+      fixedActive: "elapsed - preparationElapsed: every nonce in the predeclared case.count tail through UINT64_MAX, including post-computation cleanup; an unexpected proof fails the fixed-work sample rather than changing the range",
       processFirstSample: "Only ordinal 0 is the first sample in this backend process if the operator started a fresh server; OS CUDA/disk caches are uncontrolled",
       actualProofWork: "Identical input/start/difficulty, but parallel scheduling can find different valid nonces and process different counts; fixed case controls total work separately",
       rawValues: "Warmups and failed samples are retained; measured summaries exclude warmups and failed samples",
+      censoring: "With --stop-after-seconds, only this tool's newly started proof search is stopped by its actual web button; no-proof stopped observations are right-censored and excluded from discovery-time and fixed-completion summaries, with elapsed/count/throughput retained separately",
+      observedThroughput: "checked / (elapsed - preparationElapsed), including cleanup and only completed reported work; cancelled CPU batches may have done unreported work, so a censored rate is not a precise full-run kernel throughput",
       gpuTelemetry: "nvidia-smi runs only before clicking and after finished/DOM-ready, outside the timed search",
     },
     health,
@@ -467,7 +595,7 @@ async function main() {
     sourceFingerprints: await fingerprints(), samples: [], completed: false,
   };
   async function flush() {
-    report.summary = aggregate(report.samples, cases);
+    report.summary = aggregate(report.samples, cases, config.modes);
     await writeFile(config.out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   }
   await flush();
