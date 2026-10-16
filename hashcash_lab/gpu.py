@@ -227,6 +227,8 @@ class CudaBackend:
         self.per_thread = per_thread
         self._kernels: dict[tuple[bytes, int, int, bool], Any] = {}
         self._verified = False
+        self.search_preparation_seconds = 0.0
+        self._search_prepared_digits = set()
         try:
             import cupy as cp
             import numpy as np
@@ -355,6 +357,7 @@ class CudaBackend:
         self._test_search_predicate(1)
         self._test_search_predicate(64)
         self._verified = True
+        self._search_prepared_digits.update((1, 20))
 
     def _search_batch(self, start: int, requested: int) -> BatchResult:
         if not self._verified:
@@ -363,9 +366,16 @@ class CudaBackend:
         cp = self.cp
         try:
             with self._device, self._stream:
-                kernel = self._kernel(len(str(start)))
-                # Compile before the timer; report initialization separately.
+                digits = len(str(start))
+                first_preparation = digits not in self._search_prepared_digits
+                preparation_started = time.perf_counter() if first_preparation else 0.0
+                kernel = self._kernel(digits)
+                # Keep first source construction/compilation separate. Repeat
+                # lookups and compile calls remain normal per-batch overhead.
                 kernel.compile()
+                if first_preparation:
+                    self.search_preparation_seconds += time.perf_counter() - preparation_started
+                    self._search_prepared_digits.add(digits)
                 blocks = (count + self.threads * self.per_thread - 1) // (self.threads * self.per_thread)
                 begin, end = self._begin_event, self._end_event
                 started = time.perf_counter()

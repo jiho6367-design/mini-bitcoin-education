@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import multiprocessing as mp
 import os
 import sqlite3
@@ -116,6 +117,8 @@ class SearchJob:
             "hybridTimingLimited": False,
             "hybridExecuted": False,
             "startupElapsed": None,
+            "searchPreparationElapsed": 0.0,
+            "proofElapsed": None,
             "lastNonce": None,
             "lastHash": None,
             "result": None,
@@ -136,6 +139,10 @@ class SearchJob:
             elapsed = self.state.get("elapsed", time.perf_counter() - self.started)
             state["elapsed"] = elapsed
             state["hashesPerSecond"] = self.checked / elapsed if elapsed else 0
+            startup = state["startupElapsed"]
+            state["preparationElapsed"] = None if startup is None else startup + state["searchPreparationElapsed"]
+            state["proofSearchElapsed"] = (None if state["proofElapsed"] is None or startup is None
+                                           else state["proofElapsed"] - state["preparationElapsed"])
             state["finished"] = self.thread is None or not self.thread.is_alive()
             return state
 
@@ -183,14 +190,23 @@ class SearchJob:
                 self.state["lastNonce"] = str(last)
                 self.state["lastHash"] = batch.get("last_hash")
 
-    def accept(self, batch: dict) -> bool:
+    def accept(self, batch: dict, *, proof_elapsed: float | None = None) -> bool:
         nonce = batch.get("nonce")
         if nonce is None:
             return False
         value = sha256(self.config.message.encode("utf-8") + str(nonce).encode("ascii")).hexdigest()
         if value != batch.get("hash") or not value.startswith("0" * self.config.difficulty):
             raise ValueError("연산 결과의 SHA-256 검증에 실패했습니다.")
-        self.update(result={"nonce": str(nonce), "hash": value, "verified": True}, status="found")
+        if proof_elapsed is None:
+            proof_elapsed = time.perf_counter() - self.started
+        with self.lock:
+            startup = self.state["startupElapsed"]
+            if (isinstance(proof_elapsed, bool) or not isinstance(proof_elapsed, (int, float)) or
+                    not math.isfinite(proof_elapsed) or proof_elapsed < (startup or 0)):
+                raise ValueError("검증된 해답의 발견 시각이 올바르지 않습니다.")
+            if self.state["result"] is None:
+                self.state.update(result={"nonce": str(nonce), "hash": value, "verified": True},
+                                  status="found", proofElapsed=proof_elapsed)
         return True
 
     def run_cpu(self, base: int):
@@ -329,7 +345,10 @@ class SearchJob:
                             self.state.update(lastNonce=str(stats["last_nonce"]), lastHash=stats.get("last_hash"))
                         has_proof = self.state["result"] is not None
                     if nonce is not None and not has_proof:
-                        self.accept(stats)
+                        # C and Python use Windows QPC seconds on this path.
+                        # Preserve C's first verified receipt time, rather than
+                        # the observer's next 100ms publication time.
+                        self.accept(stats, proof_elapsed=stats["begin"] + stats["first_proof_seconds"] - self.started)
                     if stats.get("gpu_failed"):
                         detail = stats.get("gpu_error") or "CUDA 배치 실패"
                         self.update(backend=f"C · CPU · {self.config.workers}개 작업 (GPU 전환)",
@@ -428,6 +447,7 @@ class SearchJob:
                     while base <= MAX_NONCE and not self.cancel.is_set():
                         count = min(gpu_batch_size(self.config.difficulty), MAX_NONCE - base + 1)
                         batch = gpu.scan_batch(base, count)
+                        self.update(searchPreparationElapsed=getattr(gpu, "search_preparation_seconds", 0.0))
                         checked = batch.get("checked")
                         nonce = batch.get("nonce")
                         if type(checked) is not int or not 1 <= checked <= count:

@@ -136,6 +136,21 @@ class CudaHardwareTests(unittest.TestCase):
         self.assertTrue(self.negative.self_test_passed)
         self.assertTrue(self.backend.name)
 
+    def test_first_digit_preparation_is_separate_and_not_counted_twice(self):
+        backend = CudaBackend(self.message, 64)
+        self.assertEqual(backend.search_preparation_seconds, 0.0)
+        backend.scan_batch(0, 1)  # One digit was prepared by the self-test.
+        self.assertEqual(backend.search_preparation_seconds, 0.0)
+        first = backend.scan_batch(10 ** 16, 3)
+        preparation = backend.search_preparation_seconds
+        self.assertGreater(preparation, 0.0)
+        second = backend.scan_batch(10 ** 16 + 3, 3)
+        self.assertEqual(backend.search_preparation_seconds, preparation)
+        for batch in (first, second):
+            expected = hashlib.sha256(self.message.encode("utf-8")
+                                      + str(batch["last_nonce"]).encode("ascii")).hexdigest()
+            self.assertEqual(batch["last_hash"], expected)
+
     def test_33_34_35_byte_messages_and_known_nonce_digests(self):
         for message in ("x" * 33, "x" * 34, "가" * 11 + "ab"):
             with self.subTest(bytes=len(message.encode("utf-8"))):
