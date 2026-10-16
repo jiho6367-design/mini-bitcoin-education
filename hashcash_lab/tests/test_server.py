@@ -354,7 +354,9 @@ class HashcashHTTPTests(unittest.TestCase):
         def unavailable(*_):
             raise ImportError("test intentionally has no CUDA installation")
 
-        def factory(config, history):
+        def factory(config, history, gpu_cache=None):
+            # This HTTP fixture deliberately supplies an unavailable backend
+            # rather than the server's real optional CUDA resource cache.
             return real_job(config, gpu_factory=unavailable, history=history)
 
         with patch.object(lab, "SearchJob", side_effect=factory):
@@ -374,6 +376,15 @@ class HashcashHTTPTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(records["total"], 1)
         self.assertEqual(records["records"][0]["jobId"], found["id"])
+
+    def test_shutdown_rejects_new_search_before_acquiring_gpu_resources(self):
+        previous = self.server.job
+        with patch.object(self.server, "shutting_down", True):
+            status, payload = self.request("/start", {"message": "shutdown", "difficulty": 3,
+                                                      "workers": 1, "mode": "native"})
+        self.assertEqual(status, 503)
+        self.assertIn("error", payload)
+        self.assertIs(self.server.job, previous)
 
     def test_high_nonce_verification_preserves_every_decimal_digit(self):
         message = " exact\n\ud55c\uae00\U0001f642 "

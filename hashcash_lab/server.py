@@ -14,6 +14,7 @@ import sqlite3
 import threading
 import time
 import uuid
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from hashlib import sha256
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -89,10 +90,13 @@ def make_native(*args, **kwargs):
 
 class SearchJob:
     def __init__(self, config: SearchConfig, gpu_factory: Callable = make_gpu,
-                 history: HistoryStore | None = None, native_factory: Callable = make_native):
+                 history: HistoryStore | None = None, native_factory: Callable = make_native,
+                 gpu_cache=None):
         self.config = config
         self.gpu_factory = gpu_factory
         self.native_factory = native_factory
+        self.gpu_cache = gpu_cache
+        self.gpu_lease = None
         self.history = history
         self.save_lock = threading.Lock()
         self.lock = threading.Lock()
@@ -119,6 +123,11 @@ class SearchJob:
             "startupElapsed": None,
             "searchPreparationElapsed": 0.0,
             "proofElapsed": None,
+            "gpuCacheEnabled": gpu_cache is not None,
+            "gpuResourcesReused": False,
+            "nativeResourcesReused": False,
+            "nativeKernelsReused": False,
+            "jobThreadId": None,
             "lastNonce": None,
             "lastHash": None,
             "result": None,
@@ -152,6 +161,29 @@ class SearchJob:
 
     def stop(self):
         self.cancel.set()
+
+    @contextmanager
+    def borrow_gpu(self):
+        if self.gpu_cache is None:
+            gpu = self.gpu_factory(self.config.message, self.config.difficulty)
+            try:
+                yield gpu
+            finally:
+                if hasattr(gpu, "close"):
+                    gpu.close()
+        else:
+            with self.gpu_cache.acquire(self.config.message, self.config.difficulty) as lease:
+                self.gpu_lease = lease
+                self.update(gpuResourcesReused=lease.reused,
+                            nativeKernelsReused=getattr(lease.backend, "_native_functions", None) is not None)
+                try:
+                    yield lease.backend
+                finally:
+                    self.gpu_lease = None
+
+    def invalidate_gpu(self):
+        if self.gpu_lease is not None:
+            self.gpu_lease.invalidate()
 
     def save_result(self):
         """Persist only a completed verified proof; disk errors preserve found.
@@ -252,6 +284,7 @@ class SearchJob:
                 self.accept(batch)
 
         def gpu_failed(reason):
+            self.invalidate_gpu()
             self.update(backend=f"CPU · {self.config.workers}개 작업 (동시 모드 GPU 전환)",
                         reason=f"GPU 사용 불가 → 미완료 구간 CPU 재시도: {reason}")
 
@@ -272,9 +305,9 @@ class SearchJob:
     def run_native(self, gpu, base: int):
         """Keep scheduling/CUDA/readback in C; observe totals at 10 Hz only.
 
-        All resource creation, native runs, and destruction stay on this job's
-        owner thread. The observer may only snapshot/cancel and must be joined
-        before reset or destruction. A failed run never restarts its range.
+        An exclusive lease spans each run and its observer. Sequential jobs
+        can transfer idle prepared resources to another thread; observers must
+        join before reset, handoff or destruction. Failed ranges never restart.
         """
         from .hybrid import BatchTiming, kernel_overlap_lower_bound, overlap_seconds
 
@@ -288,8 +321,23 @@ class SearchJob:
                                        gpu_batch=gpu_batch_size(self.config.difficulty),
                                        trace_capacity=8192)
 
+        owned = True
+        attached = False
         try:
-            runner = create()
+            if gpu is not None and self.gpu_lease is not None:
+                try:
+                    runner, reused = self.gpu_lease.native_runner(
+                        self.native_factory, workers=self.config.workers, cpu_batch=64_000,
+                        gpu_batch=gpu_batch_size(self.config.difficulty), trace_capacity=8192)
+                    owned, attached = False, True
+                    self.update(nativeResourcesReused=reused)
+                except Exception as exc:
+                    self.invalidate_gpu()
+                    gpu = None
+                    self.update(reason=f"C CUDA 준비 불가 → C CPU 전환: {type(exc).__name__}: {str(exc)[:700]}")
+                    runner = create()
+            else:
+                runner = create()
         except Exception as exc:
             self.update(reason=f"C 연산 준비 불가 → Python CPU 전환: {type(exc).__name__}: {str(exc)[:700]}")
             if self.cancel.is_set():
@@ -299,10 +347,11 @@ class SearchJob:
             return
 
         try:
-            if gpu is not None:
+            if gpu is not None and not attached:
                 try:
                     runner.attach_gpu(gpu)
                 except Exception as exc:
+                    self.invalidate_gpu()
                     # No range has run yet. Discard any partial CUDA adapter.
                     runner.close()
                     runner = create()
@@ -313,7 +362,8 @@ class SearchJob:
                 return
             if gpu is not None:
                 self.update(backend=f"C · CPU + GPU · {self.config.workers}개 CPU 작업 + {gpu.name}",
-                            reason="작업 배분·해시 계산·CUDA 호출·결과 수집을 C에서 수행합니다.")
+                            reason=("준비된 CUDA 커널과 C 연산 자원을 재사용합니다." if self.snapshot()["nativeResourcesReused"] else
+                                    "작업 배분·해시 계산·CUDA 호출·결과 수집을 C에서 수행합니다."))
             else:
                 self.update(backend=f"C · CPU · {self.config.workers}개 작업")
             self.update(status="running", startupElapsed=time.perf_counter() - self.started)
@@ -350,10 +400,12 @@ class SearchJob:
                         # the observer's next 100ms publication time.
                         self.accept(stats, proof_elapsed=stats["begin"] + stats["first_proof_seconds"] - self.started)
                     if stats.get("gpu_failed"):
+                        self.invalidate_gpu()
                         detail = stats.get("gpu_error") or "CUDA 배치 실패"
                         self.update(backend=f"C · CPU · {self.config.workers}개 작업 (GPU 전환)",
                                     reason=f"GPU 사용 불가 → 미완료 구간 C CPU 재시도: {str(detail)[:700]}")
                     if stats.get("cleanup_warning"):
+                        self.invalidate_gpu()
                         self.update(cleanupWarning=str(stats["cleanup_warning"])[:1000])
 
                 def observe():
@@ -415,72 +467,68 @@ class SearchJob:
                 base += count
             self.update(status="stopped" if self.cancel.is_set() else "exhausted")
         finally:
-            runner.close()
+            if owned:
+                runner.close()
+
+    def run_search(self, resources):
+        base = self.config.start_nonce
+        if self.cancel.is_set():
+            self.update(status="stopped")
+            return
+        if self.config.mode == "native":
+            gpu = None
+            try:
+                gpu = resources.enter_context(self.borrow_gpu())
+            except Exception as exc:
+                self.update(reason=f"GPU 사용 불가 → C CPU 사용: {type(exc).__name__}: {str(exc)[:700]}")
+            self.run_native(gpu, base)
+            return
+        if self.config.mode != "cpu":
+            gpu = None
+            try:
+                gpu = resources.enter_context(self.borrow_gpu())
+                if self.cancel.is_set():
+                    self.update(status="stopped")
+                    return
+                if self.config.mode == "hybrid":
+                    self.run_hybrid(gpu, base)
+                    return
+                self.update(status="running", backend=f"GPU · {gpu.name}", reason="CUDA 가용성·SHA-256 자체 검증 통과")
+                self.update(startupElapsed=time.perf_counter() - self.started)
+                while base <= MAX_NONCE and not self.cancel.is_set():
+                    count = min(gpu_batch_size(self.config.difficulty), MAX_NONCE - base + 1)
+                    batch = gpu.scan_batch(base, count)
+                    self.update(searchPreparationElapsed=getattr(gpu, "search_preparation_seconds", 0.0))
+                    checked = batch.get("checked")
+                    nonce = batch.get("nonce")
+                    if type(checked) is not int or not 1 <= checked <= count:
+                        raise ValueError("GPU가 잘못된 탐색 개수를 반환했습니다.")
+                    if nonce is not None and (type(nonce) is not int or not base <= nonce < base + checked):
+                        raise ValueError("GPU 결과 nonce가 제출한 탐색 범위를 벗어났습니다.")
+                    found = self.accept(batch)
+                    self.record(batch, "gpu")
+                    base += batch["checked"]
+                    if found:
+                        return
+                self.update(status="stopped" if self.cancel.is_set() else "exhausted")
+                return
+            except Exception as exc:
+                self.invalidate_gpu()
+                if self.config.mode == "hybrid" and gpu is not None:
+                    raise
+                self.update(reason=f"GPU 사용 불가 → CPU 자동 전환: {type(exc).__name__}: {str(exc)[:700]}")
+        else:
+            self.update(reason="CPU 모드를 직접 선택했습니다.")
+        if self.cancel.is_set():
+            self.update(status="stopped")
+        else:
+            self.run_cpu(base)
 
     def run(self):
-        base = self.config.start_nonce
+        self.update(jobThreadId=threading.get_native_id())
         try:
-            if self.config.mode == "native":
-                gpu = None
-                try:
-                    try:
-                        gpu = self.gpu_factory(self.config.message, self.config.difficulty)
-                    except Exception as exc:
-                        self.update(reason=f"GPU 사용 불가 → C CPU 사용: {type(exc).__name__}: {str(exc)[:700]}")
-                    self.run_native(gpu, base)
-                finally:
-                    if gpu is not None and hasattr(gpu, "close"):
-                        gpu.close()
-                return
-            if self.config.mode != "cpu":
-                gpu = None
-                try:
-                    gpu = self.gpu_factory(self.config.message, self.config.difficulty)
-                    if self.cancel.is_set():
-                        self.update(status="stopped")
-                        return
-                    if self.config.mode == "hybrid":
-                        self.run_hybrid(gpu, base)
-                        return
-                    self.update(status="running", backend=f"GPU · {gpu.name}", reason="CUDA 가용성·SHA-256 자체 검증 통과")
-                    self.update(startupElapsed=time.perf_counter() - self.started)
-                    while base <= MAX_NONCE and not self.cancel.is_set():
-                        count = min(gpu_batch_size(self.config.difficulty), MAX_NONCE - base + 1)
-                        batch = gpu.scan_batch(base, count)
-                        self.update(searchPreparationElapsed=getattr(gpu, "search_preparation_seconds", 0.0))
-                        checked = batch.get("checked")
-                        nonce = batch.get("nonce")
-                        if type(checked) is not int or not 1 <= checked <= count:
-                            raise ValueError("GPU가 잘못된 탐색 개수를 반환했습니다.")
-                        if nonce is not None and (type(nonce) is not int or not base <= nonce < base + checked):
-                            raise ValueError("GPU 결과 nonce가 제출한 탐색 범위를 벗어났습니다.")
-                        # Verify before advancing. A failing launch is retried on CPU.
-                        found = self.accept(batch)
-                        self.record(batch, "gpu")
-                        base += batch["checked"]
-                        if found:
-                            return
-                    self.update(status="stopped" if self.cancel.is_set() else "exhausted")
-                    return
-                except Exception as exc:
-                    if self.config.mode == "hybrid" and gpu is not None:
-                        # The coordinator already retries individual CUDA
-                        # failures. CPU/protocol failures must stop the job;
-                        # restarting from the original base would count twice.
-                        raise
-                    self.update(reason=f"GPU 사용 불가 → CPU 자동 전환: {type(exc).__name__}: {str(exc)[:700]}")
-                finally:
-                    if gpu is not None and hasattr(gpu, "close"):
-                        try:
-                            gpu.close()
-                        except Exception:
-                            pass
-            else:
-                self.update(reason="CPU 모드를 직접 선택했습니다.")
-            if self.cancel.is_set():
-                self.update(status="stopped")
-            else:
-                self.run_cpu(base)
+            with ExitStack() as resources:
+                self.run_search(resources)
         except Exception as exc:
             state = self.snapshot()
             if state["result"] and state["result"].get("verified"):
@@ -502,17 +550,28 @@ class LabServer(ThreadingHTTPServer):
             raise ValueError("화면 포트는 1~65535 사이의 정수여야 합니다.")
         super().__init__(address, Handler)
         self.history = HistoryStore(data_dir)
+        from .gpu_resources import GpuReuseCache
+        self.gpu_cache = (None if os.environ.get("HASHCASH_GPU_REUSE") == "0" else
+                          GpuReuseCache(make_gpu, capacity=2))
         self.job: SearchJob | None = None
         self.job_lock = threading.Lock()
+        self.shutting_down = False
         self.instance = instance
         self.frontend_port = frontend_port
 
     def server_close(self):
-        if self.job:
-            self.job.stop()
-            if self.job.thread:
-                self.job.thread.join(timeout=5)
-        super().server_close()
+        with self.job_lock:
+            self.shutting_down = True
+            job = self.job
+        if job:
+            job.stop()
+            if job.thread:
+                job.thread.join(timeout=5)
+        try:
+            if self.gpu_cache is not None:
+                self.gpu_cache.close()
+        finally:
+            super().server_close()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -610,6 +669,9 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/api/hashcash/start":
                 config = SearchConfig.from_payload(payload)
                 with self.server.job_lock:
+                    if self.server.shutting_down:
+                        self.reply(503, {"error": "서버를 종료하고 있습니다. 다시 시작한 뒤 탐색하세요."})
+                        return
                     if self.server.job:
                         previous = self.server.job.snapshot()
                         if not previous["finished"]:
@@ -618,7 +680,7 @@ class Handler(BaseHTTPRequestHandler):
                         if previous["status"] == "found" and previous["result"] and previous["result"].get("verified") and not previous["recordId"] and previous["saveError"]:
                             self.reply(409, {"error": "발견 결과의 기록 저장을 다시 시도한 후 새 탐색을 시작하세요."})
                             return
-                    self.server.job = SearchJob(config, history=self.server.history)
+                    self.server.job = SearchJob(config, history=self.server.history, gpu_cache=self.server.gpu_cache)
                     self.server.job.start()
                 self.reply(200, {"job": self.server.job.snapshot()})
             elif self.path == "/api/hashcash/stop":

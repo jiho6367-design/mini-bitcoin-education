@@ -197,6 +197,100 @@ test("native C CPU and CUDA progress, cancel, restart, and persist a verified pr
   await page.screenshot({ path: `work/hashcash-${test.info().project.name}-native-mobile.png`, fullPage: true });
 });
 
+test("native web searches reuse prepared CUDA resources only for the exact input", async ({ page }) => {
+  test.skip(process.env.HASHCASH_EXPECT_NATIVE !== "1", "Requires the native C scheduler and actual CUDA hardware");
+  test.setTimeout(120_000);
+  const suffix = Date.now().toString();
+  const participant = `C 재사용 검사 ${suffix}`;
+  const message = ` C 한글🙂\n${suffix} `;
+  const changedMessage = `${message} `;
+  expect(Buffer.byteLength(changedMessage, "utf8")).toBeLessThanOrEqual(35);
+  const jobIds = new Set<string>();
+  const recordIds = new Set<string>();
+  let previousId: string | undefined;
+
+  await page.goto("/");
+  await expect(page.getByText("● 로컬 연산 서버 연결됨")).toBeVisible();
+  await page.getByLabel("기록 이름", { exact: true }).fill(participant);
+  await page.getByLabel("연산 장치").selectOption("native");
+  await page.getByLabel("CPU 작업 수").fill("2");
+  await page.getByLabel("목표 난이도", { exact: false }).fill("3");
+  await page.getByLabel("시작 nonce").fill("0");
+
+  async function findAndSave(input: string, reused: boolean) {
+    await expect(page.getByRole("button", { name: "탐색 시작" })).toBeEnabled();
+    await page.getByLabel("메시지", { exact: false }).fill(input);
+    await page.getByRole("button", { name: "탐색 시작" }).click();
+    await expect.poll(async () => {
+      const { job } = await (await page.request.get("/api/hashcash/status")).json();
+      return Boolean(job?.id !== previousId && job?.participantName === participant &&
+        job?.message === input && job?.status === "found" && job?.finished && job?.recordId);
+    }, { timeout: 60_000 }).toBeTruthy();
+    const { job } = await (await page.request.get("/api/hashcash/status")).json();
+    expect(job.id).not.toBe(previousId);
+    expect(job.mode).toBe("native");
+    expect(job.backend).toContain("C · CPU + GPU");
+    expect(job.backend).toContain("2개 CPU 작업");
+    expect(job.message).toBe(input);
+    expect(job.difficulty).toBe(3);
+    expect(job.startNonce).toBe("0");
+    expect(job.gpuResourcesReused).toBe(reused);
+    expect(job.nativeKernelsReused).toBe(reused);
+    expect(job.nativeResourcesReused).toBe(reused);
+    expect(typeof job.proofElapsed).toBe("number");
+    expect(job.proofElapsed).toBeGreaterThan(0);
+    expect(job.proofElapsed).toBeGreaterThanOrEqual(job.preparationElapsed);
+    expect(job.proofElapsed).toBeLessThanOrEqual(job.elapsed);
+    expect(BigInt(job.checked)).toBeGreaterThan(0n);
+    expect(BigInt(job.cpuChecked) + BigInt(job.gpuChecked)).toBe(BigInt(job.checked));
+    expect(typeof job.result.nonce).toBe("string");
+    expect(job.result.nonce).toMatch(/^[0-9]+$/);
+    expect(job.result.verified).toBe(true);
+    const reference = createHash("sha256").update(input, "utf8")
+      .update(job.result.nonce, "ascii").digest("hex");
+    expect(job.result.hash).toBe(reference);
+    expect(reference.startsWith("000")).toBeTruthy();
+    expect(typeof job.recordId).toBe("string");
+    expect(jobIds.has(job.id)).toBe(false);
+    expect(recordIds.has(job.recordId)).toBe(false);
+    jobIds.add(job.id);
+    recordIds.add(job.recordId);
+    previousId = job.id;
+    await expect(page.getByTestId("display-hash")).toHaveText(reference);
+    await expect(page.getByRole("button", { name: "탐색 시작" })).toBeEnabled();
+    return job;
+  }
+
+  await findAndSave(message, false);
+  const second = await findAndSave(message, true);
+  await page.getByRole("button", { name: "해시 다시 검증" }).click();
+  await expect(page.getByText("브라우저 SHA-256 재계산도 일치합니다.")).toBeVisible();
+  const history = page.getByTestId("history-panel");
+  await history.getByLabel("기록 이름 필터").selectOption(participant);
+  await expect(history.getByTestId("history-record-count")).toHaveText("총 2건");
+  await expect(history.locator(`[data-record-id="${second.recordId}"]`)
+    .getByTestId("history-nonce")).toHaveText(second.result.nonce);
+
+  await findAndSave(changedMessage, false);
+  await findAndSave(message, true);
+  await expect(history.getByTestId("history-record-count")).toHaveText("총 4건");
+  await expect(history.getByTestId("history-record")).toHaveCount(4);
+  const query = new URLSearchParams({ participantName: participant });
+  const saved = await (await page.request.get(`/api/hashcash/history?${query}`)).json();
+  expect(saved.total).toBe(4);
+  expect(saved.records).toHaveLength(4);
+  expect(new Set(saved.records.map((record: { id: string }) => record.id))).toEqual(recordIds);
+  expect(new Set(saved.records.map((record: { jobId: string }) => record.jobId))).toEqual(jobIds);
+  expect(saved.records.every((record: { message: string; nonce: string; hash: string }) =>
+    createHash("sha256").update(record.message, "utf8").update(record.nonce, "ascii").digest("hex") === record.hash,
+  )).toBeTruthy();
+  await history.getByLabel("입력 조건으로 한정").check();
+  await expect(history.getByTestId("history-record-count")).toHaveText("총 3건");
+  await history.getByLabel("입력 조건으로 한정").uncheck();
+  await expect(history.getByTestId("history-record-count")).toHaveText("총 4건");
+  await page.screenshot({ path: `work/hashcash-${test.info().project.name}-native-reuse.png`, fullPage: true });
+});
+
 test("found proofs persist across reload with participant and difficulty filters", async ({ page }) => {
   const suffix = Date.now().toString();
   const alice = `기록 검사 가 ${suffix}`;
