@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { PracticeArchive } from "./PracticeArchive";
 import qrcode from "qrcode-generator";
 import {
@@ -14,7 +14,8 @@ import type { ThemePreference } from "../theme";
 import { TeamNavigation } from "./TeamNavigation";
 import { uiText } from "../copy";
 import { useConnectionMessage } from "./ServerConnection";
-import { TeamPracticeGuide, type GuidePage } from "./TeamPracticeGuide";
+import { TeamPracticeGuide, useGuideTransaction, type GuidePage } from "./TeamPracticeGuide";
+import { serverConnection } from "../api/serverConnection";
 import {
   ROOM_KEY,
   roomRequest,
@@ -84,6 +85,15 @@ export function ClassroomApp({
     (p) => p.id === credential?.participantId,
   );
   const teamMode = !!(credential?.teamMode || room.state?.teamMode);
+  const serverPhase = useSyncExternalStore(
+    serverConnection.subscribe,
+    () => serverConnection.getSnapshot().phase,
+    () => serverConnection.getSnapshot().phase,
+  );
+  const guideConnected = room.connection === "연결됨" && serverPhase === "ready"
+    && !room.state?.storage?.error && !room.state?.closed;
+  const { transactionId: guideTransactionId, selectTransaction: selectGuideTransaction } =
+    useGuideTransaction(teamMode && guideConnected ? room.state : null);
   const teacher = !teamMode && me?.role === "teacher";
   const controls = teamMode || teacher;
   const disabled = room.busy || !!room.pending || room.connection !== "연결됨";
@@ -412,10 +422,13 @@ export function ClassroomApp({
               <>
                 {teamMode ? (
                   <TeamPracticeGuide
+                    key={`${room.state.code}:${room.state.lab.sessionId}`}
                     page={page}
                     team={me?.team || null}
-                    automatic={room.state.automatic}
-                    connected={room.connection === "연결됨"}
+                    room={room.state}
+                    connected={guideConnected}
+                    selectedTransactionId={guideTransactionId}
+                    onSelectTransaction={selectGuideTransaction}
                     onNavigate={navigateFromGuide}
                     onRoles={() => focusGuideTarget("team-role-selection")}
                   />
@@ -544,6 +557,8 @@ export function ClassroomApp({
                     lab={room.state.lab}
                     teamMode={teamMode}
                     team={me?.team || null}
+                    observedTransactionId={teamMode ? guideTransactionId : undefined}
+                    onObserveTransaction={teamMode ? selectGuideTransaction : undefined}
                     disabled={learningDisabled}
                     command={room.command}
                   />
@@ -667,12 +682,16 @@ function TeamWallet({
   team,
   disabled,
   command,
+  observedTransactionId,
+  onObserveTransaction,
 }: {
   lab: LabSnapshot;
   teamMode: boolean;
   team: NodeId | null;
   disabled: boolean;
   command: Command;
+  observedTransactionId?: string | null;
+  onObserveTransaction?: (id: string | null) => void;
 }) {
   const [recipient, setRecipient] = useState(
     lab.wallets[team === "A" ? 1 : 0].address,
@@ -692,7 +711,7 @@ function TeamWallet({
       : lab.wallets[NODE_IDS.indexOf(team)]
     : null;
   const [observed, setObserved] = useState("");
-  const txs = [
+  const allTransactions = [
     ...new Map(
       NODE_IDS.flatMap((n) => [
         ...lab.nodes[n].mempool,
@@ -701,8 +720,18 @@ function TeamWallet({
         ),
       ]).map((t) => [t.id, t]),
     ).values(),
-  ].slice(-20);
-  const chosen = observed || txs.at(-1)?.id;
+  ];
+  const recentTransactions = allTransactions.slice(-20);
+  const selectedId = observedTransactionId === undefined ? observed : observedTransactionId;
+  const selectedTransaction = allTransactions.find((transaction) => transaction.id === selectedId);
+  const txs = selectedTransaction && !recentTransactions.some((transaction) => transaction.id === selectedId)
+    ? [selectedTransaction, ...recentTransactions] : recentTransactions;
+  const chosen = observedTransactionId === undefined
+    ? observed || txs.at(-1)?.id : observedTransactionId;
+  const observe = (id: string) => {
+    if (onObserveTransaction) onObserveTransaction(id || null);
+    else setObserved(id);
+  };
   function clear() {
     setDraft(null);
     setSigned(null);
@@ -715,7 +744,7 @@ function TeamWallet({
           관찰 거래
           <select
             value={chosen || ""}
-            onChange={(e) => setObserved(e.target.value)}
+            onChange={(e) => observe(e.target.value)}
           >
             <option value="">거래 선택</option>
             {txs.map((t) => (
@@ -902,7 +931,7 @@ function TeamWallet({
                   if (r?.validation) {
                     setResult(uiText(r.validation.message));
                     if (r.validation.valid) {
-                      setObserved(signed!.id);
+                      observe(signed!.id);
                       setSigned(null);
                       setDraft(null);
                       setSelected([]);

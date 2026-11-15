@@ -86,6 +86,8 @@ test("교사 없이 대표를 맡고 공동 조작하며 같은 링크와 쿠키
     await expect(returning.getByRole("alert")).toContainText("이름을 입력해 같은 방에 입장하세요");
     await expect(returning.getByRole("button", { name: "교사 방 만들기", exact: true })).toHaveCount(0);
     expect(await start(returning, "다시 온 팀원")).toBe(code);
+    // New browsers choose an older confirmed transaction explicitly instead of completing a new guide from history.
+    await returning.getByRole("combobox", { name: "관찰 거래", exact: true }).selectOption(transactionId);
     await expect(returning.getByRole("combobox", { name: "관찰 거래", exact: true })).toHaveValue(transactionId);
     await a.evaluate(() => {
       const key = "team-blockchain-classroom";
