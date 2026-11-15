@@ -1,70 +1,19 @@
-# 카카오톡 추가 패키지 실행 확인
+# 카카오톡 교육용 블록체인 앱
 
-2026-11-15 카카오톡으로 받은 `추가.zip`의 파일을 원본 바이트 그대로 보관한 독립 실험 폴더입니다. 브랜치는 `codex/kakao-flask-run`이며, 기존 루트 React 앱과 별도로 구성했습니다.
+2026-11-15 카카오톡으로 받은 `PythonProject1 (2).zip`의 실행 소스를 보관한 독립 실험 폴더입니다. 브랜치는 `codex/kakao-flask-run`이며, 기존 루트 React 앱과 별도로 실행합니다.
 
-## 현재 결과: 핵심 파일 누락으로 실행 불가
+## 실행 결과
 
-Python 3.13 가상환경을 만들고 Flask 3.1.3을 설치한 뒤 확인했습니다.
+Python 3.13, Flask 3.1.3, ecdsa 0.19.2로 **실행 및 검증을 완료했습니다.**
 
-- `python -m unittest discover -s tests -v`: 두 테스트 모듈 모두 import 실패. `block`, `blockchain` 모듈을 찾을 수 없습니다. 실제 테스트 케이스는 실행되지 않았습니다.
-- `python app.py`: `ModuleNotFoundError: No module named 'blockchain'`로 종료됩니다. 웹 서버는 시작되지 않았습니다.
+- 원본 단위 테스트: 25개 모두 통과.
+- 별도 프로세스의 Flask `test_client`: 55개 HTTP 요청 검증 통과. 지갑 생성, faucet, 거래 작성·서명·제출, 채굴, A/B/C 전파, 오프라인 노드 동기화, 변조 검출·복구를 확인했습니다.
+- 실제 브라우저: Alice와 Bob 지갑 생성 → 지급 거래 채굴 → Alice에서 Bob으로 20코인 작성·서명·제출 → 두 번째 채굴까지 확인했습니다. 최종 잔액은 Alice 30 / Bob 70이며, 세 노드 모두 높이 2, 같은 tip hash, 유효한 체인을 보유했습니다.
+- 웹 서버는 `http://127.0.0.1:5000`에서 동작합니다. 데이터는 서버 메모리에 보관되므로 서버를 재시작하면 초기화됩니다.
 
-ZIP의 코드가 직접 import하지만 패키지에 없는 파일은 아래 여섯 개입니다.
+## 실행 방법
 
-```text
-block.py
-blockchain.py
-mempool.py
-miner.py
-transaction.py
-wallet.py
-```
-
-이 파일들이 의존하는 추가 모듈도 원래 전체 프로젝트에서 함께 받아야 합니다. 저장소의 `feat/python-backend` 브랜치는 다른 UTXO 기반 API를 사용하므로 이 파일들을 대체할 수 없습니다. Downloads, PycharmProjects, OneDrive 문서의 관련 파일명 검색에서도 호환 원본은 발견하지 못했습니다.
-
-## 카카오톡 이전 첨부파일 추가 조사
-
-2026-11-15 해당 채팅방의 파일 목록 19개를 확인했습니다. 2026-10-28에 다음 코드 파일들이 별도로 전달되어 있었습니다.
-
-| 파일 | 표시된 크기 |
-| --- | --- |
-| PythonProject1.zip | 13.01MB |
-| wallet.txt | 1.27KB |
-| transaction.txt | 4.63KB |
-| blockchain.txt | 6.49KB |
-| block.txt | 2.90KB |
-| miner.txt | 1.68KB |
-| mempool.txt | 1.25KB |
-| mining_gui.txt | 2.73KB |
-| demo2.txt | 11.70KB |
-
-모두 표시된 유효기간은 **2026-11-11**입니다. `wallet.txt`와 `PythonProject1.zip`의 저장을 각각 시도했지만 카카오톡이 **“원본 파일이 만료되어 파일을 불러올 수 없습니다.”**라고 응답했습니다. 파일 내용을 받지 못했으므로 현재 추가 패키지와의 호환성은 아직 검증할 수 없습니다.
-
-Downloads, PycharmProjects, OneDrive 문서 및 현재 저장소에서 위 파일명과 사본 이름을 검색했으나 이미 저장된 사본도 발견하지 못했습니다. 우선 `PythonProject1.zip`을 다시 전달받아 누락된 코어와 의존성을 확인해야 합니다. 별도 `.txt` 코드 여섯 개도 대안 후보입니다.
-
-## 받은 파일
-
-```text
-app.py
-node.py
-static/architecture.html
-static/glossary.js
-static/index.html
-tests/test_core.py
-tests/test_mempool_miner.py
-```
-
-원본 ZIP SHA-256:
-
-```text
-66282836f2b6ed7c33debf21e32a9a3f85305e101a165d52f5b16654444441ae
-```
-
-코드와 화면에는 지갑 생성, 거래 작성·서명·제출, Mempool, PoW 채굴, 체인 변조·검증, A/B/C 노드 전파·동기화 기능이 정의되어 있습니다. 핵심 모듈 누락으로 기능 동작은 검증하지 못했습니다.
-
-## 전체 원본을 받은 뒤 재시도
-
-이 폴더에 누락된 원본 모듈을 보완한 후 PowerShell에서 실행합니다. 원래 프로젝트의 의존성 목록이 있으면 함께 적용해야 합니다.
+PowerShell에서 이 폴더로 이동한 후 실행합니다.
 
 ```powershell
 python -m venv .venv
@@ -73,4 +22,61 @@ python -m venv .venv
 .\.venv\Scripts\python.exe app.py
 ```
 
-테스트가 통과하고 서버가 시작되면 `http://127.0.0.1:5000`으로 접속합니다. 첨부의 `app.py`는 로컬 주소에만 바인딩하며, 가상환경과 Python 캐시는 저장소의 기존 `.gitignore`에 의해 제외됩니다.
+브라우저에서 `http://127.0.0.1:5000`으로 접속합니다. 서버를 실행한 터미널에서 Ctrl+C로 중지할 수 있습니다. `app.py`는 로컬 주소에만 바인딩합니다.
+
+앱 화면은 지갑 생성, 거래 작성·서명·제출, Mempool, PoW 채굴, 체인 변조·검증, A/B/C 노드 전파·동기화를 제공합니다. 빠른 확인에는 난이도 2가 편리하며 원본 기본값은 4입니다. 좁은 화면에서는 상단 고정 메뉴가 높아져 조작 영역을 가릴 수 있어, PC 브라우저의 넓은 창에서 확인하는 편이 좋습니다.
+
+## 가져온 원본과 구성
+
+`PythonProject1 (2).zip`에서 소스 16개를 원본 바이트 그대로 가져왔습니다. 압축에 포함된 가상환경, IDE 설정, 캐시는 가져오지 않았습니다. 의존성은 이 폴더의 새 가상환경에 별도로 설치했습니다.
+
+```text
+app.py                  Flask 웹 진입점
+block.py                블록·머클 루트·PoW
+blockchain.py           체인·잔액·거래 검증
+wallet.py               ECDSA 지갑
+transaction.py          거래·전자서명
+mempool.py              거래 대기열
+miner.py                후보 블록·채굴
+node.py                 노드 전파·동기화
+main.py                 콘솔 진입점
+demo.py                 별도 tkinter 데모
+mining_gui.py           별도 tkinter 채굴 화면
+static/index.html       웹 학습 화면
+static/architecture.html
+static/glossary.js
+tests/test_core.py
+tests/test_mempool_miner.py
+```
+
+ZIP SHA-256:
+
+```text
+e098af6efa01de4fb337d147eef26fdd4a29227a8a984169ea2bcab2fcde7807
+```
+
+README와 requirements.txt는 실행 재현을 위해 이 브랜치에서 추가했습니다. 가상환경, Python 캐시, 로그 및 `work/` 검증 산출물은 저장소의 기존 `.gitignore`에 의해 제외됩니다.
+
+## 처음 받은 추가 패키지와의 차이
+
+처음 받은 `추가.zip`에는 app.py, node.py, 정적 파일 3개, 테스트 2개만 들어 있었습니다. 핵심 모듈 6개가 없어 테스트 import와 서버 시작이 실패했습니다. 이후 재전송된 전체 프로젝트에서 누락 파일을 확보했습니다.
+
+겹치는 파일 중 app.py, 정적 파일 3개, 테스트 2개는 두 ZIP에서 바이트가 같습니다. node.py는 중복 거래 검사 한 줄만 다릅니다.
+
+```python
+# 추가.zip: 전체 프로젝트의 Mempool에 없는 메서드를 호출
+if self.pool.contains(tx):
+
+# 재전송된 전체 프로젝트 원본: 현재 보관·검증한 코드
+if any(t.txid() == txid for t in self.pool.txs):
+```
+
+전체 프로젝트의 node.py를 함께 사용해야 합니다. 이 폴더의 실행 소스는 재전송된 전체 프로젝트와 동일하며 별도의 기능 수정을 하지 않았습니다.
+
+최초 `추가.zip` SHA-256:
+
+```text
+66282836f2b6ed7c33debf21e32a9a3f85305e101a165d52f5b16654444441ae
+```
+
+참고로 과거 2026-10-28 업로드된 `PythonProject1.zip`과 개별 코드 `.txt` 파일들은 2026-11-11에 만료됐습니다. 기존 ZIP과 wallet.txt 다운로드는 만료 오류로 실패했지만, 이번에 새로 받은 `PythonProject1 (2).zip`으로 필요한 소스를 확보했습니다.

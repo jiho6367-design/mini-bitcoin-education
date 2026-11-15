@@ -39,7 +39,7 @@ class Node:
         if not self.online:
             return False, "노드 오프라인"
         txid = tx.txid()
-        if self.pool.contains(tx):
+        if any(t.txid() == txid for t in self.pool.txs):
             return False, "이미 Mempool에 있는 거래"
         if tx.tx_type == COINBASE:
             return False, "coinbase 거래는 외부에서 받을 수 없습니다"
