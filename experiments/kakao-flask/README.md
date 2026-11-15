@@ -22,6 +22,26 @@ wallet.py
 
 이 파일들이 의존하는 추가 모듈도 원래 전체 프로젝트에서 함께 받아야 합니다. 저장소의 `feat/python-backend` 브랜치는 다른 UTXO 기반 API를 사용하므로 이 파일들을 대체할 수 없습니다. Downloads, PycharmProjects, OneDrive 문서의 관련 파일명 검색에서도 호환 원본은 발견하지 못했습니다.
 
+## 카카오톡 이전 첨부파일 추가 조사
+
+2026-11-15 해당 채팅방의 파일 목록 19개를 확인했습니다. 2026-10-28에 다음 코드 파일들이 별도로 전달되어 있었습니다.
+
+| 파일 | 표시된 크기 |
+| --- | --- |
+| PythonProject1.zip | 13.01MB |
+| wallet.txt | 1.27KB |
+| transaction.txt | 4.63KB |
+| blockchain.txt | 6.49KB |
+| block.txt | 2.90KB |
+| miner.txt | 1.68KB |
+| mempool.txt | 1.25KB |
+| mining_gui.txt | 2.73KB |
+| demo2.txt | 11.70KB |
+
+모두 표시된 유효기간은 **2026-11-11**입니다. `wallet.txt`와 `PythonProject1.zip`의 저장을 각각 시도했지만 카카오톡이 **“원본 파일이 만료되어 파일을 불러올 수 없습니다.”**라고 응답했습니다. 파일 내용을 받지 못했으므로 현재 추가 패키지와의 호환성은 아직 검증할 수 없습니다.
+
+Downloads, PycharmProjects, OneDrive 문서 및 현재 저장소에서 위 파일명과 사본 이름을 검색했으나 이미 저장된 사본도 발견하지 못했습니다. 우선 `PythonProject1.zip`을 다시 전달받아 누락된 코어와 의존성을 확인해야 합니다. 별도 `.txt` 코드 여섯 개도 대안 후보입니다.
+
 ## 받은 파일
 
 ```text
