@@ -1,6 +1,6 @@
 """[5단계] Blockchain: 연결(Previous Hash), 잔액 상태, 전체 검증."""
 from block import Block
-from transaction import COINBASE, FAUCET, TRANSFER, SYSTEM
+from transaction import COINBASE, FAUCET
 
 MIN_DIFFICULTY, MAX_DIFFICULTY, DEFAULT_DIFFICULTY = 1, 5, 4
 GENESIS_DIFFICULTY = 2

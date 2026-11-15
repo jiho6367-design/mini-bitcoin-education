@@ -6,7 +6,9 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from block import Block
-from blockchain import BLOCK_REWARD, FAUCET_AMOUNT, GENESIS, Blockchain
+from blockchain import BLOCK_REWARD, FAUCET_AMOUNT, Blockchain
+from mempool import Mempool
+from miner import mine as mine_block      # miner.mine() 직접 테스트용 (아래 helper mine()은 Node 채굴용)
 from node import Network
 from transaction import FAUCET, TRANSFER, Transaction
 from wallet import Wallet
@@ -138,6 +140,10 @@ class Tamper(unittest.TestCase):
         self.chain.chain[0].nonce += 1
         self.assertFalse(self.chain.validate_chain()[1][0]["valid"])
 
+    def test_link_tamper(self):
+        self.chain.chain[2].previous_hash = "0" * 64
+        self.assertFalse(self.chain.validate_chain()[1][2]["checks"]["link"])   # 연결(Previous Hash) 끊김 탐지
+
     def test_signatureless_block_rejected(self):
         fake = Transaction(TRANSFER, self.a.public_key, self.b.address, 5, 99)
         cb = Transaction("coinbase", "", self.a.address, BLOCK_REWARD)
@@ -145,6 +151,35 @@ class Tamper(unittest.TestCase):
         blk.mine_to_target()
         ok, why = self.chain.add_block(blk)
         self.assertFalse(ok); self.assertIn("서명", why)
+
+
+class Miner(unittest.TestCase):
+    """miner.mine()을 Node 없이 직접 테스트: 블록 연결, Mempool 비우기, 난이도."""
+    def setUp(self):
+        self.chain = Blockchain(difficulty=2)
+        self.pool = Mempool(self.chain)
+        self.a, self.b, self.m = Wallet("Alice"), Wallet("Bob"), Wallet("Miner")
+
+    def test_block_link_and_mempool_cleared(self):
+        self.assertTrue(self.pool.add(Transaction(FAUCET, "", self.a.address, FAUCET_AMOUNT))[0])
+        blk1, _, _ = mine_block(self.chain, self.pool, self.m.address)
+        self.assertTrue(blk1.hash.startswith("00"))
+        self.assertEqual(blk1.previous_hash, self.chain.chain[0].hash)
+        self.assertEqual(len(self.pool.txs), 0)                  # 블록에 담긴 거래는 Mempool에서 제거
+        tx = Transaction(TRANSFER, self.a.public_key, self.b.address, 20, 0)
+        tx.sign(self.a)
+        self.pool.add(tx)
+        blk2, _, _ = mine_block(self.chain, self.pool, self.m.address)
+        self.assertEqual(blk2.previous_hash, blk1.hash)
+        st = self.chain.state()
+        self.assertEqual((st.balance(self.a.address), st.balance(self.b.address), st.balance(self.m.address)),
+                         (30, 20, 2 * BLOCK_REWARD))
+
+    def test_difficulty(self):
+        for d in (1, 3):
+            chain = Blockchain(difficulty=d)
+            blk, _, _ = mine_block(chain, Mempool(chain), self.m.address)
+            self.assertTrue(blk.hash.startswith("0" * d))
 
 
 class Network3(unittest.TestCase):

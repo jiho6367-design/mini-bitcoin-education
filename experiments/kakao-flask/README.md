@@ -6,7 +6,7 @@
 
 Python 3.13, Flask 3.1.3, ecdsa 0.19.2로 **실행 및 검증을 완료했습니다.**
 
-- 원본 단위 테스트: 25개 모두 통과.
+- 최초 가져온 원본 단위 테스트: 25개 모두 통과. 이후 팀원 수정 안내에 따라 새 `test_core.py`로 교체한 통합 테스트 19개도 모두 통과했습니다.
 - 별도 프로세스의 Flask `test_client`: 55개 HTTP 요청 검증 통과. 지갑 생성, faucet, 거래 작성·서명·제출, 채굴, A/B/C 전파, 오프라인 노드 동기화, 변조 검출·복구를 확인했습니다.
 - 실제 브라우저: Alice와 Bob 지갑 생성 → 지급 거래 채굴 → Alice에서 Bob으로 20코인 작성·서명·제출 → 두 번째 채굴까지 확인했습니다. 최종 잔액은 Alice 30 / Bob 70이며, 세 노드 모두 높이 2, 같은 tip hash, 유효한 체인을 보유했습니다.
 - 웹 서버는 `http://127.0.0.1:5000`에서 동작합니다. 데이터는 서버 메모리에 보관되므로 서버를 재시작하면 초기화됩니다.
@@ -36,9 +36,26 @@ python -m venv .venv
 
 영상은 앱의 정적 파일에 포함되므로 별도 업로드 서비스나 외부 동영상 계정 없이 로컬에서 재생됩니다.
 
+## 2026-11-15 팀원 수정 사항
+
+카카오톡으로 새로 받은 `test_core.zip`과 후속 안내를 이 브랜치에 반영했습니다.
+
+- `tests/test_core.py`를 새 파일로 교체하고, 안내대로 미사용 `GENESIS` import를 제거했습니다. 기존 핵심 테스트에 블록 연결 변조 검사와 독립 `miner.mine()` 검사가 추가되어 총 19개입니다.
+- `tests/test_mempool_miner.py`, `main.py`, `mining_gui.py`를 삭제했습니다. Flask 실행 진입점은 `app.py`입니다.
+- `blockchain.py`에서는 미사용 `TRANSFER`, `SYSTEM` import만 제거하고 실제 사용하는 `COINBASE`, `FAUCET`은 유지했습니다.
+- `node.py`의 `self.pool.contains(tx)` 삭제 안내도 대조했습니다. 이 브랜치에는 해당 호출이 이미 없고, `txid`를 비교하는 정상 중복 검사 코드가 있으므로 추가 삭제가 필요하지 않습니다.
+
+반영 후 격리된 Flask `test_client`에서 27개 HTTP 요청으로 지갑 생성, 지급·송금·채굴, 중복 거래 거부, A/B/C 전파, 변조 검출·동기화 복구, 메인 영상의 부분 다운로드 응답을 확인했습니다. 별도로 서명된 송금의 금액을 바꾸고 PoW까지 다시 수행해도 거래 검증에서 거부되는지 확인했습니다.
+
+수정 테스트 ZIP의 SHA-256:
+
+```text
+9f7b6c983f83666e1bf91a40235bbb28810eb48372028545297d50fe9015dcbb
+```
+
 ## 가져온 원본과 구성
 
-`PythonProject1 (2).zip`에서 소스 16개를 원본 바이트 그대로 가져왔습니다. 이후 `static/index.html`의 첫 화면에 시연 영상 안내와 재생기를 추가했습니다. 압축에 포함된 가상환경, IDE 설정, 캐시는 가져오지 않았습니다. 의존성은 이 폴더의 새 가상환경에 별도로 설치했습니다.
+`PythonProject1 (2).zip`에서 소스 16개를 원본 바이트 그대로 가져왔습니다. 이후 위 팀원 수정 사항과 `static/index.html`의 시연 영상 안내·재생기를 추가했습니다. 압축에 포함된 가상환경, IDE 설정, 캐시는 가져오지 않았습니다. 의존성은 이 폴더의 새 가상환경에 별도로 설치했습니다.
 
 ```text
 app.py                  Flask 웹 진입점
@@ -49,14 +66,11 @@ transaction.py          거래·전자서명
 mempool.py              거래 대기열
 miner.py                후보 블록·채굴
 node.py                 노드 전파·동기화
-main.py                 콘솔 진입점
 demo.py                 별도 tkinter 데모
-mining_gui.py           별도 tkinter 채굴 화면
 static/index.html       웹 학습 화면
 static/architecture.html
 static/glossary.js
 tests/test_core.py
-tests/test_mempool_miner.py
 ```
 
 ZIP SHA-256:
@@ -81,7 +95,7 @@ if self.pool.contains(tx):
 if any(t.txid() == txid for t in self.pool.txs):
 ```
 
-전체 프로젝트의 node.py를 함께 사용해야 합니다. 블록체인 핵심 Python 코드는 재전송된 전체 프로젝트와 동일합니다. 웹 첫 화면에는 이 브랜치에서 시연 영상 안내와 재생기를 추가했습니다.
+전체 프로젝트의 node.py를 함께 사용해야 합니다. 재전송된 전체 프로젝트를 기준으로 위 팀원 수정 사항을 반영했으며, 웹 첫 화면에는 시연 영상 안내와 재생기를 추가했습니다.
 
 최초 `추가.zip` SHA-256:
 
