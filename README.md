@@ -1,5 +1,9 @@
 # Mini Bitcoin Education Lab
 
+> 이 브랜치의 카카오톡 Flask 앱: [실행 안내](experiments/kakao-flask/README.md) · [자막 포함 시연 영상 (3분 44초)](experiments/kakao-flask/static/media/blockchain-demo-ko.mp4)
+>
+> Flask 앱의 첫 화면에서도 시연 영상을 재생하거나 다운로드할 수 있습니다. 아래는 기존 React 앱의 안내입니다.
+
 ## 포트폴리오 개요 및 현재 상태
 
 - **형태**: 비트코인의 거래·검증·채굴 흐름을 배우기 위한 개인 교육용 웹 프로젝트입니다.

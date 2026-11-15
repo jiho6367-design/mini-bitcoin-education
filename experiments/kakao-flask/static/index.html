@@ -46,6 +46,11 @@ pre{margin:0;white-space:pre-wrap;word-break:break-all;font-size:12px}
 .log{max-height:260px;overflow:auto}
 .tipc{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
 .tag{font-size:11px;border-radius:4px;padding:0 5px;background:#eef1f8;color:var(--mute)}
+.demo{scroll-margin-top:160px}
+.demo h2{font-size:18px}
+.demo video{display:block;width:100%;max-height:66vh;aspect-ratio:8/5;object-fit:contain;background:#101626;border:1px solid var(--line);border-radius:10px}
+.demo-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 0;font-size:12px;color:var(--mute)}
+.demo a{color:var(--pri)}
 </style>
 </head>
 <body>
@@ -55,9 +60,19 @@ pre{margin:0;white-space:pre-wrap;word-break:break-all;font-size:12px}
     <div class="bar"><button class="tab" onclick="openDict()">📖 용어 사전</button><a class="tab" href="/architecture" style="text-decoration:none">🏗 시스템 구성도</a></div>
   </div>
   <div class="bar" id="nodeTabs"></div>
-  <div class="flow"><a href="#s1">① Wallet</a>→<a href="#s2">② Transaction·서명</a>→<a href="#s3">③ Mempool</a>→<a href="#s4">④ Mining(PoW)</a>→<a href="#s5">⑤ Block·Blockchain</a>→<a href="#s6">⑥ Node 전파</a>→<a href="#s7">⑦ 이벤트 로그</a></div>
+  <div class="flow"><a href="#demo">▶ 시연 영상</a>·<a href="#s1">① Wallet</a>→<a href="#s2">② Transaction·서명</a>→<a href="#s3">③ Mempool</a>→<a href="#s4">④ Mining(PoW)</a>→<a href="#s5">⑤ Block·Blockchain</a>→<a href="#s6">⑥ Node 전파</a>→<a href="#s7">⑦ 이벤트 로그</a></div>
 </header>
 <main>
+
+<section id="demo" class="demo" aria-labelledby="demo-title">
+  <h2 id="demo-title">앱 시연 영상</h2>
+  <p class="desc">지갑 생성부터 송금·전자서명, 채굴, 블록 변조와 복구까지 실제 조작을 단계별 설명 자막과 함께 살펴보세요.</p>
+  <video controls playsinline preload="metadata" poster="/static/media/blockchain-demo-poster.jpg" aria-label="교육용 블록체인 앱 시연 영상 · 한국어 설명 자막 포함">
+    <source src="/static/media/blockchain-demo-ko.mp4" type="video/mp4">
+    영상을 재생할 수 없다면 <a href="/static/media/blockchain-demo-ko.mp4" download>시연 영상을 다운로드</a>해 주세요.
+  </video>
+  <p class="demo-meta"><span>3분 44초 · 한국어 설명 자막 포함 · 전체 화면 재생 가능</span><a href="/static/media/blockchain-demo-ko.mp4" download>영상 다운로드 (MP4)</a></p>
+</section>
 
 <section id="intro" style="background:#eef2ff;border-color:#c7d3ff">
   <h2>👋 처음이신가요?</h2>
