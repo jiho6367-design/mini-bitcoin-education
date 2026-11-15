@@ -1,0 +1,2 @@
+# Confirmed dependency of the received app.py; the original core is missing.
+Flask==3.1.3
