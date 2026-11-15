@@ -94,7 +94,7 @@ SQLite 로컬 배포는 `python -m education_engine.service.backup`으로 통합
 
 ## 확인 근거와 남은 배포 검사
 
-- 현재 수행: Windows 두 엔진 회귀 검사, Chrome·Edge 전체 실습, 실제 Neon PostgreSQL 18 검사 8개, Linux 볼륨 없는 앱 교체·DB 복원, 공개 HTTPS/WSS·보안 쿠키·Render 실제 재시작 복원
+- 현재 수행: Windows 두 엔진 회귀 검사, Chrome·Edge 실습, 실제 Neon PostgreSQL 18 저장 검사, Linux 볼륨 없는 앱 교체·DB 복원, 공개 HTTPS/WSS·보안 쿠키·Render 실제 재시작 후 같은 팀 링크 복원
 - 남은 범위: 대규모 부하·장기 운영·PostgreSQL 운영자 백업의 별도 복구 훈련
 - Render 서비스 Free, Neon 프로젝트 Free, Render Hobby 청구액 $0.00·결제 카드 없음 확인
 

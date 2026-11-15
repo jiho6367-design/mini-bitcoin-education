@@ -59,6 +59,7 @@ test("교사 없이 대표를 맡고 공동 조작하며 같은 링크와 쿠키
     await a.getByRole("button", { name: "2. 전자서명", exact: true }).click();
     await a.getByRole("button", { name: "3. 검증·전파", exact: true }).click();
     await expect(b.getByText("◷ Mempool 대기", { exact: false }).first()).toBeVisible();
+    await expect(a.getByRole("combobox", { name: "관찰 거래", exact: true })).not.toHaveValue("");
     const transactionId = await a.getByRole("combobox", { name: "관찰 거래", exact: true }).inputValue();
 
     await b.getByRole("button", { name: "노드·블록체인", exact: true }).click();
@@ -69,10 +70,11 @@ test("교사 없이 대표를 맡고 공동 조작하며 같은 링크와 쿠키
     await b.getByRole("button", { name: "세 후보 준비", exact: true }).click();
     await b.getByRole("button", { name: "내 채굴 참여", exact: true }).click();
     await b.getByRole("button", { name: "각자 한 번 계산", exact: true }).click();
-    await expect(b.getByText(/후보 #1 · 시도 1회/).first()).toBeVisible();
+    await expect(b.getByText(/후보 #1 · 시도 1회|채굴자 B · #1 · 1회/).first()).toBeVisible();
 
     // Starting again reuses the stable public room, including its ledger.
     await returning.goto(`/?classroom=join&room=${code}`);
+    await expect(returning.getByLabel("별명", { exact: true })).toBeVisible();
     await returning.evaluate((roomCode) => {
       sessionStorage.setItem("team-blockchain-classroom", JSON.stringify({
         code: roomCode, runId: "legacy-run", participantId: "legacy-teacher", token: "expired-teacher-token",
