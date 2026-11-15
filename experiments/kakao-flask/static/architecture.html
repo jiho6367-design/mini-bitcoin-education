@@ -117,7 +117,7 @@
     <header class="topbar">
       <a class="brand" href="/#home"
         ><span class="brand-mark" aria-hidden="true">₿</span
-        ><span>블록체인 실습실<small>SYSTEM ARCHITECTURE</small></span></a
+        ><span>블록체인 실습실<small>시스템 구성</small></span></a
       >
       <div class="topbar-tools">
         <button class="quiet" onclick="openDict()">용어 사전</button
@@ -127,28 +127,26 @@
     <main class="architecture">
       <div class="page-heading">
         <div>
-          <p class="eyebrow">HOW IT WORKS</p>
-          <h1>하나의 실습을 이루는 네 계층.</h1>
-          <p>화면과 요청 처리, 저장, 블록체인 규칙을 나누어 이해해 보세요.</p>
+          <h1>실습실의 네 계층</h1>
+          <p>화면 → 요청 처리 → 저장·노드 → 블록체인 규칙</p>
         </div>
-        <span class="pill">Flask Learning Lab · v2.0.0</span>
+        <span class="pill">Flask · v2.0.0</span>
       </div>
       <div class="page">
         <section class="panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">THE SYSTEM</p>
               <h2>화면에서 장부까지</h2>
             </div>
           </div>
           <p class="desc">
-            브라우저는 조작과 관찰을 담당하고, Python 서버는 실제 서명·검증·해시
-            계산과 저장을 수행합니다. 세 노드는 서버 프로세스 안의 독립 상태이며
-            실제 P2P 연결은 아닙니다.
+            브라우저에서 조작하면 Python 서버가 서명·검증·해시 계산·저장을
+            처리해요 세 노드는 한 서버 안에서 장부를 따로 관리하며, 실제 P2P
+            연결은 아니에요
           </p>
           <div class="architecture-grid">
             <div class="architecture-layer">
-              <h3>01 · 브라우저의 학습 화면</h3>
+              <h3>01 · 학습 화면</h3>
               <div class="module-row">
                 <div class="module">
                   화면과 학습 안내<small>index.html · style.css</small>
@@ -157,29 +155,27 @@
                   요청 순서·입력 상태<small>app.js · ui-state.js</small>
                 </div>
                 <div class="module">
-                  용어·원리 시연<small>glossary.js · 자막 포함 영상</small>
+                  용어·시연<small>glossary.js · 자막 영상</small>
                 </div>
               </div>
             </div>
-            <p class="architecture-arrow">
-              ↓ 같은 출처의 HTTP 요청 · JSON 응답 ↑
-            </p>
+            <p class="architecture-arrow">↓ HTTP 요청 · JSON 응답 ↑</p>
             <div class="architecture-layer">
-              <h3>02 · Flask API와 실습 서비스</h3>
+              <h3>02 · 요청 처리</h3>
               <div class="module-row">
                 <div class="module">
                   요청 검증<small>입력 형식·범위·작업 ID</small>
                 </div>
                 <div class="module">
-                  실습 공간 분리<small>브라우저 쿠키로 현재 실습 선택</small>
+                  실습 분리<small>쿠키로 현재 실습 선택</small>
                 </div>
                 <div class="module">
-                  상태 일관성<small>실습 ID·revision 검사와 순서 제어</small>
+                  상태 일관성<small>실습 ID·버전 검사와 요청 순서 제어</small>
                 </div>
               </div>
             </div>
             <p class="architecture-arrow">
-              ↓ 실습 상태 저장·복원 / 독립된 노드에 명령 전달 ↓
+              ↓ 상태 저장·복원 · 노드에 명령 전달 ↓
             </p>
             <div class="architecture-layer">
               <h3>03 · 저장소와 모의 노드</h3>
@@ -188,18 +184,20 @@
                   SQLite 실습 저장<small>지갑·키·체인·대기열·기록</small>
                 </div>
                 <div class="module">
-                  Node A / B / C<small>각자 체인·Mempool·채굴 후보 보관</small>
+                  노드 A / B / C<small
+                    >각자 체인·대기 거래·채굴 후보 보관</small
+                  >
                 </div>
                 <div class="module">
                   연결·동기화<small
-                    >오프라인 분리 / 유효 체인의 누적 작업량 비교</small
+                    >오프라인 분리 · 유효 체인의 누적 작업량 비교</small
                   >
                 </div>
               </div>
             </div>
-            <p class="architecture-arrow">↓ 핵심 규칙의 함수 호출 ↓</p>
+            <p class="architecture-arrow">↓ 핵심 규칙 호출 ↓</p>
             <div class="architecture-layer">
-              <h3>04 · 블록체인 핵심 모듈</h3>
+              <h3>04 · 블록체인 규칙</h3>
               <div class="module-row">
                 <div class="module">
                   wallet.py · transaction.py<small
@@ -219,102 +217,86 @@
           </div>
         </section>
         <section class="panel">
-          <p class="eyebrow">THE LEARNING JOURNEY</p>
           <h2>거래 한 건이 기록되는 순서</h2>
           <ol class="readable-list">
             <li>
-              <b>지갑 만들기:</b> 주소를 만들고 학습용 지급 거래를 Mempool에
-              등록합니다.
+              <b>지갑:</b> 주소를 만들고 학습용 지급 거래를 대기열에 등록해요
             </li>
             <li>
-              <b>거래 작성·서명:</b> 송신자·수신자·금액·거래 순번을 정한 뒤
-              개인키로 서명합니다.
+              <b>작성·서명:</b> 송신자·수신자·금액·순번을 정하고 개인키로
+              서명해요
+            </li>
+            <li><b>검증:</b> 형식·서명·잔액·순번을 확인하고 대기열에 넣어요</li>
+            <li>
+              <b>채굴:</b> 거래와 보상을 모아 후보를 만들고 Nonce를 바꾸며
+              해시를 계산해요
             </li>
             <li>
-              <b>노드 검증:</b> 형식·서명·잔액·순번을 확인하고 대기열에
-              보관합니다.
+              <b>전파:</b> 이웃 노드가 받은 블록을 각자 검증한 뒤 반영해요
             </li>
             <li>
-              <b>후보·채굴:</b> 거래와 채굴 보상을 모으고 Nonce를 바꾸며 실제
-              SHA-256을 계산합니다.
-            </li>
-            <li>
-              <b>전파·검증:</b> 연결된 이웃 노드는 전달받은 블록을 각자 검증한
-              뒤 반영합니다.
-            </li>
-            <li>
-              <b>변조·복구:</b> 실패한 검사를 확인하고 정상 이웃의 유효 체인과
-              동기화합니다.
+              <b>변조·복구:</b> 실패한 검사를 살펴보고 정상 이웃의 체인으로
+              복구해요
             </li>
           </ol>
         </section>
         <section class="panel">
-          <p class="eyebrow">STATE & RECOVERY</p>
-          <h2>무엇이 저장되고, 무엇이 다시 시작되나요?</h2>
+          <h2>저장과 재시작</h2>
           <dl>
             <dt>브라우저별 실습</dt>
             <dd>
-              각 브라우저의 쿠키로 실습 공간을 구분합니다. 새로고침이나 서버
-              재시작 뒤에도 저장한 공간을 다시 불러옵니다. 별도 로그인 계정은
-              아닙니다.
+              쿠키로 실습을 구분하고 새로고침·서버 재시작 뒤에도 불러와요 로그인
+              계정과는 달라요
             </dd>
             <dt>지갑·장부</dt>
             <dd>
-              SQLite에 보관합니다. 현재 실습 초기화는 그 공간에만 적용합니다.
-              학습용 개인키는 서버에 보관하며, 명시적인 키 보기 요청에서만
-              화면에 표시합니다.
+              SQLite에 저장하며 초기화는 현재 실습에만 적용해요 개인키는 서버가
+              보관하고 키 보기를 눌러야 표시해요
             </dd>
             <dt>진행 중 계산</dt>
             <dd>
-              채굴 작업은 작업 ID로 구분합니다. 일시정지·재개·한 번 계산·중지가
-              가능하며, 서버 재시작 시 진행 중 작업은 중지 상태로 복원합니다.
+              작업 ID로 구분하며 일시정지·재개·한 번 계산·중지가 가능해요 서버
+              재시작 시 진행 중인 계산은 중지해요
             </dd>
             <dt>재채굴 실험</dt>
             <dd>
-              작은 계산 묶음으로 복사본을 처리합니다. 완료 때 원래 체인에
-              반영하고, 완료 전 취소나 서버 재시작 시 미완성 복사본을
-              폐기합니다.
+              사본에서 나눠 계산하고 완료 후 체인에 반영해요 완료 전 취소하거나
+              서버를 재시작하면 사본을 버리고 원본을 유지해요
             </dd>
-            <dt>화면의 준비 데이터</dt>
+            <dt>미제출 거래</dt>
             <dd>
-              아직 제출하지 않은 거래 작성·서명 단계와 선택한 표본은 현재 화면의
-              관찰 상태입니다. 입력이나 관찰 노드를 바꾸면 준비한 거래를
-              무효화합니다.
+              작성·서명 결과와 선택한 표본은 화면에만 남아요 입력이나 관찰
+              노드를 바꾸면 거래를 다시 작성해야 해요
             </dd>
           </dl>
         </section>
         <section class="panel">
-          <p class="eyebrow">RULES & LIMITS</p>
           <h2>학습 모델의 범위</h2>
           <p class="desc">
-            이 모델은 계정 잔액과 거래 순번을 사용합니다. 실제 Bitcoin의 UTXO
-            모델·주소 형식·바이너리 직렬화·이중 SHA-256·자동 난이도
-            조정·네트워크 P2P를 재현하지 않습니다. 실제 자산을 보관하거나
-            전송하지 않습니다.
+            계정 잔액과 거래 순번을 쓰는 교육용 모델이에요 실제 비트코인의
+            UTXO·주소 형식·바이너리 직렬화·이중 SHA-256·자동 난이도 조정·P2P
+            네트워크와는 다르며, 실제 자산을 다루지 않아요
           </p>
           <dl>
             <dt>작업 증명</dt>
             <dd>
-              선행 16진수 0의 개수로 난이도를 표현합니다. 난이도 1 증가 시 평균
-              계산량은 16배입니다. 변경된 정책은 지정한 다음 블록 높이부터
-              적용하며 과거 블록의 난이도를 소급 변경하지 않습니다.
+              해시 앞의 16진수 0 개수가 난이도예요 1 높아지면 평균 계산량은
+              16배이며, 변경은 지정된 다음 높이부터 적용해요
             </dd>
             <dt>체인 선택</dt>
             <dd>
-              블록 수만 비교하지 않고 유효한 체인의 누적 작업량을 비교합니다.
-              같은 작업량에서 임의로 장부를 바꾸지 않습니다.
+              유효한 체인의 누적 작업량을 비교해요 작업량이 같으면 현재 체인을
+              유지해요
             </dd>
             <dt>네트워크 분리</dt>
             <dd>
-              오프라인 노드는 로컬 채굴을 할 수 있지만, 블록 전파와 이웃
-              동기화를 하지 않습니다. 다시 온라인으로 연결한 뒤 수동
-              동기화합니다.
+              오프라인에서도 채굴은 가능해요 블록 전파·동기화는 멈추며, 온라인
+              복귀 후 직접 동기화해야 해요
             </dd>
             <dt>변조와 서명</dt>
             <dd>
-              서명된 송금을 고치면 Merkle와 해시를 재계산하고 PoW까지 다시
-              수행해도 원래 서명은 맞지 않습니다. 서명이 없는 채굴 보상의 변경과
-              구분해 관찰해야 합니다.
+              서명된 송금을 고치면 해시·Merkle·PoW를 다시 맞춰도 서명 검증은
+              실패해요 서명이 없는 채굴 보상 변경과 구분해 보세요
             </dd>
           </dl>
         </section>

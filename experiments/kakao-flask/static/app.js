@@ -13,54 +13,14 @@ import {
 const $ = (selector) => document.querySelector(selector);
 const queue = createSerialQueue();
 const pages = {
-  home: [
-    "시작하기",
-    "LEARN BY DOING",
-    "기록이 신뢰가 되는 과정을 배워요.",
-    "지갑에서 시작해 거래와 채굴, 세 노드의 검증까지 직접 살펴보세요.",
-  ],
-  wallet: [
-    "지갑",
-    "01 / WALLET",
-    "지갑은 코인 대신, 열쇠를 보관해요.",
-    "주소와 키를 확인하고 학습용 코인을 받을 지갑을 준비하세요.",
-  ],
-  transaction: [
-    "거래·전자서명",
-    "02 / TRANSACTION",
-    "작성한 내용에 나만의 서명을 더해요.",
-    "거래 작성 → 전자서명 → 노드 검증·제출을 한 단계씩 진행하세요.",
-  ],
-  mempool: [
-    "거래 대기열",
-    "03 / MEMPOOL",
-    "검증을 마친 거래도, 아직은 대기 중.",
-    "지금 관찰하는 노드에서 블록에 들어갈 거래를 확인하세요.",
-  ],
-  mining: [
-    "채굴",
-    "04 / PROOF OF WORK",
-    "숫자 하나가 바꾸는 해시를 관찰해요.",
-    "실제 Nonce를 계산하고, 목표 조건을 만족하는 순간을 찾아보세요.",
-  ],
-  chain: [
-    "블록·변조 실험",
-    "05 / BLOCKCHAIN",
-    "앞 기록의 지문으로 연결된 장부.",
-    "검증 결과를 비교하고, 내용을 바꿨을 때 어떤 검사가 실패하는지 살펴보세요.",
-  ],
-  network: [
-    "노드·동기화",
-    "06 / NETWORK",
-    "서로 다른 장부가 같은 기록을 고르는 법.",
-    "노드를 네트워크에서 분리하고, 다시 연결한 뒤 동기화해 보세요.",
-  ],
-  events: [
-    "활동 기록",
-    "07 / ACTIVITY",
-    "지금까지의 실습을 돌아봐요.",
-    "거래와 채굴, 검증 실패와 복구가 실제로 일어난 순서를 확인하세요.",
-  ],
+  home: ["시작하기", "블록체인 실습", "지갑 → 거래 → 채굴 → 검증"],
+  wallet: ["지갑", "지갑", "지갑을 만들고 잔액을 확인하세요"],
+  transaction: ["거래·서명", "거래·서명", "작성 → 서명 → 검증·제출"],
+  mempool: ["거래 대기열", "거래 대기열", "블록에 포함되기 전의 거래"],
+  mining: ["채굴", "채굴", "Nonce를 바꿔 목표 해시를 찾으세요"],
+  chain: ["블록·변조", "블록·변조", "기록을 바꾸고 검증 결과를 비교하세요"],
+  network: ["노드·동기화", "노드·동기화", "연결 상태와 노드별 장부 비교"],
+  events: ["활동 기록", "활동 기록", "거래·채굴·검증·동기화 기록"],
 };
 const model = {
   page: "home",
@@ -98,6 +58,8 @@ const model = {
 const number = (n) =>
   Number.isFinite(n) ? n.toLocaleString("ko-KR") : String(n ?? "—");
 const short = (s, n = 12) => (s ? String(s).slice(0, n) + "…" : "—");
+const uiMessage = (value) =>
+  String(value ?? "").replace(/([가-힣])\.(?=\s|$)/gu, "$1");
 const nameOf = (address) =>
   address === "SYSTEM" || !address
     ? "시스템"
@@ -127,7 +89,7 @@ class Superseded extends Error {}
 
 function notice(text, kind = "info") {
   const el = $("#global-message");
-  el.textContent = text;
+  el.textContent = uiMessage(text);
   el.className = `notice ${kind}`;
   el.hidden = !text;
 }
@@ -197,7 +159,7 @@ function rememberMeta(data, response, allowPracticeChange = false) {
     !allowPracticeChange
   )
     throw new ApiError(
-      "다른 탭에서 실습 공간이 바뀌었습니다. 현재 실습을 다시 확인합니다.",
+      "다른 탭에서 실습이 바뀌어 다시 불러옵니다",
       "PRACTICE_CHANGED",
       409,
     );
@@ -230,7 +192,7 @@ async function api(path, method = "GET", payload, options = {}) {
   });
   const data = await response.json().catch(() => {
     throw new ApiError(
-      "서버 응답을 읽지 못했습니다. 서버 상태를 확인한 뒤 다시 시도해 주세요.",
+      "서버 응답 오류 · 새로고침 후 다시 시도하세요",
       "BAD_RESPONSE",
       response.status,
     );
@@ -238,14 +200,14 @@ async function api(path, method = "GET", payload, options = {}) {
   if (epoch !== model.epoch) throw new Superseded("다른 실습의 응답");
   if (!response.ok)
     throw new ApiError(
-      data.reason || data.error || "요청을 처리하지 못했습니다.",
+      data.reason || data.error || "요청 처리 실패",
       data.code,
       response.status,
     );
   rememberMeta(data, response, options.allowPracticeChange);
   if (data?.ok === false)
     throw new ApiError(
-      data.reason || data.error || "요청이 거부됐습니다.",
+      data.reason || data.error || "요청 거부",
       data.code,
       409,
     );
@@ -278,7 +240,7 @@ function execute(label, action, { queued = false, control = false } = {}) {
         }
         notice(
           error instanceof TypeError
-            ? "서버에 연결할 수 없습니다. Python 서버가 실행 중인지 확인하고 ‘새로 확인’을 눌러 주세요."
+            ? "서버 연결 실패 · 서버 실행 후 새로고침하세요"
             : error.message,
           "danger",
         );
@@ -302,9 +264,7 @@ async function refreshAll(retry = 0) {
   });
   if (previousPractice && previousPractice !== model.practice?.id) {
     clearTransient();
-    notice(
-      "이 브라우저의 다른 실습 공간을 불러왔습니다. 준비한 거래와 화면 선택은 초기화했습니다.",
-    );
+    notice("다른 실습을 불러와 작성 중인 거래를 초기화했습니다");
   }
   const epoch = model.epoch;
   const selectedNode =
@@ -322,7 +282,7 @@ async function refreshAll(retry = 0) {
   ) {
     if (retry < 1) return refreshAll(retry + 1);
     throw new ApiError(
-      "다른 탭에서 실습이 바뀌고 있습니다. 잠시 후 새로 확인해 주세요.",
+      "다른 탭에서 변경 중 · 잠시 후 새로고침하세요",
       "STATE_CHANGED",
       409,
     );
@@ -340,11 +300,10 @@ async function refreshAll(retry = 0) {
     const includedAt = confirmedBlockIndex(chain, txid);
     if (includedAt !== null) {
       model.txStage = "confirmed";
-      model.txFeedback = `블록 #${includedAt}에 포함돼 Node ${node}의 장부와 확정 잔액에 반영됐습니다. 다른 노드의 반영 상태도 비교해 보세요.`;
+      model.txFeedback = `블록 #${includedAt} · Node ${node} 반영 완료`;
     } else if (chain.valid && mempool.some((tx) => tx.txid === txid)) {
       model.txStage = "submitted";
-      model.txFeedback =
-        "검증을 통과해 거래 대기열에 등록돼 있습니다. 아직 이 노드의 블록에는 포함되지 않았습니다.";
+      model.txFeedback = "대기열에 등록됨 · 채굴 후 잔액 반영";
     } else if (
       model.txStage === "confirmed" ||
       model.txStage === "unconfirmed" ||
@@ -352,8 +311,8 @@ async function refreshAll(retry = 0) {
     ) {
       model.txStage = "unconfirmed";
       model.txFeedback = chain.valid
-        ? "이 노드의 현재 체인에서 해당 거래를 확인할 수 없습니다. 대기열과 노드 상태를 비교해 주세요."
-        : "체인 검증이 실패해 이 거래의 확정 상태를 신뢰할 수 없습니다. 정상 체인과 동기화해 주세요.";
+        ? "현재 체인에 없는 거래 · 대기열과 노드를 확인하세요"
+        : "체인 검증 실패 · 동기화 후 확정 상태를 확인하세요";
     }
   }
   const candidate = selectedNode.candidate;
@@ -377,14 +336,12 @@ async function refreshAll(retry = 0) {
     (n) => n.id !== node && jobIsActive(n.candidate),
   );
   if (activeElsewhere && !jobIsActive(model.mining)) {
-    notice(
-      `Node ${activeElsewhere.id}에 진행 중인 채굴 후보가 있습니다. 해당 노드에서 이어 보거나 중지할 수 있습니다.`,
-    );
+    notice(`Node ${activeElsewhere.id}에 진행 중인 채굴이 있습니다`);
   }
   const recovery =
     state.practice?.recovery_notice ||
     (state.practice?.job_cancelled_on_restore
-      ? "서버 재시작으로 진행 중이던 계산을 중지했습니다. 저장된 체인과 지갑은 복원됐습니다."
+      ? "실습 복원 완료 · 진행 중이던 계산은 중지됨"
       : "");
   if (
     recovery &&
@@ -398,8 +355,8 @@ async function refreshAll(retry = 0) {
 function renderSaveStatus(label = "") {
   const p = model.practice;
   $("#practice-label").textContent = p
-    ? `내 실습 · ${String(p.id).slice(0, 8)}`
-    : "내 실습을 불러오는 중";
+    ? `실습 · ${String(p.id).slice(0, 8)}`
+    : "실습 불러오는 중";
   $("#save-dot").className =
     `save-dot${model.saveProblem ? " failed" : busy() ? " pending" : ""}`;
   if (model.saveProblem) {
@@ -413,11 +370,11 @@ function renderSaveStatus(label = "") {
   else if (p?.saved_at) {
     const date = new Date(p.saved_at);
     $("#save-status").textContent = Number.isNaN(date.getTime())
-      ? "이 브라우저의 실습 자동 저장됨"
+      ? "자동 저장됨"
       : `자동 저장됨 · ${date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}`;
   } else
     $("#save-status").textContent = p
-      ? "이 브라우저의 실습 자동 저장"
+      ? "자동 저장"
       : "서버 연결을 확인해 주세요";
 }
 function setPage(page, updateHash = true) {
@@ -431,16 +388,14 @@ function setPage(page, updateHash = true) {
     if (el.dataset.page === page) el.setAttribute("aria-current", "page");
     else el.removeAttribute("aria-current");
   });
-  const [title, eyebrow, heading, description] = pages[page];
+  const [title, heading, description] = pages[page];
   $("#breadcrumb").textContent = title;
-  $("#page-eyebrow").textContent = eyebrow;
   $("#page-title").textContent = heading;
   $("#page-description").textContent = description;
   document.title = `${title} · 블록체인 실습실`;
   const guide = $("#learning-guide");
   const container = $(`#page-${page}`);
-  if (page === "home")
-    container.insertBefore(guide, container.querySelector(".home-grid"));
+  if (page === "home") container.querySelector(".demo-panel").after(guide);
   else container.prepend(guide);
   if (updateHash) history.replaceState(null, "", `#${page}`);
   renderGuide();
@@ -452,105 +407,106 @@ function renderGuide() {
   const valid = model.chain?.valid !== false;
   const guides = {
     home: [
-      "거래 하나가 기록되는 여정",
+      "실습 시작",
       users.length < 2
-        ? "Alice와 Bob의 지갑을 만들어 첫 지급 거래를 준비하세요."
-        : "준비한 지갑으로 송금 거래를 작성해 보세요.",
-      "서명과 검증을 거친 거래가 블록에 들어가고 세 노드에 반영됩니다.",
+        ? "송금할 지갑 두 개를 만드세요"
+        : "받는 지갑과 금액을 정해 거래를 작성하세요",
+      "거래는 채굴 후 장부에 반영됩니다",
       users.length < 2 ? "wallet" : "transaction",
-      users.length < 2 ? "지갑 만들러 가기 →" : "거래 작성하러 가기 →",
+      users.length < 2 ? "지갑 만들기 →" : "거래 작성 →",
     ],
     wallet: [
-      "지갑의 숫자는 어디에서 올까요?",
+      "지갑 준비",
       users.length < 2
-        ? "이름을 입력하고 Alice·Bob 지갑을 하나씩 만들어 보세요."
+        ? "이름을 입력해 지갑을 만드세요"
         : hasPending
-          ? "새 지갑의 지급 거래가 기다립니다. 첫 블록을 채굴해 보세요."
-          : "지갑의 확정 잔액과 주소를 확인하고 송금을 준비하세요.",
-      "지갑 생성 직후에는 대기 입금 +50이며, 블록에 기록되면 확정 잔액이 됩니다.",
+          ? "대기 거래를 채굴하세요"
+          : "보낼 지갑과 받을 지갑을 확인하세요",
+      "새 지갑에 지급되는 50코인은 채굴 후 확정됩니다",
       hasPending ? "mempool" : users.length < 2 ? "wallet" : "transaction",
       hasPending
-        ? "대기 거래 확인 →"
+        ? "대기열 →"
         : users.length < 2
-          ? "지갑 이름 입력으로 →"
-          : "송금 준비하기 →",
+          ? "이름 입력 →"
+          : "거래 작성 →",
     ],
     transaction: [
-      "서명은 작성한 내용에 묶입니다.",
+      "작성 → 서명 → 제출",
       model.txStage === "signed"
-        ? "서명 내용을 확인한 뒤 검증·제출을 누르세요."
+        ? "검증·제출을 누르세요"
         : model.txStage === "confirmed"
-          ? "현재 노드의 블록에 반영됐습니다. 다른 노드의 장부와 잔액도 비교하세요."
+          ? "다른 노드에도 거래가 반영됐는지 확인하세요"
           : model.txStage === "submitted"
-            ? "검증을 통과한 거래를 대기열에서 확인하세요."
+            ? "대기열에서 거래를 확인하세요"
             : model.txStage === "prepared"
-              ? "작성한 송신자·수신자·금액을 읽고 개인키로 서명하세요."
-              : "보내는 지갑·받는 지갑·금액을 정하고 거래 작성부터 시작하세요.",
-      "서명 후 내용을 바꾸면 검증에 실패합니다. 정상 제출도 채굴 전에는 확정 잔액을 바꾸지 않습니다.",
+              ? "입력 내용을 확인하고 서명하세요"
+              : "보내는 지갑·받는 지갑·금액을 입력하세요",
+      "서명 후 내용이 바뀌면 검증에 실패합니다",
       model.txStage === "confirmed"
         ? "network"
         : model.txStage === "submitted"
           ? "mempool"
           : "transaction",
       model.txStage === "confirmed"
-        ? "다른 노드와 비교 →"
+        ? "노드 비교 →"
         : model.txStage === "submitted"
-          ? "대기 거래 확인 →"
-          : "현재 거래 단계로 →",
+          ? "대기열 →"
+          : "거래 입력 →",
     ],
     mempool: [
-      "검증과 블록 확정은 다른 단계예요.",
+      "채굴 대기",
       hasPending
-        ? "대기 거래의 금액과 송신자를 확인한 뒤 채굴을 시작하세요."
-        : "선택한 노드의 대기열이 비어 있습니다. 지갑을 만들거나 새 거래를 제출하세요.",
-      "검증된 거래는 블록에 담기기를 기다립니다. 채굴이 성공하면 대기열에서 빠지고 장부에 남습니다.",
+        ? "대기 거래를 확인하고 채굴하세요"
+        : "지갑을 만들거나 거래를 제출하세요",
+      "블록에 포함되면 확정 잔액에 반영됩니다",
       hasPending ? "mining" : users.length < 2 ? "wallet" : "transaction",
-      hasPending ? "이 거래로 채굴하기 →" : "새 거래 준비하기 →",
+      hasPending ? "채굴 →" : "거래 준비 →",
     ],
     mining: [
-      "Nonce 하나로 해시가 달라집니다.",
+      "Nonce와 해시",
       jobIsActive(model.mining)
         ? model.mining.status === "paused"
-          ? "일시정지한 표본을 비교하거나 한 번 더 계산해 보세요."
-          : "필요하면 일시정지한 뒤 표본을 골라 비교해 보세요."
+          ? "표본을 비교하거나 계산을 이어가세요"
+          : "일시정지하면 표본을 비교할 수 있습니다"
         : model.mining?.status === "found"
-          ? "성공한 블록이 다른 노드에도 반영됐는지 비교하세요."
-          : "한 번 계산하기로 첫 해시를 보고, 천천히 학습 실행을 눌러 보세요.",
-      "목표 개수의 0으로 시작하는 실제 해시를 찾을 때만 블록이 추가됩니다. 서버 계산 시간과 화면 대기는 구분됩니다.",
+          ? "다른 노드의 블록 반영 상태를 확인하세요"
+          : "한 번 계산하거나 느린 실행을 시작하세요",
+      "해시 앞의 0 개수가 목표 난이도입니다",
       model.mining?.status === "found" ? "network" : "mining",
-      model.mining?.status === "found" ? "노드 반영 비교 →" : "채굴 조작으로 →",
+      model.mining?.status === "found" ? "노드 비교 →" : "계산하기 →",
     ],
     chain: [
-      "기록을 고치면 무엇이 어긋날까요?",
+      "변조와 복구",
       !valid
-        ? "변조로 체인 검증이 실패했습니다. 실패 항목을 읽고 유효한 이웃과 동기화하세요."
+        ? "실패한 검사를 확인하고 동기화하세요"
         : (model.chain?.height ?? 0) < 1
-          ? "지급 거래나 송금 거래가 담긴 블록을 먼저 채굴하세요."
-          : "변조할 블록·거래·새 값을 고르고, 확인창에서 대상을 다시 읽으세요.",
-      "서명된 송금은 내용을 고친 뒤 PoW를 다시 수행해도 거래 검증을 통과할 수 없습니다.",
+          ? "먼저 거래가 담긴 블록을 채굴하세요"
+          : "블록·거래·새 값을 선택하세요",
+      "재채굴해도 변경된 송금의 원래 서명은 무효입니다",
       !valid ? "network" : (model.chain?.height ?? 0) < 1 ? "mining" : "chain",
       !valid
-        ? "정상 노드와 비교·복구 →"
+        ? "복구하기 →"
         : (model.chain?.height ?? 0) < 1
-          ? "먼저 블록 채굴하기 →"
-          : "변조 실험으로 →",
+          ? "채굴 →"
+          : "변조하기 →",
     ],
     network: [
-      "네트워크 연결과 로컬 연산은 달라요.",
-      "한 노드를 오프라인으로 분리해 채굴하고, 다시 온라인으로 연결한 뒤 동기화해 보세요.",
-      "분리된 노드의 블록은 이웃에게 전파되지 않습니다. 동기화는 유효한 체인의 누적 작업량을 비교합니다.",
+      "분리와 동기화",
+      "노드를 분리해 채굴한 뒤 다시 연결하세요",
+      "동기화는 유효한 체인의 누적 작업량을 비교합니다",
       "network",
-      "노드 상태 비교하기 →",
+      "노드 비교 →",
     ],
     events: [
-      "실패와 복구도 학습의 기록입니다.",
-      "기록 유형을 바꾸며 거래 검증, 채굴, 동기화가 어떤 순서로 일어났는지 읽어 보세요.",
-      "실패 이유와 대상 노드를 함께 읽으면 다음에 바꿀 조건을 찾을 수 있습니다.",
+      "기록 조회",
+      "유형별 기록 확인",
+      "최근 기록부터 표시",
       "events",
-      "최근 기록 살펴보기 →",
+      "기록 보기 →",
     ],
   };
   const guide = guides[model.page];
+  $("#learning-guide").hidden = model.page === "events";
   $("#guide-title").textContent = guide[0];
   $("#guide-action").textContent = guide[1];
   $("#guide-observe").textContent = guide[2];
@@ -603,9 +559,9 @@ function renderTransaction() {
   const wallet = model.wallets.find((w) => w.address === $("#tx-from").value);
   $("#tx-balance-hint").textContent = wallet
     ? wallet.balance_valid === false
-      ? "이 노드의 체인 검증이 실패해 잔액을 신뢰할 수 없습니다. 동기화 후 거래를 준비하세요."
+      ? "체인 검증 실패 · 동기화가 필요합니다"
       : `${wallet.name} · 확정 ${number(wallet.balance)}코인 · 대기 출금 ${number(wallet.pending_out ?? 0)}코인`
-    : "먼저 지갑을 만들어 주세요.";
+    : "지갑을 먼저 만드세요";
   const labels = {
     empty: "작성 전",
     prepared: "작성 완료",
@@ -622,8 +578,7 @@ function renderTransaction() {
   $("#tx-signature-details").hidden = !tx?.signed;
   if (!tx) {
     $("#tx-summary").className = "empty-state";
-    $("#tx-summary").textContent =
-      "거래를 작성하면 금액과 거래 순번을 확인할 수 있습니다.";
+    $("#tx-summary").textContent = "거래 작성 전";
   } else {
     $("#tx-summary").className = "summary-grid";
     $("#tx-summary").innerHTML =
@@ -637,17 +592,16 @@ function renderTransaction() {
   $("#tx-result").className = model.txFeedback
     ? `result-card${model.txStage === "unconfirmed" || (model.txStage !== "submitted" && model.txFeedback.startsWith("거부")) ? " bad" : ""}`
     : "empty-state";
-  $("#tx-result").textContent =
+  $("#tx-result").textContent = uiMessage(
     model.txFeedback ||
-    (tx?.signed
-      ? "전자서명을 생성했습니다. 검증·제출로 노드의 판단을 확인하세요."
-      : "아직 서명하지 않았습니다.");
+      (tx?.signed ? "서명 완료 · 검증·제출을 누르세요" : "서명 전"),
+  );
 }
 function renderMempool() {
   $("#mempool-node").textContent = `· Node ${model.node}`;
   const n = currentNode();
   $("#mempool-metrics").innerHTML =
-    `<div><span>현재 노드</span><strong>Node ${model.node}</strong><small>${n?.online ? "네트워크 연결됨" : "네트워크에서 분리됨"}</small></div><div><span>대기 거래</span><strong>${model.mempool.length}<em>건</em></strong><small>아직 블록 포함 전</small></div><div><span>현재 체인 높이</span><strong>${number(n?.height ?? 0)}</strong><small>Genesis 다음 블록부터 집계</small></div>`;
+    `<div><span>대기 거래</span><strong>${model.mempool.length}<em>건</em></strong><small>블록 포함 전</small></div><div><span>체인 높이</span><strong>${number(n?.height ?? 0)}</strong><small>Genesis 제외</small></div>`;
   $("#mempool-list").innerHTML = model.mempool.length
     ? model.mempool
         .map(
@@ -655,7 +609,7 @@ function renderMempool() {
             `<tr><td><span class="tiny-tag">${esc({ faucet: "지급", transfer: "송금", coinbase: "보상" }[t.type] ?? t.type)}</span></td><td>${esc(nameOf(t.sender_address))} → ${esc(nameOf(t.receiver_address))}</td><td class="numeric"><strong>${number(t.amount)}</strong></td><td>${number(t.nonce)}</td><td class="mono" title="${esc(t.txid)}">${esc(short(t.txid, 17))}</td></tr>`,
         )
         .join("")
-    : '<tr><td colspan="5"><div class="empty-state">대기 중인 거래가 없습니다. 지갑을 만들거나 새 송금 거래를 제출해 보세요.</div></td></tr>';
+    : '<tr><td colspan="5"><div class="empty-state">대기 거래 없음</div></td></tr>';
 }
 function hashHtml(hash, difficulty) {
   const value = String(hash ?? "");
@@ -680,31 +634,32 @@ function renderMining() {
   $("#mining-nonce").textContent = sample ? number(sample.nonce) : "—";
   $("#mining-hash").innerHTML = sample
     ? hashHtml(sample.hash, job.difficulty ?? model.state?.difficulty)
-    : "첫 번째 계산을 기다리고 있습니다.";
+    : "계산 전";
   $("#mining-attempts").textContent = number(job?.attempts ?? 0);
   $("#mining-elapsed").innerHTML =
     `${((job?.elapsed_ms ?? 0) / 1000).toFixed(3)} <em>초</em>`;
   $("#mining-reward").innerHTML =
     `+${number(model.state?.block_reward ?? 10)} <em>코인</em>`;
-  $("#mining-result").textContent =
+  $("#mining-result").textContent = uiMessage(
     job?.resultText ??
-    (job?.reason === "restore_cancelled"
-      ? "서버 재시작으로 이전 계산은 중지했습니다. 저장된 체인은 유지됩니다."
-      : job?.status === "paused"
-        ? "일시정지했습니다. 같은 후보에서 한 번 더 계산하거나 이어갈 수 있습니다."
-        : job?.status === "stopped"
-          ? "후보 계산을 중지했습니다. 새 채굴은 새로운 후보로 시작합니다."
-          : "");
+      (job?.reason === "restore_cancelled"
+        ? "서버 재시작으로 계산 중지 · 체인 유지"
+        : job?.status === "paused"
+          ? "일시정지 · 한 번 계산하거나 이어가세요"
+          : job?.status === "stopped"
+            ? "중지됨 · 새 후보로 다시 시작하세요"
+            : ""),
+  );
   const actualDifficulty = jobIsActive(job)
     ? job.difficulty
     : (currentNode()?.difficulty ?? model.state?.difficulty ?? 2);
   const modeHint = jobIsActive(job)
     ? model.mineMode === "fast"
-      ? "빠른 실행 · 요청마다 최대 2000회 계산합니다."
-      : "학습 실행 · 약 250ms 간격으로 하나씩 계산합니다."
-    : "한 번 계산하거나 천천히 학습 실행으로 관찰해 보세요.";
+      ? "연속 실행"
+      : "느린 실행 · 약 250ms마다 1회"
+    : "";
   $("#mining-mode-hint").textContent =
-    `이 노드의 후보 난이도 ${actualDifficulty} · 목표 ${"0".repeat(actualDifficulty)}… · ${modeHint}`;
+    `난이도 ${actualDifficulty} · 목표 ${"0".repeat(actualDifficulty)}…${modeHint ? ` · ${modeHint}` : ""}`;
   const samples = job?.samples ?? [];
   $("#mining-samples").className = samples.length
     ? "sample-list"
@@ -718,16 +673,16 @@ function renderMining() {
             `<div class="sample-row"><button data-sample="${esc(s.nonce)}" aria-pressed="${model.selectedSample?.nonce === s.nonce}">Nonce ${esc(s.nonce)}</button><code class="sample-hash">${hashHtml(s.hash, job.difficulty ?? model.state?.difficulty)}</code><span class="${s.passed ? "ok" : "subtle"}">${s.passed ? "성공" : "미달"}</span></div>`,
         )
         .join("")
-    : "아직 계산 표본이 없습니다.";
+    : "표본 없음";
   $("#selected-sample").hidden = !model.selectedSample;
   if (model.selectedSample)
     $("#selected-sample").innerHTML =
-      `<strong>선택한 표본 · Nonce ${esc(model.selectedSample.nonce)}</strong><code>${esc(model.selectedSample.hash)}</code><p>최신 계산과 별도로 관찰하는 실제 표본입니다. 다음 계산이 진행돼도 선택한 값은 유지됩니다.</p>`;
+      `<strong>선택한 표본 · Nonce ${esc(model.selectedSample.nonce)}</strong><code>${esc(model.selectedSample.hash)}</code><p>선택한 표본은 다음 계산 중에도 유지됩니다</p>`;
 }
 function renderChain() {
   const chain = model.chain;
   $("#chain-status").innerHTML =
-    `<span class="status-chip ${chain?.valid ? "ok" : "bad"}">${chain?.valid ? "✓ 모든 블록의 검증을 통과했습니다" : "검증 실패 · 이 노드의 잔액은 신뢰할 수 없습니다"}</span>`;
+    `<span class="status-chip ${chain?.valid ? "ok" : "bad"}">${chain?.valid ? "✓ 체인 유효" : "검증 실패 · 잔액 확인 불가"}</span>`;
   const checks = {
     hash: "해시",
     merkle: "Merkle",
@@ -747,7 +702,7 @@ function renderChain() {
           )
           .join(
             "",
-          )}</div><dl><dt>블록 해시</dt><dd>${esc(b.hash)}</dd><dt>앞 블록 해시</dt><dd>${esc(b.previous_hash)}</dd><dt>Merkle Root</dt><dd>${esc(b.merkle_root)}</dd><dt>Nonce · 난이도</dt><dd>${number(b.nonce)} · ${number(b.difficulty)}</dd></dl>${b.transactions.length ? `<details><summary>거래 ${b.transactions.length}개 보기</summary>${b.transactions.map((t, i) => `<div class="tx-line">#${i} ${esc({ coinbase: "채굴 보상", faucet: "지급", transfer: "송금" }[t.type] ?? t.type)}<br>${esc(nameOf(t.sender_address))} → ${esc(nameOf(t.receiver_address))} · <b>${number(t.amount)}</b></div>`).join("")}</details>` : ""}${b.reasons?.length ? `<p class="reason">${b.reasons.map(esc).join("<br>")}</p>` : ""}</article>`,
+          )}</div><dl><dt>블록 해시</dt><dd>${esc(b.hash)}</dd><dt>앞 블록 해시</dt><dd>${esc(b.previous_hash)}</dd><dt>Merkle Root</dt><dd>${esc(b.merkle_root)}</dd><dt>Nonce · 난이도</dt><dd>${number(b.nonce)} · ${number(b.difficulty)}</dd></dl>${b.transactions.length ? `<details><summary>거래 ${b.transactions.length}개 보기</summary>${b.transactions.map((t, i) => `<div class="tx-line">#${i} ${esc({ coinbase: "채굴 보상", faucet: "지급", transfer: "송금" }[t.type] ?? t.type)}<br>${esc(nameOf(t.sender_address))} → ${esc(nameOf(t.receiver_address))} · <b>${number(t.amount)}</b></div>`).join("")}</details>` : ""}${b.reasons?.length ? `<p class="reason">${b.reasons.map((reason) => esc(uiMessage(reason))).join("<br>")}</p>` : ""}</article>`,
     )
     .join("");
   renderTamperOptions();
@@ -765,7 +720,7 @@ function renderTamperOptions() {
             `<option value="${b.index}">블록 #${b.index} · 거래 ${b.transactions.length}개</option>`,
         )
         .join("")
-    : '<option value="">먼저 블록을 채굴해 주세요</option>';
+    : '<option value="">블록을 먼저 채굴하세요</option>';
   const preferred =
     blocks
       .slice()
@@ -791,7 +746,7 @@ function renderTamperTransactions() {
             `<option value="${i}">#${i} ${esc({ coinbase: "채굴 보상", faucet: "지급", transfer: "서명된 송금" }[t.type] ?? t.type)} · ${esc(nameOf(t.receiver_address))} ${t.amount}</option>`,
         )
         .join("")
-    : '<option value="">선택할 거래가 없습니다</option>';
+    : '<option value="">거래 없음</option>';
   const defaultIndex =
     block?.transactions.findIndex((t) => t.type === "transfer") ?? -1;
   el.value =
@@ -807,13 +762,13 @@ function renderTamperTarget() {
   const tx = block?.transactions[Number($("#tamper-tx").value)];
   $("#tamper-target").textContent = tx
     ? `변경 대상: Node ${model.node} · 블록 #${block.index} · 거래 #${$("#tamper-tx").value} · ${nameOf(tx.sender_address)} → ${nameOf(tx.receiver_address)} · 현재 ${tx.amount}코인`
-    : "채굴한 블록이 있어야 변조 실험을 시작할 수 있습니다.";
+    : "변조할 블록 없음 · 먼저 채굴하세요";
 }
 function renderNetwork() {
   $("#network-list").innerHTML = (model.state?.nodes ?? [])
     .map(
       (n) =>
-        `<article class="network-card${n.id === model.node ? " observed" : ""}"><h2>${esc(n.name)}${n.id === model.node ? '<span class="tiny-tag">관찰 중</span>' : ""}</h2><span class="connection${n.online ? "" : " offline"}">${n.online ? "네트워크 연결됨" : "네트워크에서 분리됨"}</span><div class="height">${number(n.height)} <small>블록 높이</small></div><dl><dt>마지막 블록 해시</dt><dd class="mono">${esc(n.tip_hash)}</dd><dt>검증 · 대기 거래</dt><dd class="${n.valid ? "ok" : "bad"}">${n.valid ? "✓ 체인 유효" : "× 변조 검출"} · ${n.mempool}건 대기</dd><dt>누적 작업량 · 채굴 상태</dt><dd>${esc(n.cumulative_work ?? "—")} · ${esc({ running: "계산 후보 준비됨", paused: "일시정지", found: "발견 완료", stopped: "중지됨", idle: "준비" }[n.mining_status] ?? "준비")}</dd></dl><div class="actions"><button class="secondary" data-online="${esc(n.id)}" data-next-online="${!n.online}">${n.online ? "오프라인으로 분리" : "온라인으로 연결"}</button><button class="secondary" data-sync="${esc(n.id)}" data-testid="node-sync-${esc(n.id)}" ${n.online ? "" : "disabled"}>동기화</button><button class="text-button" data-observe="${esc(n.id)}">이 노드 관찰 →</button></div></article>`,
+        `<article class="network-card${n.id === model.node ? " observed" : ""}"><h2>${esc(n.name)}${n.id === model.node ? '<span class="tiny-tag">관찰 중</span>' : ""}</h2><span class="connection${n.online ? "" : " offline"}">${n.online ? "네트워크 연결됨" : "네트워크에서 분리됨"}</span><div class="height">${number(n.height)} <small>블록 높이</small></div><dl><dt>마지막 블록 해시</dt><dd class="mono">${esc(n.tip_hash)}</dd><dt>검증 · 대기 거래</dt><dd class="${n.valid ? "ok" : "bad"}">${n.valid ? "✓ 체인 유효" : "× 변조 검출"} · ${n.mempool}건 대기</dd><dt>누적 작업량 · 채굴 상태</dt><dd>${esc(n.cumulative_work ?? "—")} · ${esc({ running: "계산 후보 준비됨", paused: "일시정지", found: "발견 완료", stopped: "중지됨", idle: "준비" }[n.mining_status] ?? "준비")}</dd></dl><div class="actions"><button class="secondary" data-online="${esc(n.id)}" data-next-online="${!n.online}">${n.online ? "오프라인으로" : "온라인으로"}</button><button class="secondary" data-sync="${esc(n.id)}" data-testid="node-sync-${esc(n.id)}" ${n.online ? "" : "disabled"}>동기화</button><button class="text-button" data-observe="${esc(n.id)}">관찰 →</button></div></article>`,
     )
     .join("");
 }
@@ -825,8 +780,7 @@ function renderEvents() {
       e.kind === filter ||
       (filter === "block" && e.kind === "mine"),
   );
-  $("#events-count").textContent =
-    `${selected.length}개 기록 · 최근 기록이 위에 표시됩니다`;
+  $("#events-count").textContent = `${selected.length}개 · 최신순`;
   const kinds = new Set([
     "tx",
     "mine",
@@ -842,9 +796,9 @@ function renderEvents() {
       .reverse()
       .map(
         (e) =>
-          `<li class="kind-${kinds.has(e.kind) ? e.kind : "sys"}"><time>${esc(e.time)}</time><strong>${e.node === "-" ? "실습실" : `Node ${esc(e.node)}`}</strong><p>${esc(e.msg)}</p></li>`,
+          `<li class="kind-${kinds.has(e.kind) ? e.kind : "sys"}"><time>${esc(e.time)}</time><strong>${e.node === "-" ? "실습실" : `Node ${esc(e.node)}`}</strong><p>${esc(uiMessage(e.msg))}</p></li>`,
       )
-      .join("") || "<li><p>아직 이 유형의 기록이 없습니다.</p></li>";
+      .join("") || "<li><p>기록 없음</p></li>";
 }
 function renderControls() {
   const ready = Boolean(model.state);
@@ -913,15 +867,13 @@ function renderControls() {
       (activeTamper() && model.tamperLooping) ||
       !$("#tamper-block").value,
   );
-  $("#tamper-start").textContent = activeTamper()
-    ? "재채굴 계산 이어가기"
-    : "대상 확인 후 변조";
+  $("#tamper-start").textContent = activeTamper() ? "재채굴 계속" : "변조하기";
   set("#tamper-cancel", !activeTamper() || model.controlPending);
   set("#chain-sync", locked || !currentNode()?.online);
   set("#invalid-sync", locked || !currentNode()?.online);
   $("#integrity-warning").hidden = !ready || validChain;
   $("#integrity-description").textContent =
-    `Node ${model.node}의 체인 검증이 실패했습니다. 잔액을 신뢰할 수 없으므로 정상 이웃 체인과 비교·동기화한 뒤 거래와 채굴을 진행하세요.${currentNode()?.online ? "" : " 먼저 노드를 온라인으로 연결해 주세요."}`;
+    `Node ${model.node} 체인 검증 실패 · 동기화가 필요합니다${currentNode()?.online ? "" : " 먼저 온라인으로하세요"}`;
   document
     .querySelectorAll(
       "[data-faucet],[data-keys],[data-online],[data-sync],[data-observe]",
@@ -936,8 +888,8 @@ function renderControls() {
   $("#task-message").hidden = !work;
   if (work)
     $("#task-message").textContent = activeTamper()
-      ? `Node ${model.tamper.node ?? model.node}의 복사본을 재채굴하고 있습니다. 취소하면 원래 체인을 유지합니다. 다른 설정은 완료·취소 후 바꿀 수 있습니다.`
-      : `Node ${model.mining.node}의 채굴 후보를 ${model.mining.status === "paused" ? "일시정지해 관찰 중입니다" : model.looping ? "계산 중입니다" : "불러왔습니다"}. 노드와 조건은 작업 중지 후 바꿀 수 있습니다.`;
+      ? `Node ${model.tamper.node ?? model.node} 재채굴 중 · 취소하면 원본 유지`
+      : `Node ${model.mining.node} · ${model.mining.status === "paused" ? "일시정지" : model.looping ? "계산 중" : "후보 준비"} · 설정 변경은 중지 후 가능`;
 }
 function renderAll() {
   renderWallets();
@@ -962,27 +914,23 @@ async function createWallet() {
   const name = $("#wallet-name").value.trim();
   if (!name) {
     $("#wallet-name").focus();
-    notice("지갑 이름을 입력해 주세요.", "warning");
+    notice("지갑 이름을 입력하세요", "warning");
     return;
   }
   const result = await api("/api/wallets", "POST", { name, node: model.node });
   $("#wallet-name").value = "";
   $("#wallet-feedback").textContent = result.faucet?.ok
-    ? `${name} 지갑을 만들었습니다. 현재 지급 상태와 확정 잔액은 아래 목록에서 확인하세요.`
-    : `${name} 지갑을 만들었습니다. 지급 요청 결과: ${result.faucet?.reason ?? "대기열을 확인해 주세요."}`;
+    ? `${name} 지갑 생성 · 지급 상태는 잔액 목록에서 확인`
+    : `${name} 지갑 생성 · 지급 결과: ${uiMessage(result.faucet?.reason ?? "대기열을 확인하세요")}`;
   await refreshAll();
-  notice(
-    `${name} 지갑을 생성했습니다. 채굴 후 지급액이 확정됩니다.`,
-    "success",
-  );
+  notice(`${name} 지갑 생성 · 50코인 지급 대기`, "success");
 }
 async function prepareTransaction() {
   const input = txInput();
   const amount = strictInteger(input.amount);
   if (!input.from || !input.to)
-    throw new Error("송신 지갑과 수신 지갑을 먼저 선택해 주세요.");
-  if (amount === null)
-    throw new Error("송금액은 1 이상의 정확한 정수로 입력해 주세요.");
+    throw new Error("보내는 지갑과 받는 지갑을 선택하세요");
+  if (amount === null) throw new Error("금액은 1 이상의 정수로 입력하세요");
   const generation = ++model.txGeneration;
   const fingerprint = draftFingerprint(input);
   const result = await api("/api/tx/prepare", "POST", {
@@ -1004,8 +952,7 @@ async function prepareTransaction() {
     fingerprint,
   };
   model.txStage = "prepared";
-  model.txFeedback =
-    "거래 내용을 준비했습니다. 송신자·수신자·금액을 읽고 서명하세요.";
+  model.txFeedback = "거래 작성 완료 · 내용을 확인하고 서명하세요";
   renderTransaction();
 }
 async function signTransaction() {
@@ -1016,13 +963,12 @@ async function signTransaction() {
     model.txStage !== "prepared" ||
     tx.fingerprint !== draftFingerprint(txInput())
   )
-    throw new Error("현재 입력으로 거래를 다시 작성해 주세요.");
+    throw new Error("현재 입력으로 거래를 다시 작성하세요");
   const result = await api("/api/tx/sign", "POST", { tx: tx.draft });
   if (generation !== model.txGeneration || model.tx !== tx) return;
   tx.signed = result.tx;
   model.txStage = "signed";
-  model.txFeedback =
-    "전자서명을 생성했습니다. 검증·제출로 노드의 판단을 확인하세요.";
+  model.txFeedback = "서명 완료 · 검증·제출을 누르세요";
   renderTransaction();
 }
 async function submitTransaction() {
@@ -1034,9 +980,7 @@ async function submitTransaction() {
     tx.fingerprint !== draftFingerprint(txInput()) ||
     tx.node !== model.node
   )
-    throw new Error(
-      "입력이 바뀌었습니다. 거래 작성과 서명부터 다시 진행해 주세요.",
-    );
+    throw new Error("입력 변경 · 거래 작성과 서명을 다시 진행하세요");
   const payload = structuredClone(tx.signed);
   const tampered = $("#tx-tamper").checked;
   if (tampered) payload.amount += 1000;
@@ -1057,14 +1001,13 @@ async function submitTransaction() {
   }
   if (generation !== model.txGeneration || model.tx !== tx) return;
   model.txStage = "submitted";
-  model.txFeedback =
-    "검증을 통과해 거래 대기열에 등록됐습니다. 아직 확정 잔액은 바뀌지 않습니다.";
+  model.txFeedback = "대기열 등록 완료 · 채굴 후 잔액 반영";
   await refreshAll();
   renderTransaction();
   notice(
     model.txStage === "confirmed"
-      ? "서명된 거래가 블록에 반영됐습니다. 현재 잔액과 노드 상태를 확인해 보세요."
-      : "서명된 거래를 등록했습니다. 대기열을 확인하고 채굴해 보세요.",
+      ? "거래 확정 · 잔액과 노드 상태를 확인하세요"
+      : "거래 등록 완료 · 채굴 대기",
     "success",
   );
 }
@@ -1085,12 +1028,12 @@ function acceptMining(result) {
   if (result.found) {
     model.mining.status = result.accepted ? "found" : "error";
     model.mining.resultText = result.accepted
-      ? `블록 #${result.index}을 찾았습니다. Nonce ${result.nonce} · ${number(result.attempts)}회 계산. ${result.propagation?.length ? "이웃 노드 전파 결과를 비교해 보세요." : "네트워크에서 분리된 노드라면 이 블록은 로컬에만 남습니다."}`
-      : `블록 검증 거부: ${result.reason}`;
+      ? `블록 #${result.index} 발견 · Nonce ${result.nonce} · ${number(result.attempts)}회 · ${result.propagation?.length ? "이웃 전파 결과 확인" : "로컬 채굴 · 이웃 전파 없음"}`
+      : `블록 검증 거부: ${uiMessage(result.reason)}`;
     stopMineLoop();
     if (result.accepted)
       notice(
-        `Node ${model.mining.node}에서 블록 #${result.index} 채굴을 완료했습니다. 현재 확정 잔액과 노드 반영 결과를 확인해 보세요.`,
+        `Node ${model.mining.node}에서 블록 #${result.index} 채굴 완료`,
         "success",
       );
   }
@@ -1199,8 +1142,8 @@ async function synchronize(node) {
   invalidateDraft();
   notice(
     result.changed
-      ? `Node ${node}를 유효한 체인으로 동기화했습니다.`
-      : `Node ${node}에 채택할 더 높은 작업량의 유효한 체인이 없습니다.`,
+      ? `Node ${node} 동기화 완료`
+      : `Node ${node} · 채택할 새 체인 없음`,
     result.changed ? "success" : "info",
   );
 }
@@ -1208,9 +1151,9 @@ function confirmAction(title, description, action, danger = false) {
   if (busy()) return;
   const context = { practiceId: model.practice?.id, epoch: model.epoch };
   model.confirmation = () => action(context);
-  $("#confirm-title").textContent = title;
-  $("#confirm-description").textContent = description;
-  $("#confirm-accept").textContent = danger ? "확인하고 실행" : "계속";
+  $("#confirm-title").textContent = uiMessage(title);
+  $("#confirm-description").textContent = uiMessage(description);
+  $("#confirm-accept").textContent = danger ? "실행" : "계속";
   $("#confirm-accept").className = danger ? "danger-button" : "";
   $("#confirm-dialog").showModal();
   $("#confirm-cancel").focus();
@@ -1221,7 +1164,7 @@ function assertConfirmedContext(context) {
     context.epoch !== model.epoch
   )
     throw new ApiError(
-      "확인한 실습 공간이 바뀌어 작업을 실행하지 않았습니다. 현재 실습을 다시 확인해 주세요.",
+      "실습이 바뀌어 실행 취소 · 현재 상태를 확인하세요",
       "PRACTICE_CHANGED",
       409,
     );
@@ -1236,7 +1179,7 @@ function requestTamper() {
   const block_index = strictInteger($("#tamper-block").value, 1);
   const tx_index = strictInteger($("#tamper-tx").value, 0);
   if (block_index === null || tx_index === null) {
-    notice("변조할 블록과 거래를 선택해 주세요.", "warning");
+    notice("블록과 거래를 선택하세요", "warning");
     return;
   }
   const field = $("#tamper-field").value;
@@ -1245,25 +1188,23 @@ function requestTamper() {
   if (field === "amount") {
     const n = strictInteger(value, 0);
     if (n === null) {
-      notice("새 금액을 0 이상의 정수로 입력해 주세요.", "warning");
+      notice("새 금액은 0 이상의 정수로 입력하세요", "warning");
       return;
     }
     value = n;
   } else if (!/^[0-9a-fA-F]{64}$/.test(value)) {
-    notice("수신 주소는 64자리 16진수로 입력해 주세요.", "warning");
+    notice("수신 주소는 64자리 16진수로 입력하세요", "warning");
     return;
   }
   const node = model.node;
   const epoch = model.epoch;
   confirmAction(
-    `Node ${node}의 기록을 바꿀까요?`,
-    `${$("#tamper-target").textContent}\n새 ${field === "amount" ? "금액" : "수신 주소"}: ${value}\n방식: ${$("#tamper-mode").selectedOptions[0].textContent}\n\n선택한 노드의 체인만 변경합니다. 정상 이웃이 있다면 동기화로 복구할 수 있습니다.${mode === "remine" ? "\n재채굴은 복사본에서 진행하며, 완료 전 취소하면 원래 체인이 유지됩니다." : ""}`,
+    `Node ${node} 기록 변경`,
+    `${$("#tamper-target").textContent}\n새 ${field === "amount" ? "금액" : "수신 주소"}: ${value}\n방식: ${$("#tamper-mode").selectedOptions[0].textContent}\n\n선택한 노드의 체인만 변경합니다 · 정상 이웃과 동기화해 복구 가능${mode === "remine" ? "\n재채굴은 복사본에서 진행 · 완료 전 취소하면 원본 유지" : ""}`,
     () =>
       execute("변조 실험", async () => {
         if (epoch !== model.epoch || node !== model.node)
-          throw new Error(
-            "관찰 대상이 바뀌었습니다. 변조 대상을 다시 확인해 주세요.",
-          );
+          throw new Error("관찰 노드 변경 · 변조 대상을 다시 선택하세요");
         const result = await api(`/api/nodes/${node}/tamper`, "POST", {
           block_index,
           tx_index,
@@ -1276,13 +1217,12 @@ function requestTamper() {
           model.tamper = { ...result, node };
           model.tamperLooping = true;
           scheduleTamper(model.tamperToken, 0);
-          $("#tamper-result").textContent =
-            "복사본을 재채굴하고 있습니다. 계산 중에도 취소할 수 있습니다.";
+          $("#tamper-result").textContent = "복사본 재채굴 중 · 취소 가능";
         } else {
           model.tamper = { ...result, node, status: "completed" };
           $("#tamper-result").textContent = result.valid
-            ? "이 체인은 현재 검사에서 유효합니다. 다른 노드의 마지막 해시와 작업량도 비교하세요."
-            : "변조를 검출했습니다. 실패 항목을 읽고 노드 화면에서 정상 체인과 비교해 보세요.";
+            ? "체인 유효 · 다른 노드의 해시와 작업량을 비교하세요"
+            : "변조 검출 · 실패한 검사를 확인하세요";
           await refreshAll();
         }
       }),
@@ -1305,8 +1245,8 @@ function scheduleTamper(token, delay) {
         model.tamper = { ...model.tamper, ...result };
         $("#tamper-result").textContent =
           result.status === "completed"
-            ? `재채굴을 완료했습니다. ${result.valid ? "체인은 유효합니다. 다른 노드와 비교하세요." : "PoW를 다시 수행해도 거래 검증을 통과하지 못했습니다."}`
-            : `실제 ${number(result.attempts ?? 0)}회 계산 중 · 원래 체인은 아직 변경하지 않았습니다.`;
+            ? `재채굴 완료 · ${result.valid ? "체인 유효" : "거래 검증 실패"}`
+            : `실제 ${number(result.attempts ?? 0)}회 계산 · 원본 유지 중`;
         if (result.status === "completed") {
           stopTamperLoop();
           await refreshAll();
@@ -1346,10 +1286,7 @@ document.addEventListener("click", (event) => {
         node: model.node,
       });
       await refreshAll();
-      notice(
-        "지급 거래를 대기열에 등록했습니다. 채굴 후 잔액에 반영됩니다.",
-        "success",
-      );
+      notice("지급 등록 완료 · 채굴 후 잔액 반영", "success");
     });
     return;
   }
@@ -1378,8 +1315,8 @@ document.addEventListener("click", (event) => {
       await refreshAll();
       notice(
         online.dataset.nextOnline === "true"
-          ? `Node ${online.dataset.online}를 연결했습니다. 기록이 다르면 직접 동기화하세요.`
-          : `Node ${online.dataset.online}를 네트워크에서 분리했습니다. 로컬 채굴은 계속 실습할 수 있습니다.`,
+          ? `Node ${online.dataset.online} 온라인 · 기록이 다르면 동기화하세요`
+          : `Node ${online.dataset.online} 오프라인 · 로컬 채굴 가능`,
       );
     });
     return;
@@ -1410,9 +1347,7 @@ $("#wallet-form").addEventListener("submit", (event) => {
 ["#tx-from", "#tx-to", "#tx-amount"].forEach((id) =>
   $(id).addEventListener("input", () => {
     model.formTouched = true;
-    invalidateDraft(
-      "입력이 바뀌었습니다. 현재 내용으로 거래를 다시 작성해 주세요.",
-    );
+    invalidateDraft("입력 변경 · 거래를 다시 작성하세요");
   }),
 );
 $("#tx-prepare").addEventListener("click", () =>
@@ -1433,7 +1368,7 @@ $("#difficulty-apply").addEventListener("click", () =>
     );
     if (difficulty === null)
       throw new Error(
-        `난이도는 ${model.state.min_difficulty}~${model.state.max_difficulty} 사이의 정수로 입력해 주세요.`,
+        `난이도는 ${model.state.min_difficulty}~${model.state.max_difficulty} 사이의 정수로 입력하세요`,
       );
     const result = await api("/api/difficulty", "POST", { difficulty });
     stopMineLoop();
@@ -1441,7 +1376,7 @@ $("#difficulty-apply").addEventListener("click", () =>
     model.selectedSample = null;
     await refreshAll();
     notice(
-      `난이도 ${difficulty}를 ${result.from_height != null ? `블록 높이 ${result.from_height}` : "다음 높이의 블록"}부터 적용합니다. 과거 블록의 규칙은 바뀌지 않습니다.`,
+      `난이도 ${difficulty}를 ${result.from_height != null ? `블록 높이 ${result.from_height}` : "다음 높이의 블록"}부터 적용 · 과거 블록 유지`,
       "success",
     );
   }),
@@ -1492,8 +1427,7 @@ $("#tamper-cancel").addEventListener("click", () => {
         job_id: model.tamper.job_id,
       });
       model.tamper.status = "cancelled";
-      $("#tamper-result").textContent =
-        "재채굴 실험을 취소했습니다. 원래 체인을 유지했습니다.";
+      $("#tamper-result").textContent = "재채굴 취소 · 원본 유지";
       await refreshAll();
     },
     { queued: true, control: true },
@@ -1504,8 +1438,8 @@ $("#refresh").addEventListener("click", () =>
 );
 $("#practice-reset").addEventListener("click", () =>
   confirmAction(
-    "현재 실습을 초기화할까요?",
-    "이 브라우저의 현재 지갑·체인·대기 거래를 초기 상태로 되돌립니다. 다른 브라우저의 실습은 바뀌지 않습니다. 준비한 서명과 선택한 표본도 지워집니다.",
+    "실습 초기화",
+    "현재 실습의 지갑·거래·블록과 작성 중인 내용을 초기화합니다",
     (context) => {
       stopMineLoop();
       stopTamperLoop();
@@ -1517,7 +1451,7 @@ $("#practice-reset").addEventListener("click", () =>
           clearTransient();
           model.node = "A";
           await refreshAll();
-          notice("현재 실습을 초기화했습니다. 새 지갑부터 준비해 보세요.");
+          notice("실습 초기화 완료");
         },
         { queued: true, control: true },
       );
@@ -1527,8 +1461,8 @@ $("#practice-reset").addEventListener("click", () =>
 );
 $("#practice-new").addEventListener("click", () =>
   confirmAction(
-    "새 실습 공간을 시작할까요?",
-    "새로운 지갑과 체인을 준비합니다. 현재 화면의 거래·서명·계산 선택을 지우고 이 브라우저를 새 실습 공간으로 전환합니다.",
+    "새 실습 시작",
+    "작성 중인 내용과 계산을 지우고 새 실습으로 전환합니다",
     (context) => {
       stopMineLoop();
       stopTamperLoop();
@@ -1546,10 +1480,7 @@ $("#practice-new").addEventListener("click", () =>
           model.node = "A";
           await refreshAll();
           setPage("home");
-          notice(
-            "새 실습 공간을 준비했습니다. 지갑 생성부터 시작하세요.",
-            "success",
-          );
+          notice("새 실습 준비 완료", "success");
         },
         { queued: true, control: true },
       );
@@ -1629,4 +1560,4 @@ window.addEventListener("pagehide", () => {
 });
 setPage(location.hash.slice(1) || "home", false);
 renderControls();
-execute("내 실습 불러오기", refreshAll);
+execute("실습 불러오기", refreshAll);

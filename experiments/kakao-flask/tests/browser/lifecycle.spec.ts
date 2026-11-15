@@ -179,7 +179,9 @@ test("dark theme persists and every learning page fits a phone viewport", async 
     "home",
   ]) {
     await navigate(page, section);
-    await expect(page.locator("#learning-guide")).toBeVisible();
+    if (section === "events")
+      await expect(page.locator("#learning-guide")).toBeHidden();
+    else await expect(page.locator("#learning-guide")).toBeVisible();
     expect(
       await page.evaluate(
         () =>

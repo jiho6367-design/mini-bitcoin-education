@@ -27,7 +27,7 @@ test("the glossary opens, filters and closes entirely by keyboard", async ({
   await expect(dictionary).toContainText("누적 작업량을 비교");
 
   await search.fill("찾을수없는용어123");
-  await expect(dictionary).toContainText("검색 결과가 없습니다.");
+  await expect(dictionary).toContainText("검색 결과가 없어요");
   await search.press("Escape");
   await expect(dictionary).not.toBeVisible();
   await expect(opener).toBeFocused();
@@ -45,18 +45,18 @@ test("the architecture page describes current behavior and inherits the chosen t
   await page.getByRole("link", { name: "구성도 ↗", exact: true }).click();
   await expect(page).toHaveURL(/\/architecture$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "하나의 실습을 이루는 네 계층.",
+    "실습실의 네 계층",
   );
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.getByText("SQLite 실습 저장")).toBeVisible();
   await expect(
     page.getByRole("heading", {
-      name: "무엇이 저장되고, 무엇이 다시 시작되나요?",
+      name: "저장과 재시작",
       exact: true,
     }),
   ).toBeVisible();
   await expect(page.locator("main")).toContainText("누적 작업량");
-  await expect(page.locator("main")).toContainText("실제 P2P 연결은 아닙니다");
+  await expect(page.locator("main")).toContainText("실제 P2P 연결은 아니에요");
 
   const dictionaryButton = page.getByRole("button", {
     name: "용어 사전",
@@ -97,9 +97,7 @@ test("leaving home pauses the live video and the guide follows each learning pag
 
   await page.locator('nav [data-page="mining"]').click();
   await expect(page.locator("#page-mining #learning-guide")).toBeVisible();
-  await expect(page.locator("#guide-title")).toHaveText(
-    "Nonce 하나로 해시가 달라집니다.",
-  );
+  await expect(page.locator("#guide-title")).toHaveText("Nonce와 해시");
   await page.locator('nav [data-page="home"]').click();
   await expect(page.locator("#page-home #learning-guide")).toBeVisible();
   expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);

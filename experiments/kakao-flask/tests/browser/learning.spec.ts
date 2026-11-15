@@ -149,8 +149,8 @@ test("wallet → invalidate changed draft → sign → mine updates all nodes", 
   });
   await navigate(page, "transaction");
   await expect(page.locator("#tx-stage")).toHaveText("블록 반영 완료");
-  await expect(page.locator("#tx-result")).toContainText("블록 #2에 포함돼");
-  await expect(page.locator("#tx-result")).toContainText("확정 잔액에 반영");
+  await expect(page.locator("#tx-result")).toContainText("블록 #2");
+  await expect(page.locator("#tx-result")).toContainText("Node A 반영 완료");
   await expect(page.getByTestId("tx-sign")).toBeDisabled();
   await expect(page.getByTestId("tx-submit")).toBeDisabled();
   await navigate(page, "wallet");
