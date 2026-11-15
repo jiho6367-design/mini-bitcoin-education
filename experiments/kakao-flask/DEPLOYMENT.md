@@ -1,6 +1,6 @@
 # 팀 Flask 배포 안내
 
-팀 전용 브랜치 `codex/kakao-flask-run`을 단일 Flask 서버로 배포하는 구성입니다. 저장 기록은 컨테이너 밖의 영속 디스크에 보관합니다. 공개 호스팅 생성·실제 HTTPS/WSS·호스팅 재시작 검사는 완료 후 이 문서와 검증 기록에 따로 표시합니다.
+팀 전용 브랜치 `codex/kakao-flask-run`의 기본 공개 배포는 **Render Free + Neon Free**입니다. Flask·실시간 연결은 Render, 기초·통합·공동 기록과 소유자 정보는 Neon PostgreSQL에 저장합니다. 로컬 실행은 기존 SQLite를 사용합니다. 공개 호스팅 생성·실제 HTTPS/WSS·재시작 검사는 완료 후 검증 기록에 따로 표시합니다.
 
 ## 실행 구조
 
@@ -14,7 +14,7 @@
 
 교실의 활성 방·채굴 실행기·활성 실습은 한 프로세스가 관리합니다. `gunicorn.conf.py`의 worker 수를 늘리거나 여러 인스턴스로 자동 확장하지 않습니다. 현재 구조에서 다중 프로세스는 같은 실습의 작업 중지·캐시 충돌을 일으킬 수 있습니다. 많은 서버로 확장하려면 상태와 실행기를 별도 공유 서비스로 분리해야 합니다.
 
-## 컨테이너 준비
+## 로컬 SQLite 컨테이너 준비 (선택 사항)
 
 이 폴더를 빌드 컨텍스트로 사용합니다. Node 24 빌드 단계와 Python 3.13 실행 단계를 분리합니다. 시작 진입점은 새로 마운트한 디스크의 지정 DB 경로·SQLite 보조 파일 권한만 준비한 뒤 UID/GID 10001로 전환해 Gunicorn을 실행합니다. 쓰기 확인이나 교사 비밀코드 검증에 실패하면 서버를 시작하지 않습니다.
 
@@ -38,25 +38,29 @@ docker run --name team-blockchain --rm -p 8080:8080 `
 | --- | --- |
 | 소스 | `jiho6367-design/mini-bitcoin-education` |
 | 브랜치 | `codex/kakao-flask-run` |
-| 런타임·리전 | Docker·Singapore |
+| 런타임·리전 | Docker·Ohio (Neon AWS US East 2와 인접) |
 | Dockerfile | `experiments/kakao-flask/Dockerfile` |
 | Docker 빌드 컨텍스트 | `experiments/kakao-flask` |
 | Root Directory | 비워 둠 |
-| 서버 | `0.5c-512mb` 한 인스턴스, 자동 확장 없음 |
-| 디스크 | `/data`에 1GB 영속 디스크 |
+| 서버 | `free` 한 인스턴스, 자동 확장 없음 |
+| 저장소 | Neon Free PostgreSQL 1GB, Render 디스크 사용 안 함 |
 | 상태 검사 | `/api/education/health` |
 | 배포 | 수동, 검증 후 최신 커밋 배포 |
 | 교사 비밀코드 | 운영 환경에서 32~100자의 무작위 값 생성·재사용 |
 
-2026-11-16 확인한 월 기본 요금은 서버 $7 + 디스크 $0.25 = **$7.25**입니다. Hobby 작업공간의 포함 대역폭 5GB를 넘으면 GB당 $0.15가 붙으며 세금은 별도입니다. 정적 영상 재생도 대역폭에 포함됩니다. 유료 서비스 생성 전 비용 확인이 필요하며, 무료 Render 서버에는 영속 디스크를 붙일 수 없습니다. [Render 요금](https://render.com/pricing), [영속 디스크 제한](https://render.com/docs/disks)
+2026-11-16 확인한 두 서비스의 Free 플랜 기본 요금은 **월 $0**입니다. 유료 서버·디스크·Render 자체 무료 Postgres(30일 만료)를 사용하지 않습니다. Neon Free는 기한·카드 등록 없이 프로젝트당 1GB·월 100 CU시간·전송량 5GB를 제공합니다. Render Free는 작업공간당 월 750시간이며 15분 무트래픽 후 쉬고 첫 접속에는 약 1분이 걸릴 수 있습니다. 한도를 넘기면 서비스가 제한될 수 있으므로 업그레이드·결제 수단·유료 추가 기능은 자동으로 등록하지 않습니다. 정적 영상 재생도 Render 대역폭에 포함됩니다. [Render 무료 조건](https://render.com/docs/free), [Neon 무료 조건](https://neon.com/pricing)
 
-공개 저장소 URL로 수동 연결하면 GitHub 전체 저장소 권한을 새로 부여할 필요가 없습니다. 교사 비밀코드는 Render의 Environment에서 관리하며 Git·웹 화면·참가 링크에 넣지 않습니다. `TEAM_TRUST_PROXY=1`과 두 DB의 `/data` 경로를 반드시 적용합니다. `TEAM_PUBLIC_URL`을 비워 두면 Render가 주는 `RENDER_EXTERNAL_URL`을 사용합니다. 사용자 지정 도메인으로 전환할 때만 해당 HTTPS 주소로 재설정합니다.
+공개 저장소 URL로 수동 연결하면 GitHub 전체 저장소 권한을 새로 부여할 필요가 없습니다. 교사 비밀코드와 Neon의 TLS 연결 문자열은 Render Environment에 보관하며 Git·웹 화면·참가 링크에 넣지 않습니다. `TEAM_DATABASE_URL`과 `TEAM_TRUST_PROXY=1`을 적용합니다. `TEAM_PUBLIC_URL`을 비워 두면 `RENDER_EXTERNAL_URL`을 사용합니다.
+
+PostgreSQL은 `team_basic`, `team_education`, `team_control` 스키마로 두 장부와 배포 제어를 분리합니다. 소유 쿠키 서명 키도 DB에 보존합니다. 초기화에 성공한 새 배포만 쓰기 권한을 넘겨받고, 이전 배포의 변경은 거부해 오래된 메모리 상태의 덮어쓰기를 막습니다. 연결 오류 시 변경을 성공으로 응답하지 않습니다. `TEAM_DATABASE_URL`이 설정되면 컨테이너의 SQLite 파일을 사용하지 않습니다.
 
 ## 환경 변수
 
 | 이름 | 용도 |
 | --- | --- |
 | `PORT` | 운영 리스닝 포트, 기본 8080 |
+| `TEAM_DATABASE_URL` | 무료 공개 배포의 Neon TLS PostgreSQL URL, 비밀값 |
+| `TEAM_DATABASE_PREFIX` | PostgreSQL 스키마 접두어, 기본 `team` |
 | `KAKAO_PRACTICE_DB` | 기존 기초 DB, 컨테이너 기본 `/data/basic.sqlite3` |
 | `TEAM_EDUCATION_DB` | 통합·공동 DB, 컨테이너 기본 `/data/education.sqlite3` |
 | `TEAM_TEACHER_SECRET` | 운영자가 설정하는 긴 무작위 교사 비밀코드 |
@@ -83,7 +87,7 @@ docker run --name team-blockchain --rm -p 8080:8080 `
 
 재배포 시 일시 중단과 WebSocket 끊김이 생길 수 있습니다. 개인 실습은 저장 보관함에서 다시 열고, 공동 수업은 교사가 저장 수업을 새 방으로 복원해 역할을 다시 지정합니다. 중단 없는 방 유지나 토큰의 자동 승계를 약속하지 않습니다.
 
-통합 DB는 `python -m education_engine.service.backup`으로 일관된 온라인 백업을 만들 수 있습니다. 복원 전 서버를 모두 종료하고 `--confirm-server-stopped`를 지정합니다. 기초 DB도 별도로 백업하며, 실행 중인 SQLite 파일을 WAL 파일과 분리해 일반 파일 복사하지 않습니다. 복원 시험은 복사한 DB로 먼저 수행합니다.
+SQLite 로컬 배포는 `python -m education_engine.service.backup`으로 통합 DB의 일관된 온라인 백업을 만들 수 있습니다. 복원 전 서버를 모두 종료하고 `--confirm-server-stopped`를 지정합니다. 기초 DB도 별도로 백업하며, 실행 중인 SQLite 파일을 WAL 파일과 분리해 일반 파일 복사하지 않습니다. **Neon PostgreSQL 배포에는 이 SQLite 백업 명령을 사용하지 않습니다**. PostgreSQL 백업은 Neon의 무료 복구 범위 또는 `pg_dump`로 수행하며 개인정보·교육용 키가 포함된 백업을 공개하지 않습니다.
 
 ## 확인 근거와 남은 배포 검사
 

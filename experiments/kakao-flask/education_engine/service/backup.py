@@ -1,6 +1,7 @@
 """Offline restore and consistent online backups: python -m ...service.backup."""
 
 import argparse
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -14,6 +15,8 @@ def main():
     parser.add_argument("--db", type=Path, default=default_path())
     parser.add_argument("--confirm-server-stopped", action="store_true")
     args = parser.parse_args()
+    if os.environ.get("TEAM_DATABASE_URL"):
+        parser.error("PostgreSQL 배포에서는 이 SQLite 백업 도구를 사용하지 않습니다. PostgreSQL 백업을 사용하세요")
     if args.file.resolve() == args.db.resolve():
         parser.error("백업 파일과 운영 DB 경로는 달라야 합니다.")
     if args.action == "backup" and args.file.exists():

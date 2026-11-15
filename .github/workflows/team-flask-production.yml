@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           docker build --tag "$IMAGE_TAG" experiments/kakao-flask
 
-      - name: Verify Gunicorn, real WebSocket and replacement-container persistence
+      - name: Verify production persistence under 256 MiB and 0.25 CPU
         run: |
           set -euo pipefail
           private_dir="${RUNNER_TEMP}/team-production-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
@@ -61,6 +61,7 @@ jobs:
             status=$?
             if [ "$status" -ne 0 ]; then
               docker logs --tail 100 "$CONTAINER_NAME" 2>&1 || true
+              docker inspect --format '{{json .State}}' "$CONTAINER_NAME" 2>/dev/null || true
               if [ -f "$private_dir/graceful.log" ]; then
                 cat "$private_dir/graceful.log"
               fi
@@ -71,6 +72,7 @@ jobs:
             docker volume rm "$VOLUME_NAME" >/dev/null 2>&1 || true
             rm -f -- "$private_dir/state.json" "$private_dir/prepare.json" "$private_dir/verify.json"
             rm -f -- "$private_dir/graceful-ready.json" "$private_dir/graceful.log"
+            rm -f -- "$private_dir/resources-first.json" "$private_dir/resources-replacement.json"
             rmdir -- "$private_dir" 2>/dev/null || true
             exit "$status"
           }
@@ -101,6 +103,7 @@ jobs:
 
           start_server() {
             docker run --detach --name "$CONTAINER_NAME" \
+              --memory 256m --memory-swap 256m --cpus 0.25 \
               --publish 127.0.0.1:18080:8080 \
               --mount "type=volume,source=${VOLUME_NAME},target=/data" \
               --env TEAM_TEACHER_SECRET --env PORT=8080 \
@@ -137,6 +140,60 @@ jobs:
           '
           }
 
+          capture_resource_usage() {
+            phase="$1"
+            docker exec --user 10001:10001 "$CONTAINER_NAME" python -B -c '
+          import json
+          import os
+          from pathlib import Path
+          import sys
+          cgroup = Path("/sys/fs/cgroup")
+          limit = int((cgroup / "memory.max").read_text())
+          peak = int((cgroup / "memory.peak").read_text())
+          swap_limit = int((cgroup / "memory.swap.max").read_text())
+          events = dict(line.split() for line in (cgroup / "memory.events").read_text().splitlines())
+          quota, period = (cgroup / "cpu.max").read_text().split()
+          assert limit == 256 * 1024 * 1024, "The server memory ceiling was not applied"
+          assert swap_limit == 0, "The server must not use extra swap"
+          assert quota != "max" and int(quota) / int(period) == 0.25, "The CPU ceiling was not applied"
+          assert peak <= limit, "The cgroup exceeded the configured memory ceiling"
+          assert int(events.get("oom", 0)) == int(events.get("oom_kill", 0)) == 0, "The workload hit an OOM event"
+          processes = []
+          for directory in Path("/proc").iterdir():
+              if not directory.name.isdigit() or int(directory.name) == os.getpid():
+                  continue
+              try:
+                  if b"gunicorn" not in (directory / "cmdline").read_bytes():
+                      continue
+                  status = dict(line.split(":", 1) for line in (directory / "status").read_text().splitlines() if ":" in line)
+                  processes.append({"pid": int(directory.name),
+                                    "peak_rss_bytes": int(status["VmHWM"].split()[0]) * 1024,
+                                    "current_rss_bytes": int(status["VmRSS"].split()[0]) * 1024})
+              except (FileNotFoundError, ProcessLookupError):
+                  continue
+          assert len(processes) == 2 and any(item["pid"] == 1 for item in processes), "Expected one Gunicorn master and one worker"
+          print(json.dumps({"phase": sys.argv[1], "memory_limit_bytes": limit,
+                            "cgroup_memory_peak_bytes": peak, "swap_limit_bytes": swap_limit,
+                            "cpu_limit": 0.25, "oom_kills": int(events.get("oom_kill", 0)),
+                            "gunicorn_processes": sorted(processes, key=lambda item: item["pid"])}))
+          ' "$phase" >"$private_dir/resources-${phase}.json"
+            python3 - "$private_dir/resources-${phase}.json" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          result = json.loads(Path(sys.argv[1]).read_text())
+          peak = result["cgroup_memory_peak_bytes"] / (1024 ** 2)
+          rss = ", ".join(f"PID {item['pid']}: {item['peak_rss_bytes'] / (1024 ** 2):.1f}" for item in result["gunicorn_processes"])
+          with Path(sys.argv[2]).open("a") as summary:
+              if result["phase"] == "first":
+                  summary.write("## Constrained Docker resource preflight\n\n")
+                  summary.write("256 MiB memory, no extra swap, 0.25 CPU. This is not an Alwaysdata runtime benchmark. RSS values are each process's VmHWM, not a simultaneous sum; the cgroup peak includes the resource-check process.\n\n")
+                  summary.write("| Container | Gunicorn peak RSS per process (MiB) | Cgroup memory peak (MiB) | OOM kills |\n| --- | --- | --- | --- |\n")
+              summary.write(f"| {result['phase']} | {rss} | {peak:.1f} | {result['oom_kills']} |\n")
+          print(f"{result['phase']}: cgroup peak {peak:.1f} MiB / 256 MiB; Gunicorn peak RSS {rss} MiB; no OOM")
+          PY
+          }
+
           probe() {
             docker run --rm --network host \
               --user "$(id -u):$(id -g)" \
@@ -168,6 +225,7 @@ jobs:
             --state-file /probe-state/state.json --result-file /probe-state/prepare.json
           check_server_identity
           hold_authenticated_websocket
+          capture_resource_usage first
 
           # Remove the whole container, preserving only the explicitly named test volume.
           docker stop --time 20 "$CONTAINER_NAME" >/dev/null
@@ -200,5 +258,186 @@ jobs:
           )
           assert all(result.get(key) is True for key in required), "A required persistence check did not pass"
           PY
+          capture_resource_usage replacement
           printf 'Verified new container identity, HTTP, actual WS, and persisted records\n'
           printf 'No public endpoint was deployed; private probe state is deleted on exit\n'
+
+  postgres-restart:
+    # Keep this on the free standard runner for this public repository.
+    if: ${{ github.event.repository.private == false }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    env:
+      IMAGE_TAG: team-flask-postgres:${{ github.run_id }}-${{ github.run_attempt }}
+      CONTAINER_NAME: team-flask-postgres-${{ github.run_id }}-${{ github.run_attempt }}
+      PG_CONTAINER_NAME: team-postgres-${{ github.run_id }}-${{ github.run_attempt }}
+      NETWORK_NAME: team-postgres-network-${{ github.run_id }}-${{ github.run_attempt }}
+      PROBE_BASE_URL: http://127.0.0.1:18081
+      GIT_TERMINAL_PROMPT: "0"
+
+    steps:
+      - name: Fetch exact public commit without credentials
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          git -c advice.detachedHead=false checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Build PostgreSQL production Docker image
+        run: |
+          set -euo pipefail
+          docker build --tag "$IMAGE_TAG" experiments/kakao-flask
+
+      - name: Verify PostgreSQL stores and diskless app replacement
+        run: |
+          set -euo pipefail
+          private_dir="${RUNNER_TEMP}/team-postgres-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir -m 0700 "$private_dir"
+          export POSTGRES_PASSWORD POSTGRES_DB TEAM_TEACHER_SECRET TEAM_DATABASE_PREFIX
+          POSTGRES_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
+          TEAM_TEACHER_SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
+          POSTGRES_DB="team_ci_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          TEAM_DATABASE_PREFIX="team_ci_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          export TEAM_DATABASE_URL="postgresql://team_ci:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+          export TEST_POSTGRES_URL="$TEAM_DATABASE_URL"
+          export TEAM_VERIFY_TEACHER_SECRET="$TEAM_TEACHER_SECRET"
+          # Secrets are synthetic and expire with this runner; never print them in logs.
+          printf '::add-mask::%s\n' "$POSTGRES_PASSWORD"
+          printf '::add-mask::%s\n' "$TEAM_TEACHER_SECRET"
+          printf '::add-mask::%s\n' "$TEAM_DATABASE_URL"
+
+          cleanup() {
+            status=$?
+            if [ "$status" -ne 0 ]; then
+              docker logs --tail 100 "$CONTAINER_NAME" 2>&1 || true
+              docker inspect --format '{{json .State}}' "$CONTAINER_NAME" 2>/dev/null || true
+              docker logs --tail 50 "$PG_CONTAINER_NAME" 2>&1 || true
+            fi
+            docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+            # PostgreSQL's anonymous data volume is disposable test data, too.
+            docker rm -f -v "$PG_CONTAINER_NAME" >/dev/null 2>&1 || true
+            docker network rm "$NETWORK_NAME" >/dev/null 2>&1 || true
+            rm -f -- "$private_dir/state.json" "$private_dir/prepare.json" "$private_dir/verify.json"
+            rmdir -- "$private_dir" 2>/dev/null || true
+            exit "$status"
+          }
+          trap cleanup EXIT
+
+          start_server() {
+            docker run --detach --name "$CONTAINER_NAME" --network "$NETWORK_NAME" \
+              --publish 127.0.0.1:18081:8080 \
+              --env TEAM_DATABASE_URL --env TEAM_DATABASE_PREFIX \
+              --env TEAM_TEACHER_SECRET --env PORT=8080 \
+              "$IMAGE_TAG" >/dev/null
+            for attempt in {1..90}; do
+              if curl --fail --silent --max-time 1 "$PROBE_BASE_URL/api/education/health" >/dev/null; then
+                break
+              fi
+              if [ "$(docker inspect --format '{{.State.Running}}' "$CONTAINER_NAME")" != true ]; then
+                return 1
+              fi
+              sleep 1
+            done
+            curl --fail --silent --show-error --max-time 3 "$PROBE_BASE_URL/api/education/health" >/dev/null
+          }
+
+          check_diskless_identity() {
+            test "$(docker inspect --format '{{json .Mounts}}' "$CONTAINER_NAME")" = '[]'
+            docker exec "$CONTAINER_NAME" python -B -c '
+          from pathlib import Path
+          lines = Path("/proc/1/status").read_text().splitlines()
+          for label in ("Uid:", "Gid:"):
+              fields = next(line for line in lines if line.startswith(label)).split()[1:]
+              assert fields == ["10001"] * 4, (label, fields)
+          assert b"gunicorn" in Path("/proc/1/cmdline").read_bytes()
+          assert not Path("/data/basic.sqlite3").exists(), "PostgreSQL mode created a local basic database"
+          assert not Path("/data/education.sqlite3").exists(), "PostgreSQL mode created a local education database"
+          print("Diskless Gunicorn uses UID/GID 10001 and no local SQLite database")
+          '
+          }
+
+          probe() {
+            docker run --rm --network host \
+              --user "$(id -u):$(id -g)" \
+              --env TEAM_VERIFY_TEACHER_SECRET \
+              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/probes,readonly" \
+              --mount "type=bind,source=${private_dir},target=/probe-state" \
+              --entrypoint python "$IMAGE_TAG" -B -X utf8 \
+              /probes/persistence_probe.py "$@"
+          }
+
+          docker network create "$NETWORK_NAME" >/dev/null
+          docker run --detach --name "$PG_CONTAINER_NAME" \
+            --network "$NETWORK_NAME" --network-alias postgres \
+            --env POSTGRES_USER=team_ci --env POSTGRES_DB --env POSTGRES_PASSWORD \
+            --health-cmd 'pg_isready -U team_ci -d "$POSTGRES_DB"' \
+            --health-interval 1s --health-timeout 3s --health-retries 60 \
+            postgres:18 >/dev/null
+          for attempt in {1..90}; do
+            pg_status="$(docker inspect --format '{{.State.Health.Status}}' "$PG_CONTAINER_NAME")"
+            if [ "$pg_status" = healthy ]; then break; fi
+            if [ "$pg_status" = unhealthy ] || \
+               [ "$(docker inspect --format '{{.State.Running}}' "$PG_CONTAINER_NAME")" != true ]; then
+              exit 1
+            fi
+            sleep 1
+          done
+          test "$(docker inspect --format '{{.State.Health.Status}}' "$PG_CONTAINER_NAME")" = healthy
+          postgres_id="$(docker inspect --format '{{.Id}}' "$PG_CONTAINER_NAME")"
+          postgres_started="$(docker inspect --format '{{.State.StartedAt}}' "$PG_CONTAINER_NAME")"
+
+          # Unit integration tests create and clean their own schemas in this CI-only database.
+          # Do not set TEAM_DATABASE_URL here: importing app must not attach the global app to PostgreSQL.
+          test -f experiments/kakao-flask/tests/test_postgres_deployment.py
+          docker run --rm --network "$NETWORK_NAME" --user 10001:10001 \
+            --env TEST_POSTGRES_URL \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/app/tests,readonly" \
+            --entrypoint python "$IMAGE_TAG" -B -m unittest discover \
+            -s tests -p test_postgres_deployment.py -v
+
+          start_server
+          first_id="$(docker inspect --format '{{.Id}}' "$CONTAINER_NAME")"
+          check_diskless_identity
+          probe prepare --base-url "$PROBE_BASE_URL" \
+            --state-file /probe-state/state.json --result-file /probe-state/prepare.json
+
+          # Nothing from the application filesystem is carried to the replacement.
+          docker stop --time 20 "$CONTAINER_NAME" >/dev/null
+          test "$(docker inspect --format '{{.State.ExitCode}}' "$CONTAINER_NAME")" = 0
+          docker rm "$CONTAINER_NAME" >/dev/null
+          if docker container inspect "$first_id" >/dev/null 2>&1; then
+            echo "The original PostgreSQL-backed app container still exists" >&2
+            exit 1
+          fi
+
+          start_server
+          second_id="$(docker inspect --format '{{.Id}}' "$CONTAINER_NAME")"
+          test "$first_id" != "$second_id"
+          check_diskless_identity
+          test "$(docker inspect --format '{{.Id}}' "$PG_CONTAINER_NAME")" = "$postgres_id"
+          test "$(docker inspect --format '{{.State.StartedAt}}' "$PG_CONTAINER_NAME")" = "$postgres_started"
+          probe verify --state-file /probe-state/state.json --cleanup \
+            --result-file /probe-state/verify.json
+          python3 - "$private_dir/verify.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          result = json.loads(Path(sys.argv[1]).read_text())
+          required = (
+              "basic_practice_restored", "owner_cookie_retained",
+              "personal_archive_and_key_restored", "other_browser_denied",
+              "classroom_archive_restored", "classroom_new_authority_only",
+              "http_and_websocket_exercised", "education_probe_records_cleaned",
+              "basic_probe_record_retained",
+          )
+          assert all(result.get(key) is True for key in required), "A required PostgreSQL persistence check did not pass"
+          PY
+          printf '## PostgreSQL diskless app replacement\n\n' >>"$GITHUB_STEP_SUMMARY"
+          printf 'PostgreSQL 18 integration tests, HTTP, actual WS, owner isolation, and saved records passed after complete app-container replacement without a local data volume\n' >>"$GITHUB_STEP_SUMMARY"
+          printf 'The database container stayed running; test data, credentials, and private probe state are removed on exit\n' >>"$GITHUB_STEP_SUMMARY"
+          printf 'No public endpoint or paid hosting resource was created\n' >>"$GITHUB_STEP_SUMMARY"

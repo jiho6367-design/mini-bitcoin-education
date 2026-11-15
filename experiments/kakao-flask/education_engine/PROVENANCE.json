@@ -88,7 +88,7 @@
     "service/backup.py": {
       "source_sha256": "b8bd0a545e0ecbc2a43c884cdbbd0f2dd16df4f0e22612c26e392fe31a68e6d4",
       "source_bytes": 1606,
-      "ported_sha256": "b8bd0a545e0ecbc2a43c884cdbbd0f2dd16df4f0e22612c26e392fe31a68e6d4"
+      "ported_sha256": "0fc164b0a34f440448f1dd662ecc4e27b567527c841e3c023a543a856b926802"
     },
     "service/checkpoint.py": {
       "source_sha256": "dd7e46292191b47a840e31453aeddca5a948ceb000880d6bd4e2b9092a37484b",
@@ -143,6 +143,7 @@
     "No personal database, runtime token, teacher secret, or AGENTS.md was copied",
     "service/storage.py closes backup and read-only restore connections explicitly to release Windows file locks",
     "api/__init__.py describes the transport-independent schemas rather than a FastAPI server",
-    "service/storage.py validates existing archive table shapes before writes so legacy account-model databases are rejected unchanged"
+    "service/storage.py validates existing archive table shapes before writes so legacy account-model databases are rejected unchanged",
+    "service/backup.py refuses the SQLite backup command in PostgreSQL deployments to avoid a misleading empty backup"
   ]
 }

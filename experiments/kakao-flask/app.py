@@ -64,6 +64,8 @@ def create_app(config=None, *, database_path=None):
     if config:
         app.config.update(config)
     app.config.setdefault("TEAM_APP_VERSION", APP_VERSION)
+    app.config.setdefault("TEAM_DATABASE_URL", os.environ.get("TEAM_DATABASE_URL", ""))
+    app.config.setdefault("TEAM_DATABASE_PREFIX", os.environ.get("TEAM_DATABASE_PREFIX", "team"))
     app.config.setdefault("TEAM_PUBLIC_URL", os.environ.get("TEAM_PUBLIC_URL")
                           or os.environ.get("RENDER_EXTERNAL_URL", ""))
     app.config.setdefault("EDUCATION_ENABLED", not app.testing)
@@ -72,7 +74,19 @@ def create_app(config=None, *, database_path=None):
     if os.environ.get("TEAM_TRUST_PROXY") == "1":
         from werkzeug.middleware.proxy_fix import ProxyFix
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
-    store = PracticeStore(app.config["DATABASE"], max_practices=app.config.get("BASIC_MAX_PRACTICES", 500))
+    if app.config["TEAM_DATABASE_URL"]:
+        from postgres_backend import PostgresBackend
+        from postgres_basic_store import PostgresBasicStore
+        backend = PostgresBackend(app.config["TEAM_DATABASE_URL"], prefix=app.config["TEAM_DATABASE_PREFIX"],
+                                  defer_claim=True)
+        app.extensions["postgres_backend"] = backend
+        try:
+            store = PostgresBasicStore(backend, max_practices=app.config.get("BASIC_MAX_PRACTICES", 500))
+        except Exception:
+            backend.close()
+            raise
+    else:
+        store = PracticeStore(app.config["DATABASE"], max_practices=app.config.get("BASIC_MAX_PRACTICES", 500))
     manager = PracticeManager(store)
     app.extensions["practice_store"] = store
     app.extensions["practice_manager"] = manager
@@ -541,7 +555,7 @@ def create_app(config=None, *, database_path=None):
                               or os.environ.get("TEAM_EDUCATION_DB")
                               or (":memory:" if legacy_database == ":memory:" else
                                   str(Path(legacy_database).parent / "education.sqlite3")))
-        if legacy_database != ":memory:" and education_database != ":memory:":
+        if not app.config["TEAM_DATABASE_URL"] and legacy_database != ":memory:" and education_database != ":memory:":
             legacy_path = Path(legacy_database).resolve()
             education_path = Path(education_database).resolve()
             same_file = (legacy_path == education_path or
@@ -549,7 +563,25 @@ def create_app(config=None, *, database_path=None):
                           and os.path.samefile(legacy_path, education_path)))
             if same_file:
                 raise ValueError("기초 실습 DB와 통합 실습 DB는 서로 다른 파일이어야 합니다")
-        register_education(app, education_database)
+        try:
+            register_education(app, education_database)
+        except Exception:
+            runtime = app.extensions.get("education")
+            if runtime is not None:
+                runtime.close()
+            store.close()
+            raise
+
+    backend = app.extensions.get("postgres_backend")
+    if backend is not None:
+        try:
+            backend.activate()
+        except Exception:
+            runtime = app.extensions.get("education")
+            if runtime is not None:
+                runtime.close()
+            store.close()
+            raise
 
     return app
 

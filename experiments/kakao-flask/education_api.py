@@ -84,6 +84,9 @@ class PersonalOwnership:
     """Durable ownership metadata shares the team's archive database and lock."""
     def __init__(self, store):
         self.store = store
+        if hasattr(store, "owner_secret"):
+            self.secret = store.owner_secret()
+            return
         with store.lock, store.db:
             store.db.execute("""CREATE TABLE IF NOT EXISTS team_education_owners (
                 practice_id TEXT PRIMARY KEY, owner_hash TEXT NOT NULL
@@ -108,6 +111,8 @@ class PersonalOwnership:
         return token + "." + hmac.new(self.secret, token.encode(), hashlib.sha256).hexdigest()
 
     def assign(self, practice_id, owner_hash):
+        if hasattr(self.store, "owner_assign"):
+            return self.store.owner_assign(practice_id, owner_hash)
         try:
             with self.store.lock, self.store.db:
                 self.store.db.execute("INSERT INTO team_education_owners VALUES (?,?)",
@@ -116,6 +121,8 @@ class PersonalOwnership:
             raise LabError("SAVE_FAILED", "실습 소유 정보를 저장하지 못했습니다", 503) from error
 
     def owns(self, practice_id, owner_hash):
+        if hasattr(self.store, "owner_owns"):
+            return self.store.owner_owns(practice_id, owner_hash)
         with self.store.lock:
             return self.store.db.execute(
                 "SELECT 1 FROM team_education_owners WHERE practice_id=? AND owner_hash=?",
@@ -123,10 +130,14 @@ class PersonalOwnership:
             ).fetchone() is not None
 
     def remove(self, practice_id):
+        if hasattr(self.store, "owner_remove"):
+            return self.store.owner_remove(practice_id)
         with self.store.lock, self.store.db:
             self.store.db.execute("DELETE FROM team_education_owners WHERE practice_id=?", (practice_id,))
 
     def list(self, owner_hash, query):
+        if hasattr(self.store, "owner_list"):
+            return self.store.owner_list(owner_hash, query)
         where, values = self.store.filters(
             "personal", query.q.strip(), query.updatedFrom, query.updatedUntil,
         )
@@ -150,7 +161,12 @@ class PersonalOwnership:
 class EducationRuntime:
     def __init__(self, app, database_path):
         self.app = app
-        self.store = PracticeStore(database_path)
+        backend = app.extensions.get("postgres_backend")
+        if backend is not None:
+            from postgres_education_store import PostgresEducationStore
+            self.store = PostgresEducationStore(backend)
+        else:
+            self.store = PracticeStore(database_path)
         self.ownership = PersonalOwnership(self.store)
         self.registry = LabRegistry(max_labs=app.config.get("EDUCATION_MAX_ACTIVE_LABS", 32), store=self.store)
         self.hub = ClassroomHub(app.config.get("TEAM_TEACHER_SECRET")
@@ -198,7 +214,10 @@ class EducationRuntime:
             if self._closed:
                 return
             self._closed = True
-            self.store.db.close()
+            if hasattr(self.store, "close"):
+                self.store.close()
+            else:
+                self.store.db.close()
             if self._atexit_registered:
                 atexit.unregister(self.close)
                 self._atexit_registered = False
@@ -322,8 +341,9 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
                       or race_command in ("pause", "stop", "configure", "toggle"))
             if not relief:
                 with store.lock:
-                    count = store.db.execute("SELECT count(*) FROM events WHERE practice_id=?",
-                                             (found.practice_id,)).fetchone()[0]
+                    count = (store.event_count(found.practice_id) if hasattr(store, "event_count") else
+                             store.db.execute("SELECT count(*) FROM events WHERE practice_id=?",
+                                              (found.practice_id,)).fetchone()[0])
                 if count >= app.config.get("EDUCATION_MAX_PERSONAL_EVENTS", 5000):
                     raise LabError("EVENT_LIMIT", "활동 기록 한도입니다. 결과를 저장하고 새 실습을 시작하세요", 409)
             if method == "add_wallet" and len(found.wallets) >= app.config.get("EDUCATION_MAX_WALLETS", 100):
@@ -342,11 +362,12 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
 
     def creation_limit(*, personal=False):
         with store.lock:
-            total = store.db.execute("SELECT count(*) FROM practices").fetchone()[0]
+            total = (store.total_count() if hasattr(store, "total_count") else
+                     store.db.execute("SELECT count(*) FROM practices").fetchone()[0])
             if total >= app.config.get("EDUCATION_MAX_PRACTICES", 2000):
                 raise LabError("ARCHIVE_LIMIT", "저장 한도입니다. 불필요한 기록을 정리한 뒤 다시 시작하세요", 429)
             if personal:
-                count = store.db.execute(
+                count = store.owner_count(g.education_owner) if hasattr(store, "owner_count") else store.db.execute(
                     "SELECT count(*) FROM practices p JOIN team_education_owners o "
                     "ON p.id=o.practice_id WHERE o.owner_hash=?", (g.education_owner,),
                 ).fetchone()[0]

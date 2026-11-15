@@ -5,28 +5,22 @@ services:
     name: kakao-team-flask
     runtime: docker
     branch: codex/kakao-flask-run
-    region: singapore
-    plan: 0.5c-512mb
+    region: ohio
+    plan: free
     dockerfilePath: ./experiments/kakao-flask/Dockerfile
     dockerContext: ./experiments/kakao-flask
     numInstances: 1
     autoDeployTrigger: "off"
     healthCheckPath: /api/education/health
-    disk:
-      name: team-blockchain-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: PORT
         value: "8080"
       - key: WEB_CONCURRENCY
         value: "1"
-      - key: KAKAO_PRACTICE_DB
-        value: /data/basic.sqlite3
-      - key: TEAM_EDUCATION_DB
-        value: /data/education.sqlite3
-      - key: TEAM_DATA_DIR
-        value: /data
+      - key: TEAM_DATABASE_URL
+        sync: false
+      - key: TEAM_DATABASE_PREFIX
+        value: team
       - key: TEAM_TEACHER_SECRET
         generateValue: true
       - key: TEAM_TRUST_PROXY

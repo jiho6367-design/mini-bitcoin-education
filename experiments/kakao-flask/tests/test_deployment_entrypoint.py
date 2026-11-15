@@ -86,6 +86,25 @@ class DeploymentEntrypointTests(unittest.TestCase):
                 entrypoint.main([], {"TEAM_DATA_DIR": str(self.root)})
             prepare.assert_not_called()
 
+    def test_postgres_deployment_drops_privileges_without_using_ephemeral_sqlite(self):
+        environment = {"TEAM_TEACHER_SECRET": "test-" + "x" * 40,
+                       "TEAM_DATABASE_URL": "postgresql://test:test@postgres/test?sslmode=disable"}
+        with patch.object(entrypoint.os, "geteuid", return_value=0, create=True), \
+                patch.object(entrypoint.os, "umask"), \
+                patch.object(entrypoint, "prepare_storage") as prepare, \
+                patch.object(entrypoint, "verify_writable") as probe, \
+                patch.object(entrypoint.os, "setgroups", create=True), \
+                patch.object(entrypoint.os, "setgid", create=True), \
+                patch.object(entrypoint.os, "setuid", create=True) as drop, \
+                patch.object(entrypoint.os, "execvpe") as execute:
+            entrypoint.main(["gunicorn", "app:app"], environment)
+        prepare.assert_not_called()
+        probe.assert_not_called()
+        drop.assert_called_once_with(10001)
+        self.assertEqual(execute.call_args.args[0], "gunicorn")
+        self.assertNotIn("TEAM_EDUCATION_DB", execute.call_args.args[2])
+        self.assertNotIn("KAKAO_PRACTICE_DB", execute.call_args.args[2])
+
 
 class GunicornShutdownTests(unittest.TestCase):
     @classmethod

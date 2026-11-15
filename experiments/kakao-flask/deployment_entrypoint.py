@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+from urllib.parse import urlsplit
 
 APP_UID = 10001
 APP_GID = 10001
@@ -79,11 +80,18 @@ def main(argv=None, environ=None):
     secret = environ.get("TEAM_TEACHER_SECRET", "")
     if not 32 <= len(secret) <= 100:
         raise ValueError("Set TEAM_TEACHER_SECRET to a persistent random value of 32–100 characters")
-    root, databases, backups = storage_paths(environ)
+    postgres = bool(environ.get("TEAM_DATABASE_URL"))
+    if postgres:
+        parsed = urlsplit(environ["TEAM_DATABASE_URL"])
+        if parsed.scheme not in ("postgres", "postgresql") or not parsed.hostname:
+            raise ValueError("TEAM_DATABASE_URL must be a PostgreSQL connection URL")
+    else:
+        root, databases, backups = storage_paths(environ)
     # SQLite creates its main file and later sidecars after this entrypoint runs.
     os.umask(0o077)
     privileged = os.geteuid() == 0
-    prepare_storage(root, databases, backups, privileged=privileged)
+    if not postgres:
+        prepare_storage(root, databases, backups, privileged=privileged)
     if privileged:
         os.setgroups([])
         os.setgid(APP_GID)
@@ -92,8 +100,9 @@ def main(argv=None, environ=None):
         raise PermissionError("Run the entrypoint as root for disk setup, or as UID 10001")
     environ["HOME"] = "/home/teamapp"
     environ["USER"] = environ["LOGNAME"] = "teamapp"
-    environ["KAKAO_PRACTICE_DB"], environ["TEAM_EDUCATION_DB"] = map(str, databases)
-    verify_writable(root, databases, backups)
+    if not postgres:
+        environ["KAKAO_PRACTICE_DB"], environ["TEAM_EDUCATION_DB"] = map(str, databases)
+        verify_writable(root, databases, backups)
     command = list(sys.argv[1:] if argv is None else argv)
     if not command:
         command = ["gunicorn", "--config", "gunicorn.conf.py", "app:app"]
