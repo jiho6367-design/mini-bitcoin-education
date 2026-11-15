@@ -91,3 +91,16 @@ Python 검사는 UTXO·수수료·코인베이스·100블록 성숙, 동률·부
 - Render Blueprint를 공식 JSON Schema로 검증
 
 위 프로세스 검사는 임시 DB의 Windows Flask 서버를 사용했습니다. Linux Docker·Gunicorn 검사는 별도 GitHub Actions 결과로, 실제 Render의 HTTPS/WSS·영속 디스크·재시작 검사는 공개 배포 후 결과로 구분합니다.
+
+## Linux 운영 컨테이너 확인 (2026-11-16)
+
+[GitHub Actions 실행 43741142718](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43741142718)에서 다음 검사를 모두 통과했습니다. 소스 커밋은 `e228206359f8a8d20ddfee2ff4698c91d1dd5549`입니다.
+
+- Ubuntu 표준 러너의 Node 24·Python 3.13 다단계 Docker 이미지 실제 빌드
+- root 소유의 빈 볼륨을 마운트한 뒤 Gunicorn PID 1과 두 DB가 UID/GID 10001로 동작하고 다른 사용자 권한 비트가 없는지 확인
+- 실제 HTTP·WebSocket으로 개인·기초·공동 실습 기록 생성
+- 인증된 WebSocket이 열린 상태에서 SIGTERM 정상 종료, 강제 종료 없이 서버 exit code 0 확인
+- 기존 컨테이너를 완전히 삭제하고 다른 컨테이너 ID로 같은 볼륨을 마운트한 뒤 두 DB·소유 쿠키·키·저장 수업·새 권한 복원 확인
+- 검사 통합·공동 기록과 비공개 상태 파일 정리 확인
+
+프런트엔드 운영 의존성 `npm audit --omit=dev`도 알려진 취약점 0개입니다. 운영 이미지는 Node·node_modules를 포함하지 않습니다. 이 검사는 외부 공개 주소를 배포하지 않으며 실제 Render의 HTTPS/WSS·호스팅 디스크·재시작 확인은 남아 있습니다.

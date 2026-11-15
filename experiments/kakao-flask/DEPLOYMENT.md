@@ -87,9 +87,9 @@ docker run --name team-blockchain --rm -p 8080:8080 `
 
 ## 확인 근거와 남은 배포 검사
 
-- 현재 수행: Windows 단일 Flask HTTP·실제 WebSocket, 두 엔진 회귀 검사, Chrome·Edge 전체 실습과 모드 이동
-- 남은 검사: 컨테이너 빌드·Linux Gunicorn, 실제 호스팅의 HTTPS/WSS·영속 볼륨·재배포·백업 복구·부하
-- 외부 배포 비용·도메인·호스팅 계정은 선택하거나 결제하지 않음
+- 현재 수행: Windows 단일 Flask HTTP·실제 WebSocket, 두 엔진 회귀 검사, Chrome·Edge 전체 실습과 모드 이동, Linux Docker·Gunicorn·같은 볼륨의 새 컨테이너 복원
+- 남은 검사: 실제 Render 호스팅의 HTTPS/WSS·영속 볼륨·재시작·백업 복구·부하
+- Render 생성 화면에 서버·디스크를 구성했으며, 유료 리소스 생성·결제와 공개 서비스 생성은 아직 하지 않음
 
 Flask 개발 서버를 운영에 사용하지 않는 원칙은 [Flask 공식 배포 안내](https://flask.palletsprojects.com/en/stable/deploying/), threaded Gunicorn의 WebSocket 구성은 [Flask-Sock 공식 문서](https://flask-sock.readthedocs.io/en/latest/web_servers.html)를 참고했습니다. [Render 디스크 안내](https://render.com/docs/disks)는 기본 파일시스템이 임시이며 영속 디스크가 있는 서비스는 단일 인스턴스로 제한됨을 설명합니다. 플랫폼 요금은 실제 생성 화면에서 다시 확인합니다.
 
@@ -109,3 +109,5 @@ Flask 개발 서버를 운영에 사용하지 않는 원칙은 [Flask 공식 배
 상태 파일에는 소유 쿠키가 있으므로 Git이나 공개 검사 산출물에 올리지 않습니다. `--cleanup`은 검사에서 만든 통합·공동 기록만 정리하며 기초 지갑을 만든 검사 실습은 남깁니다. 실제 수업이 진행 중인 서버에서 실행하지 않습니다.
 
 공개 저장소의 `.github/workflows/team-flask-production.yml`은 표준 Ubuntu 러너에서 Docker 이미지를 빌드하고, root 소유의 빈 볼륨 → 권한 준비 → Gunicorn·실제 WebSocket → 컨테이너 삭제 → 같은 볼륨을 쓰는 새 컨테이너로 기록 복원을 확인합니다. 공개 서비스는 만들지 않으며 검사 쿠키·DB·이미지를 artifact나 캐시에 올리지 않습니다. 실행 결과가 성공하기 전에는 컨테이너 검증 완료로 간주하지 않습니다.
+
+2026-11-16의 [운영 컨테이너 검사](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43741142718)가 성공했습니다. 검사 소스는 `e228206359f8a8d20ddfee2ff4698c91d1dd5549`이며, 실제 호스팅의 TLS·디스크 설정 검사를 대신하지 않습니다.
