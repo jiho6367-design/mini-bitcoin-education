@@ -2,6 +2,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from app import create_app
 
@@ -9,6 +10,7 @@ from app import create_app
 class AppIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
         self.root = Path(self.folder.name)
         self.app = create_app({
             "TESTING": True,
@@ -22,7 +24,6 @@ class AppIntegrationTests(unittest.TestCase):
     def tearDown(self):
         self.app.extensions["education"].close()
         self.app.extensions["practice_store"].close()
-        self.folder.cleanup()
 
     def test_primary_ui_and_basic_ui_use_one_flask_server(self):
         with self.client.get("/") as response:
@@ -67,6 +68,29 @@ class AppIntegrationTests(unittest.TestCase):
             create_app({"TESTING": True, "EDUCATION_ENABLED": True,
                         "DATABASE": str(path), "EDUCATION_DATABASE": str(path)})
         self.assertEqual(path.read_bytes(), b"existing data that must remain unchanged")
+
+    def test_hosted_public_url_and_https_proxy_preserve_same_origin_actions(self):
+        with patch.dict("os.environ", {"TEAM_TRUST_PROXY": "1", "TEAM_PUBLIC_URL": "",
+                                       "RENDER_EXTERNAL_URL": "https://team.example"}):
+            hosted = create_app({
+                "TESTING": True, "EDUCATION_ENABLED": True,
+                "DATABASE": str(self.root / "hosted-basic.sqlite3"),
+                "EDUCATION_DATABASE": str(self.root / "hosted-education.sqlite3"),
+                "TEAM_TEACHER_SECRET": "hosted-test-teacher",
+            })
+        self.addCleanup(hosted.extensions["practice_store"].close)
+        self.addCleanup(hosted.extensions["education"].close)
+        client = hosted.test_client()
+        headers = {"X-Forwarded-Proto": "https", "X-Forwarded-Host": "team.example",
+                   "Origin": "https://team.example"}
+        self.assertEqual(hosted.config["TEAM_PUBLIC_URL"], "https://team.example")
+        created = client.post("/api/education/labs", json={"mode": "example", "difficulty": 1},
+                              headers=headers)
+        self.assertEqual(created.status_code, 201)
+        self.assertIn("Secure", created.headers["Set-Cookie"])
+        self.assertEqual(client.post("/api/reset", json={}, headers=headers).status_code, 200)
+        headers["Origin"] = "https://unrelated.example"
+        self.assertEqual(client.post("/api/reset", json={}, headers=headers).status_code, 403)
 
     def test_basic_limits_preserve_reads_and_reset(self):
         self.app.config["BASIC_MAX_PENDING"] = 0

@@ -64,7 +64,8 @@ def create_app(config=None, *, database_path=None):
     if config:
         app.config.update(config)
     app.config.setdefault("TEAM_APP_VERSION", APP_VERSION)
-    app.config.setdefault("TEAM_PUBLIC_URL", os.environ.get("TEAM_PUBLIC_URL", ""))
+    app.config.setdefault("TEAM_PUBLIC_URL", os.environ.get("TEAM_PUBLIC_URL")
+                          or os.environ.get("RENDER_EXTERNAL_URL", ""))
     app.config.setdefault("EDUCATION_ENABLED", not app.testing)
     app.config.setdefault("EDUCATION_RUNNER_ENABLED", not app.testing and os.environ.get("TEAM_EDUCATION_RUNNER", "1") == "1")
     app.config.setdefault("EDUCATION_FRONTEND", str(Path(__file__).parent / "frontend" / "dist"))
