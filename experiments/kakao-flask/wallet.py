@@ -27,5 +27,23 @@ class Wallet:
 
     def sign(self, message: str) -> str:
         """개인키로 메시지(문자열)에 서명하고 hex 문자열로 반환."""
-        sig = self._sk.sign(message.encode(), hashfunc=hashlib.sha256)
+        sig = self._sk.sign_deterministic(message.encode(), hashfunc=hashlib.sha256,
+                                          sigencode=ecdsa.util.sigencode_string_canonize)
         return binascii.hexlify(sig).decode()
+
+    def to_dict(self):
+        return {"name": self.name, "private_key": self.private_key,
+                "public_key": self.public_key, "address": self.address}
+
+    @classmethod
+    def from_dict(cls, data):
+        if (not isinstance(data, dict) or not isinstance(data.get("name", ""), str)
+                or not isinstance(data.get("private_key"), str) or len(data["private_key"]) != 64):
+            raise ValueError("저장된 지갑 데이터 형식 오류")
+        try:
+            wallet = cls(data.get("name", ""), data["private_key"])
+        except (ValueError, binascii.Error, ecdsa.errors.MalformedPointError) as exc:
+            raise ValueError("저장된 지갑 개인키 형식 오류") from exc
+        if data.get("address", wallet.address) != wallet.address or data.get("public_key", wallet.public_key) != wallet.public_key:
+            raise ValueError("저장된 지갑의 개인키·공개키·주소가 일치하지 않습니다")
+        return wallet

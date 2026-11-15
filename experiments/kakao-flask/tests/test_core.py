@@ -113,7 +113,7 @@ class Tamper(unittest.TestCase):
         self.assertTrue(self.chain.is_valid())
 
     def test_amount_tamper_detected_at_every_level(self):
-        tx = self.chain.chain[1].transactions[1]       # 블록1의 faucet 직후 transfer
+        tx = self.chain.chain[1].transactions[2]       # coinbase, faucet 다음의 서명된 transfer
         tx.amount = 1000
         ok, res = self.chain.validate_chain()
         self.assertFalse(ok); self.assertFalse(res[1]["checks"]["merkle"])
@@ -123,7 +123,7 @@ class Tamper(unittest.TestCase):
         self.assertFalse(res[1]["checks"]["pow"] and res[1]["checks"]["hash"] and res[1]["checks"]["txs"])
 
     def test_remine_all_still_fails_on_signature(self):
-        tx = self.chain.chain[1].transactions[1]
+        tx = self.chain.chain[1].transactions[2]
         tx.amount = 1000
         for i in range(1, len(self.chain.chain)):      # 이후 모든 블록 재채굴
             blk = self.chain.chain[i]
@@ -135,6 +135,7 @@ class Tamper(unittest.TestCase):
         self.assertFalse(ok)                           # 해시/PoW/연결은 맞아도 서명을 위조할 수 없음
         self.assertTrue(res[1]["checks"]["pow"] and res[1]["checks"]["link"])
         self.assertFalse(res[1]["checks"]["txs"])
+        self.assertTrue(any("서명" in reason for reason in res[1]["reasons"]))
 
     def test_genesis_tamper(self):
         self.chain.chain[0].nonce += 1

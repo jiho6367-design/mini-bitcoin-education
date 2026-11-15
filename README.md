@@ -1,8 +1,8 @@
 # Mini Bitcoin Education Lab
 
-> 이 브랜치의 카카오톡 Flask 앱: [실행 안내](experiments/kakao-flask/README.md) · [자막 포함 시연 영상 (3분 44초)](experiments/kakao-flask/static/media/blockchain-demo-ko.mp4)
+> 이 브랜치의 카카오톡 Flask 2.0 개선판: [실행 안내](experiments/kakao-flask/README.md) · [자막 포함 시연 영상 (3분 44초)](experiments/kakao-flask/static/media/blockchain-demo-ko.mp4)
 >
-> Flask 앱의 첫 화면에서도 시연 영상을 재생하거나 다운로드할 수 있습니다. 아래는 기존 React 앱의 안내입니다.
+> 단계별 실습 안내, 실습별 저장·복원, 채굴 제어와 검증 규칙을 개선했습니다. 첫 화면의 영상은 이전 UI로 녹화한 기본 원리 시연입니다. 아래는 기존 React 앱의 안내입니다.
 
 ## 포트폴리오 개요 및 현재 상태
 

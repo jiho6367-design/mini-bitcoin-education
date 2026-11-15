@@ -1,212 +1,499 @@
-"""웹 서버: python app.py  ->  http://127.0.0.1:5000  (로컬 전용)"""
+"""로컬 교육용 Flask 앱: 격리된 실습, SQLite 저장, 단계별 채굴·변조 실험."""
+import math
 import os
+import re
 import time
+from pathlib import Path
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, g, jsonify, request, send_from_directory
+from werkzeug.exceptions import HTTPException
 
 from blockchain import BLOCK_REWARD, FAUCET_AMOUNT, MAX_DIFFICULTY, MIN_DIFFICULTY
 from node import Network
+from operations import OperationError, PracticeManager, TamperJob, chain_fingerprint
+from storage import PracticeStore, StorageError
 from transaction import FAUCET, TRANSFER, Transaction
 
-app = Flask(__name__, static_folder="static")
-NET = Network()
+APP_VERSION = "2.0.0"
+COOKIE_NAME = "mini_bitcoin_practice"
+MAX_BATCH = 5000
+MAX_INTEGER = 2 ** 53 - 1
 
 
-def node_or_404(node_id):
-    node = NET.nodes.get(node_id)
-    if node is None:
-        raise KeyError(f"없는 노드: {node_id}")
-    return node
+def integer(value, label, minimum=0, maximum=MAX_INTEGER):
+    if type(value) is not int or not minimum <= value <= maximum:
+        raise OperationError("INVALID_REQUEST", f"{label}: {minimum}~{maximum} 범위의 정수를 입력하세요.")
+    return value
 
 
-@app.errorhandler(KeyError)
-@app.errorhandler(ValueError)
-def bad_request(e):
-    return jsonify({"ok": False, "reason": str(e.args[0]) if e.args else str(e)}), 400
+def text(value, label, maximum=128, *, blank=False):
+    if not isinstance(value, str) or len(value) > maximum or (not blank and not value.strip()):
+        raise OperationError("INVALID_REQUEST", f"{label}: 올바른 문자열을 입력하세요 (최대 {maximum}자).")
+    return value
 
 
-def wallet_info(w, node):
-    st = node.blockchain.state()
-    inc = sum(t.amount for t in node.mempool if t.receiver_address == w.address)
-    out = sum(t.amount for t in node.mempool if t.sender_address == w.address)
-    return {"name": w.name, "address": w.address, "public_key": w.public_key, "private_key": w.private_key,
-            "balance": st.balance(w.address), "pending_in": inc, "pending_out": out,
-            "is_node_wallet": any(n.wallet.address == w.address for n in NET.nodes.values())}
+def address(value, label="지갑 주소"):
+    if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
+        raise OperationError("INVALID_REQUEST", f"{label} 형식을 확인하세요.")
+    return value
 
 
-@app.get("/")
-def index():
-    return send_from_directory("static", "index.html")
+def transaction(body):
+    raw = body.get("tx")
+    if not isinstance(raw, dict):
+        raise OperationError("INVALID_TRANSACTION", "tx 객체에 거래 내용을 전달하세요.")
+    if raw.get("type") != TRANSFER:
+        raise OperationError("INVALID_TRANSACTION", "이 경로에서는 일반 송금 거래만 처리합니다.")
+    public = text(raw.get("sender_public_key"), "송신자 공개키", 256)
+    receiver = address(raw.get("receiver_address"), "수신 지갑 주소")
+    amount = integer(raw.get("amount"), "금액", 1)
+    nonce = integer(raw.get("nonce"), "거래 순번")
+    stamp = raw.get("timestamp")
+    if type(stamp) not in (int, float) or not 0 <= stamp <= MAX_INTEGER or not math.isfinite(stamp):
+        raise OperationError("INVALID_TRANSACTION", "거래 시각은 0 이상의 유한한 숫자여야 합니다.")
+    signature = raw.get("signature")
+    if signature is not None:
+        text(signature, "전자서명", 512, blank=True)
+    return Transaction(TRANSFER, public, receiver, amount, nonce, stamp, signature)
 
 
-@app.get("/architecture")
-def architecture():
-    return send_from_directory("static", "architecture.html")
+def create_app(config=None, *, database_path=None):
+    app = Flask(__name__, static_folder="static", instance_relative_config=True)
+    app.config.update(MAX_CONTENT_LENGTH=64 * 1024,
+                      DATABASE=database_path or os.environ.get("KAKAO_PRACTICE_DB") or str(Path(app.instance_path) / "practices.sqlite3"))
+    if config:
+        app.config.update(config)
+    store = PracticeStore(app.config["DATABASE"])
+    manager = PracticeManager(store)
+    app.extensions["practice_store"] = store
+    app.extensions["practice_manager"] = manager
 
+    def json_body(*, empty=False):
+        if empty and not request.get_data():
+            return {}
+        if not request.is_json:
+            raise OperationError("INVALID_JSON", "Content-Type: application/json 형식으로 요청하세요.")
+        try:
+            data = request.get_json(silent=True)
+        except (ValueError, RecursionError, OverflowError) as error:
+            raise OperationError("INVALID_JSON", "JSON을 해석할 수 없습니다. 입력 형식과 중첩 깊이를 확인하세요.") from error
+        if not isinstance(data, dict):
+            raise OperationError("INVALID_JSON", "JSON 객체를 전달하세요.")
+        return data
 
-@app.get("/api/state")
-def state():
-    return jsonify({"difficulty": NET.difficulty, "min_difficulty": MIN_DIFFICULTY, "max_difficulty": MAX_DIFFICULTY,
-                    "block_reward": BLOCK_REWARD, "faucet_amount": FAUCET_AMOUNT,
-                    "nodes": [n.snapshot() for n in NET.nodes.values()]})
+    def node(p, nid):
+        if not isinstance(nid, str) or nid not in p.network.nodes:
+            raise OperationError("NODE_NOT_FOUND", "없는 노드입니다.", 404)
+        return p.network.nodes[nid]
 
+    def wallet(p, value):
+        value = address(value)
+        found = p.network.wallets.get(value)
+        if found is None:
+            raise OperationError("WALLET_NOT_FOUND", "이 실습에 없는 지갑입니다.", 404)
+        return found
 
-# ---- 1. Wallet -----------------------------------------------------------
-@app.get("/api/wallets")
-def wallets():
-    node = node_or_404(request.args.get("node", "A"))
-    return jsonify([wallet_info(w, node) for w in NET.wallets.values()])
+    def valid_node(p, nid):
+        n = node(p, nid)
+        if not n.blockchain.is_valid():
+            raise OperationError("INVALID_CHAIN", "선택한 체인의 검증이 실패했습니다. 먼저 동기화로 복구하세요.", 409)
+        return n
 
+    def active_mining(p):
+        return any(n.candidate is not None for n in p.network.nodes.values())
 
-@app.post("/api/wallets")
-def create_wallet():
-    body = request.get_json(force=True)
-    w = NET.create_wallet((body.get("name") or "").strip())
-    ok, why = node_or_404(body.get("node", "A")).receive_transaction(Transaction(FAUCET, "", w.address, FAUCET_AMOUNT))
-    return jsonify({"ok": True, "address": w.address, "faucet": {"ok": ok, "reason": why}})
+    def no_mining(p):
+        if active_mining(p):
+            raise OperationError("MINING_ACTIVE", "진행 중인 채굴을 중지한 뒤 변조 실험을 실행하세요.", 409)
 
+    def state_data(p):
+        return {"version": APP_VERSION, "difficulty": p.network.difficulty,
+                "difficulty_rules": p.network.difficulty_rules,
+                "min_difficulty": MIN_DIFFICULTY, "max_difficulty": MAX_DIFFICULTY,
+                "block_reward": BLOCK_REWARD, "faucet_amount": FAUCET_AMOUNT,
+                "nodes": [n.snapshot() for n in p.network.nodes.values()],
+                "tamper_job": p.tamper_job.progress() if p.tamper_job else None}
 
-@app.post("/api/faucet")
-def faucet():
-    body = request.get_json(force=True)
-    if body["address"] not in NET.wallets:
-        raise KeyError("없는 지갑 주소")
-    ok, why = node_or_404(body.get("node", "A")).receive_transaction(
-        Transaction(FAUCET, "", body["address"], FAUCET_AMOUNT))
-    return jsonify({"ok": ok, "reason": why})
+    def response(data, status=200):
+        p = getattr(g, "practice", None)
+        if p is not None:
+            g.response_revision = p.revision
+            if isinstance(data, dict):
+                data = {**data, "practice": p.metadata(), "revision": p.revision}
+        return jsonify(data), status
 
+    def read(action):
+        with g.practice.lock:
+            return response(action(g.practice))
 
-# ---- 2. Transaction (작성 -> 서명 -> 제출 3단계) ----------------------------
-@app.post("/api/tx/prepare")
-def tx_prepare():
-    body = request.get_json(force=True)
-    wallet = NET.wallets.get(body["from"])
-    if wallet is None:
-        raise KeyError("송신 지갑 없음")
-    node = node_or_404(body.get("node", "A"))
-    amount = int(body["amount"])
-    nonce = node.pending_state().nonces.get(wallet.address, 0)
-    tx = Transaction(TRANSFER, wallet.public_key, body["to"], amount, nonce)
-    return jsonify({"tx": tx.to_dict(), "signing_hash": tx.signing_hash()})
+    def change(body, action, *, allow_tamper=False):
+        expected_practice = body.get("expected_practice_id")
+        if expected_practice is not None:
+            text(expected_practice, "실습 ID", 128)
+        if expected_practice is not None and expected_practice != g.practice.id:
+            raise OperationError("PRACTICE_CHANGED", "다른 탭에서 선택한 실습이 변경됐습니다. 현재 실습을 다시 확인하세요.", 409)
+        expected = body.get("expected_revision")
+        if expected is not None:
+            integer(expected, "실습 버전")
+        with g.practice.lock:
+            result = manager.mutate(g.practice, expected, action, allow_tamper=allow_tamper)
+            data, status = result if isinstance(result, tuple) else (result, 200)
+            return response(data, status)
 
+    @app.before_request
+    def choose_practice():
+        if request.path.startswith("/api/") and request.path != "/api/health":
+            g.practice = manager.get(request.cookies.get(COOKIE_NAME))
 
-@app.post("/api/tx/sign")
-def tx_sign():
-    tx = Transaction.from_dict(request.get_json(force=True)["tx"])
-    wallet = NET.wallets.get(tx.sender_address)
-    if wallet is None:
-        raise KeyError("이 공개키에 해당하는 지갑이 없습니다")
-    tx.sign(wallet)
-    return jsonify({"tx": tx.to_dict()})
+    @app.after_request
+    def protect_response(r):
+        if request.path.startswith("/api/"):
+            r.headers["Cache-Control"] = "no-store"
+        r.headers["X-Content-Type-Options"] = "nosniff"
+        p = getattr(g, "practice", None)
+        if p:
+            r.headers["X-Practice-Revision"] = str(getattr(g, "response_revision", p.revision))
+            if request.cookies.get(COOKIE_NAME) != p.id:
+                r.set_cookie(COOKIE_NAME, p.id, max_age=365 * 24 * 60 * 60,
+                             httponly=True, secure=request.is_secure, samesite="Lax", path="/")
+        return r
 
+    @app.errorhandler(OperationError)
+    def operation_error(error):
+        return response({"ok": False, "code": error.code, "reason": error.reason}, error.status)
 
-@app.post("/api/tx/submit")
-def tx_submit():
-    body = request.get_json(force=True)
-    tx = Transaction.from_dict(body["tx"])
-    ok, why = node_or_404(body.get("node", "A")).receive_transaction(tx)
-    return jsonify({"ok": ok, "reason": why, "txid": tx.txid()})
+    @app.errorhandler(StorageError)
+    def storage_error(error):
+        return response({"ok": False, "code": "STORAGE_ERROR", "reason": str(error)}, 503)
 
+    @app.errorhandler(HTTPException)
+    def http_error(error):
+        return response({"ok": False, "code": "HTTP_ERROR", "reason": error.description}, error.code)
 
-# ---- 3. Mempool / 4. Mining ------------------------------------------------
-@app.get("/api/nodes/<nid>/mempool")
-def mempool(nid):
-    return jsonify([t.to_dict() for t in node_or_404(nid).mempool])
+    @app.errorhandler(Exception)
+    def unexpected_error(error):
+        app.logger.error("Unexpected request failure", exc_info=error)
+        return response({"ok": False, "code": "INTERNAL_ERROR", "reason": "요청을 처리하지 못했습니다. 현재 상태를 확인한 뒤 다시 시도하세요."}, 500)
 
+    @app.get("/")
+    def index():
+        return send_from_directory(app.static_folder, "index.html")
 
-@app.post("/api/nodes/<nid>/mine/start")
-def mine_start(nid):
-    body = request.get_json(silent=True) or {}
-    miner = body.get("miner")
-    if miner and miner not in NET.wallets:
-        raise KeyError("없는 채굴자 지갑")
-    return jsonify({"ok": True, "candidate": node_or_404(nid).start_mining(miner)})
+    @app.get("/architecture")
+    def architecture():
+        return send_from_directory(app.static_folder, "architecture.html")
 
+    @app.get("/api/health")
+    def health():
+        return response({"ok": True, "version": APP_VERSION})
 
-@app.post("/api/nodes/<nid>/mine/step")
-def mine_step(nid):
-    batch = min(int((request.get_json(silent=True) or {}).get("batch", 3000)), 50000)
-    return jsonify(node_or_404(nid).mine_step(batch))
+    @app.get("/api/state")
+    def state():
+        return read(state_data)
 
+    def wallet_info(w, n):
+        valid = n.blockchain.is_valid()
+        confirmed = n.blockchain.state().balance(w.address) if valid else None
+        return {"name": w.name, "address": w.address, "public_key": w.public_key,
+                "balance": confirmed, "balance_valid": valid,
+                "pending_in": sum(t.amount for t in n.mempool if t.receiver_address == w.address),
+                "pending_out": sum(t.amount for t in n.mempool if t.sender_address == w.address),
+                "is_node_wallet": w.address == n.wallet.address or any(w.address == x.wallet.address for x in g.practice.network.nodes.values())}
 
-# ---- 5. Blockchain (조회 / 검증 / 변조 실험 / 복구) -------------------------
-@app.get("/api/nodes/<nid>/chain")
-def chain(nid):
-    bc = node_or_404(nid).blockchain
-    valid, results = bc.validate_chain()
-    blocks = [dict(b.to_dict(), **{"checks": r["checks"], "reasons": r["reasons"], "valid": r["valid"]})
-              for b, r in zip(bc.chain, results)]
-    return jsonify({"valid": valid, "height": bc.tip.index, "blocks": blocks})
+    @app.get("/api/wallets")
+    def wallets():
+        return read(lambda p: [wallet_info(w, node(p, request.args.get("node", "A"))) for w in p.network.wallets.values()])
 
+    @app.get("/api/wallets/<value>/keys")
+    def keys(value):
+        def reveal(p):
+            w = wallet(p, value)
+            return {"address": w.address, "public_key": w.public_key, "private_key": w.private_key}
+        return read(reveal)
 
-@app.post("/api/nodes/<nid>/tamper")
-def tamper(nid):
-    """변조 시뮬레이션. mode: simple(내용만) / rehash(머클·해시 재계산) / remine(그 뒤 블록까지 PoW 재수행)"""
-    body = request.get_json(force=True)
-    node = node_or_404(nid)
-    chain_ = node.blockchain.chain
-    bi, ti = int(body["block_index"]), int(body["tx_index"])
-    if not (0 <= bi < len(chain_)) or not (0 <= ti < len(chain_[bi].transactions)):
-        raise ValueError("블록/거래 번호가 범위를 벗어났습니다 (Genesis에는 거래가 없습니다)")
-    tx, field, mode = chain_[bi].transactions[ti], body["field"], body.get("mode", "simple")
-    if field == "amount":
-        tx.amount = int(body["value"])
-    elif field == "receiver_address":
-        tx.receiver_address = str(body["value"])
-    else:
-        raise ValueError("변조 가능한 필드: amount, receiver_address")
-    attempts, t0 = 0, time.time()
-    if mode in ("rehash", "remine"):
-        for i in range(bi, len(chain_) if mode == "remine" else bi + 1):
-            blk = chain_[i]
-            if i > bi:
-                blk.previous_hash = chain_[i - 1].hash
-            blk.merkle_root = blk.calculate_merkle_root()
+    @app.post("/api/wallets")
+    def create_wallet():
+        body = json_body()
+        name = text(body.get("name"), "지갑 이름", 80).strip()
+        def action(p):
+            n = valid_node(p, body.get("node", "A"))
+            if not n.online:
+                raise OperationError("NODE_OFFLINE", "오프라인 노드에는 지급 거래를 제출할 수 없습니다.", 409)
+            if len(p.network.wallets) >= 100:
+                raise OperationError("WALLET_LIMIT", "한 실습에서는 최대 100개 지갑을 사용할 수 있습니다.", 409)
+            w = p.network.create_wallet(name)
+            ok, why = n.receive_transaction(Transaction(FAUCET, "", w.address, FAUCET_AMOUNT))
+            if not ok:
+                raise OperationError("FAUCET_REJECTED", why, 409)
+            return {"ok": True, "address": w.address, "faucet": {"ok": ok, "reason": why}}
+        return change(body, action)
+
+    @app.post("/api/faucet")
+    def faucet():
+        body = json_body()
+        def action(p):
+            w = wallet(p, body.get("address"))
+            n = valid_node(p, body.get("node", "A"))
+            ok, why = n.receive_transaction(Transaction(FAUCET, "", w.address, FAUCET_AMOUNT))
+            return {"ok": ok, "reason": why}
+        return change(body, action)
+
+    @app.post("/api/tx/prepare")
+    def prepare():
+        body = json_body()
+        amount = integer(body.get("amount"), "금액", 1)
+        def action(p):
+            w = wallet(p, body.get("from"))
+            target = wallet(p, body.get("to"))
+            n = valid_node(p, body.get("node", "A"))
+            nonce = n.pending_state().nonces.get(w.address, 0)
+            tx = Transaction(TRANSFER, w.public_key, target.address, amount, nonce)
+            return {"tx": tx.to_dict(), "signing_hash": tx.signing_hash()}
+        return change(body, action)
+
+    @app.post("/api/tx/sign")
+    def sign():
+        body = json_body()
+        tx = transaction(body)
+        def action(p):
+            w = p.network.wallets.get(tx.sender_address)
+            if w is None or w.public_key != tx.sender_public_key:
+                raise OperationError("WALLET_NOT_FOUND", "이 실습의 송신자 지갑을 확인하세요.", 404)
+            tx.sign(w)
+            return {"tx": tx.to_dict()}
+        return change(body, action)
+
+    @app.post("/api/tx/submit")
+    def submit():
+        body = json_body()
+        tx = transaction(body)
+        def action(p):
+            n = valid_node(p, body.get("node", "A"))
+            ok, why = n.receive_transaction(tx)
+            return {"ok": ok, "reason": why, "txid": tx.txid()}
+        return change(body, action)
+
+    @app.get("/api/nodes/<nid>/mempool")
+    def mempool(nid):
+        return read(lambda p: [t.to_dict() for t in node(p, nid).mempool])
+
+    def mining_job(p, nid, body):
+        n = node(p, nid)
+        job_id = text(body.get("job_id"), "채굴 작업 ID", 128)
+        info = n.candidate_info()
+        if not info or info.get("job_id") != job_id:
+            raise OperationError("STALE_JOB", "교체되거나 종료된 채굴 작업입니다. 현재 상태를 확인하세요.", 409)
+        if n.candidate is None:
+            raise OperationError("NO_ACTIVE_JOB", "이미 종료된 채굴 작업입니다.", 409)
+        return n, job_id
+
+    def mining_result(result):
+        if result.get("error") or result.get("ok") is False:
+            raise OperationError(result.get("code", "MINING_CONFLICT"), result.get("error") or result.get("reason") or "채굴 상태를 확인하세요.", 409)
+        return result
+
+    @app.post("/api/nodes/<nid>/mine/start")
+    def mine_start(nid):
+        body = json_body(empty=True)
+        def action(p):
+            n = valid_node(p, nid)
+            if n.candidate is not None:
+                raise OperationError("ALREADY_MINING", "현재 채굴을 중지한 뒤 새 후보를 만드세요.", 409)
+            miner = body.get("miner")
+            if miner is not None:
+                wallet(p, miner)
+            try:
+                candidate = n.start_mining(miner)
+            except ValueError as error:
+                raise OperationError("MINING_CONFLICT", str(error), 409) from error
+            return {"ok": True, "candidate": candidate, "job_id": candidate["job_id"], "status": candidate["status"]}
+        return change(body, action)
+
+    @app.post("/api/nodes/<nid>/mine/step")
+    def mine_step(nid):
+        body = json_body()
+        batch = integer(body.get("batch", 1), "계산 횟수", 1, MAX_BATCH)
+        def action(p):
+            n, job_id = mining_job(p, nid, body)
+            return mining_result(n.mine_step(batch, job_id=job_id))
+        return change(body, action)
+
+    @app.post("/api/nodes/<nid>/mine/<command>")
+    def mine_control(nid, command):
+        if command not in ("pause", "resume", "stop"):
+            raise OperationError("NOT_FOUND", "없는 채굴 명령입니다.", 404)
+        body = json_body()
+        def action(p):
+            n, job_id = mining_job(p, nid, body)
+            result = mining_result(getattr(n, command + "_mining")(job_id=job_id))
+            return {**result, "candidate": n.candidate_info()}
+        return change(body, action)
+
+    @app.get("/api/nodes/<nid>/chain")
+    def chain(nid):
+        def inspect(p):
+            bc = node(p, nid).blockchain
+            valid, results = bc.validate_chain()
+            blocks = [dict(b.to_dict(), checks=r["checks"], reasons=r["reasons"], valid=r["valid"]) for b, r in zip(bc.chain, results)]
+            return {"valid": valid, "height": bc.tip.index, "blocks": blocks}
+        return read(inspect)
+
+    def tamper_fields(p, nid, body):
+        n = node(p, nid)
+        bi = integer(body.get("block_index"), "블록 번호")
+        ti = integer(body.get("tx_index"), "거래 번호")
+        if bi >= len(n.blockchain.chain) or ti >= len(n.blockchain.chain[bi].transactions):
+            raise OperationError("INVALID_INDEX", "블록 또는 거래 번호가 범위를 벗어났습니다.")
+        field_name = body.get("field")
+        if field_name == "amount":
+            value = integer(body.get("value"), "변조 금액", -MAX_INTEGER)
+        elif field_name == "receiver_address":
+            value = text(body.get("value"), "변조 주소", 128, blank=True)
+        else:
+            raise OperationError("INVALID_FIELD", "금액(amount) 또는 수신 주소(receiver_address)를 선택하세요.")
+        mode = body.get("mode", "simple")
+        if mode not in ("simple", "rehash", "remine"):
+            raise OperationError("INVALID_MODE", "변조 모드를 확인하세요.")
+        return n, bi, ti, field_name, value, mode
+
+    @app.post("/api/nodes/<nid>/tamper")
+    def tamper(nid):
+        body = json_body()
+        def action(p):
+            no_mining(p)
+            n, bi, ti, field_name, value, mode = tamper_fields(p, nid, body)
             if mode == "remine":
-                attempts += blk.mine_to_target()
-            else:
-                blk.hash = blk.calculate_hash()
-    node.log("tamper", f"[실험] {node.name} 블록#{bi} 거래#{ti}의 {field}를 변조 (모드: {mode})")
-    valid, results = node.blockchain.validate_chain()
-    return jsonify({"ok": True, "valid": valid, "attempts": attempts,
-                    "seconds": round(time.time() - t0, 2), "results": results})
+                p.tamper_job = TamperJob(nid, bi, ti, field_name, value,
+                                        [b.copy() for b in n.blockchain.chain], chain_fingerprint(n.blockchain.chain))
+                return {"ok": True, **p.tamper_job.progress()}, 202
+            started = time.monotonic()
+            tx = n.blockchain.chain[bi].transactions[ti]
+            setattr(tx, field_name, value)
+            if mode == "rehash":
+                block = n.blockchain.chain[bi]
+                block.merkle_root = block.calculate_merkle_root()
+                block.hash = block.calculate_hash()
+            n.invalidate_validation_cache()
+            n.log("tamper", f"[실험] {n.name} 블록#{bi} 거래#{ti}의 {field_name} 변조 (모드: {mode})")
+            valid, results = n.blockchain.validate_chain()
+            return {"ok": True, "status": "completed", "valid": valid, "results": results,
+                    "attempts": 0, "seconds": round(time.monotonic() - started, 3)}
+        return change(body, action)
+
+    def tamper_job(p, nid, body):
+        node(p, nid)
+        job_id = text(body.get("job_id"), "재채굴 실험 ID", 128)
+        job = p.tamper_job
+        if job is None or job.job_id != job_id or job.node_id != nid:
+            raise OperationError("STALE_TAMPER_JOB", "교체되거나 취소된 재채굴 실험입니다.", 409)
+        if chain_fingerprint(p.network.nodes[nid].blockchain.chain) != job.original_fingerprint:
+            raise OperationError("STALE_TAMPER_CHAIN", "원본 체인이 변경돼 실험을 적용할 수 없습니다.", 409)
+        return job
+
+    @app.post("/api/nodes/<nid>/tamper/step")
+    def tamper_step(nid):
+        body = json_body()
+        batch = integer(body.get("batch", 1), "계산 횟수", 1, MAX_BATCH)
+        def action(p):
+            job = tamper_job(p, nid, body)
+            complete = job.step(batch)
+            if not complete:
+                return {"ok": True, **job.progress()}
+            n = node(p, nid)
+            n.blockchain.chain = job.chain
+            n.invalidate_validation_cache()
+            job.status = "completed"
+            n.log("tamper", f"[실험] {n.name} 블록#{job.block_index} 이후 PoW 재수행 완료 (원본 서명은 유지)")
+            valid, results = n.blockchain.validate_chain()
+            result = {"ok": True, **job.progress(), "valid": valid, "results": results,
+                      "seconds": round(time.monotonic() - job.started, 3)}
+            p.tamper_job = None
+            return result
+        return change(body, action, allow_tamper=True)
+
+    @app.post("/api/nodes/<nid>/tamper/cancel")
+    def tamper_cancel(nid):
+        body = json_body()
+        def action(p):
+            job = tamper_job(p, nid, body)
+            job.status = "cancelled"
+            result = {"ok": True, **job.progress()}
+            p.tamper_job = None
+            return result
+        return change(body, action, allow_tamper=True)
+
+    @app.post("/api/nodes/<nid>/sync")
+    def sync(nid):
+        body = json_body(empty=True)
+        def action(p):
+            n = node(p, nid)
+            if not n.online:
+                raise OperationError("NODE_OFFLINE", "오프라인 노드는 동기화할 수 없습니다.", 409)
+            return {"ok": True, "changed": n.resolve_conflicts()}
+        return change(body, action)
+
+    @app.post("/api/nodes/<nid>/online")
+    def online(nid):
+        body = json_body()
+        enabled = body.get("online")
+        if type(enabled) is not bool:
+            raise OperationError("INVALID_REQUEST", "online 값은 true 또는 false여야 합니다.")
+        def action(p):
+            n = node(p, nid)
+            n.online = enabled
+            n.log("sys", f"{n.name} {'온라인' if enabled else '오프라인 (네트워크 분리)'}")
+            return {"ok": True, "online": enabled}
+        return change(body, action)
+
+    @app.post("/api/difficulty")
+    def difficulty():
+        body = json_body()
+        value = integer(body.get("difficulty"), "난이도", MIN_DIFFICULTY, MAX_DIFFICULTY)
+        def action(p):
+            policy = p.network.set_difficulty(value)
+            return {"ok": True, **policy}
+        return change(body, action)
+
+    @app.get("/api/events")
+    def events():
+        raw = request.args.get("since", "0")
+        if not re.fullmatch(r"[0-9]{1,16}", raw):
+            raise OperationError("INVALID_REQUEST", "이벤트 순번을 확인하세요.")
+        since = integer(int(raw), "이벤트 순번")
+        return read(lambda p: [e for e in p.network.events if e["seq"] > since])
+
+    @app.post("/api/reset")
+    def reset():
+        body = json_body(empty=True)
+        def action(p):
+            p.network = Network()
+            p.tamper_job = None
+            p.recovery_notice = ""
+            p.job_cancelled_on_restore = False
+            return {"ok": True, **state_data(p)}
+        return change(body, action, allow_tamper=True)
+
+    @app.post("/api/practices/new")
+    def new_practice():
+        body = json_body(empty=True)
+        expected_practice = body.get("expected_practice_id")
+        if expected_practice is not None:
+            text(expected_practice, "실습 ID", 128)
+        if expected_practice is not None and expected_practice != g.practice.id:
+            raise OperationError("PRACTICE_CHANGED", "다른 탭에서 선택한 실습이 변경됐습니다. 현재 실습을 다시 확인하세요.", 409)
+        expected = body.get("expected_revision")
+        if expected is not None:
+            integer(expected, "실습 버전")
+        with g.practice.lock:
+            if expected is not None and expected != g.practice.revision:
+                raise OperationError("STALE_REVISION", "현재 실습이 변경됐습니다. 상태를 다시 확인하세요.", 409)
+            g.practice = manager.create()
+            return response({"ok": True, **state_data(g.practice)})
+
+    return app
 
 
-@app.post("/api/nodes/<nid>/sync")
-def sync(nid):
-    node = node_or_404(nid)
-    changed = node.resolve_conflicts()
-    return jsonify({"ok": True, "changed": changed})
-
-
-# ---- 6. Node 제어 / 로그 / 설정 --------------------------------------------
-@app.post("/api/nodes/<nid>/online")
-def online(nid):
-    node = node_or_404(nid)
-    node.online = bool(request.get_json(force=True)["online"])
-    node.log("sys", f"{node.name} {'온라인' if node.online else '오프라인 (네트워크 분리)'}")
-    return jsonify({"ok": True})
-
-
-@app.post("/api/difficulty")
-def difficulty():
-    NET.set_difficulty(int(request.get_json(force=True)["difficulty"]))
-    return jsonify({"ok": True, "difficulty": NET.difficulty})
-
-
-@app.get("/api/events")
-def events():
-    since = int(request.args.get("since", 0))
-    return jsonify([e for e in NET.events if e["seq"] > since])
-
-
-@app.post("/api/reset")
-def reset():
-    global NET
-    NET = Network()
-    return jsonify({"ok": True})
-
+app = create_app()
 
 if __name__ == "__main__":
-    # 로컬 학습용: 외부 접속이 불가능하도록 127.0.0.1에만 바인딩
-    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 5000)), debug=False, threaded=False)
+    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 5000)), debug=False, threaded=True)

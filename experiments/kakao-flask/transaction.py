@@ -2,6 +2,7 @@
 import binascii
 import hashlib
 import json
+import math
 import time
 
 import ecdsa
@@ -17,13 +18,8 @@ def _sha256(text: str) -> str:
 
 
 def _is_hex64(value) -> bool:
-    if not isinstance(value, str) or len(value) != 64:
-        return False
-    try:
-        int(value, 16)
-        return True
-    except ValueError:
-        return False
+    return (isinstance(value, str) and len(value) == 64
+            and all(c in "0123456789abcdef" for c in value))
 
 
 class Transaction:
@@ -86,11 +82,21 @@ class Transaction:
             return False, "금액은 0보다 큰 정수여야 합니다"
         if not _is_hex64(self.receiver_address):
             return False, "수신자 주소 형식 오류"
+        if type(self.nonce) is not int or self.nonce < 0:
+            return False, "거래 순번 nonce는 음이 아닌 정수여야 합니다"
+        try:
+            valid_time = type(self.timestamp) in (int, float) and math.isfinite(self.timestamp) and self.timestamp >= 0
+        except OverflowError:
+            valid_time = False
+        if not valid_time:
+            return False, "거래 시각 형식 오류"
         if self.tx_type == TRANSFER:
-            if not self.sender_public_key:
-                return False, "송신자 공개키 없음"
-            if not self.signature:
-                return False, "전자서명 없음"
+            if (not isinstance(self.sender_public_key, str) or len(self.sender_public_key) != 128
+                    or any(c not in "0123456789abcdef" for c in self.sender_public_key)):
+                return False, "송신자 공개키 형식 오류"
+            if (not isinstance(self.signature, str) or len(self.signature) != 128
+                    or any(c not in "0123456789abcdef" for c in self.signature)):
+                return False, "전자서명 형식 오류"
             if not self.verify_signature():
                 return False, "전자서명 검증 실패 (내용 변조 또는 키 불일치)"
         elif self.sender_public_key or self.signature:
@@ -105,8 +111,13 @@ class Transaction:
 
     @classmethod
     def from_dict(cls, d: dict) -> "Transaction":
-        return cls(d["type"], d.get("sender_public_key", ""), d["receiver_address"], d["amount"],
-                   d.get("nonce", 0), d.get("timestamp"), d.get("signature"))
+        if not isinstance(d, dict):
+            raise ValueError("거래 데이터 형식 오류")
+        try:
+            return cls(d["type"], d.get("sender_public_key", ""), d["receiver_address"], d["amount"],
+                       d.get("nonce", 0), d.get("timestamp"), d.get("signature"))
+        except KeyError as exc:
+            raise ValueError("거래 데이터에 필수 필드가 없습니다") from exc
 
     def copy(self) -> "Transaction":
         return Transaction.from_dict(self.to_dict())

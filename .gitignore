@@ -33,3 +33,6 @@ coverage/
 test-results/
 playwright-report/
 work/
+
+# Local Flask practice database (contains educational wallet keys)
+experiments/kakao-flask/instance/
