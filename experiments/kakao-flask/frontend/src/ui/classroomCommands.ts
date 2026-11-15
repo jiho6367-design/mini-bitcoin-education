@@ -1,5 +1,6 @@
 import { RequestTimeoutError, withRequestTimeout } from "../api/transport";
 import { uiText } from "../copy";
+import { PREPARING_MESSAGE, serverConnection, serverUnavailableMessage } from "../api/serverConnection";
 
 /** A timed-out mutation may already have succeeded. Keep its ID until confirmed. */
 export class ClassroomRequestError extends Error {
@@ -54,12 +55,23 @@ async function educationRequest<T>(
             signal,
           });
         } catch {
+          serverConnection.reportUnavailable();
           throw new ClassroomRequestError(
-            "서버에 연결할 수 없습니다 인터넷 연결을 확인하세요",
+            serverUnavailableMessage(body !== undefined),
             body !== undefined,
           );
         }
         const data = await response.json().catch(() => null);
+        if ([408, 502, 503, 504].includes(response.status)) {
+          serverConnection.reportUnavailable();
+          const known = typeof data?.error?.code === "string" && typeof data.error.message === "string";
+          throw new ClassroomRequestError(
+            known ? `${data.error.message} ${PREPARING_MESSAGE}` : serverUnavailableMessage(body !== undefined),
+            body !== undefined && !known,
+            data?.error?.code || "BACKEND_UNREACHABLE",
+            response.status,
+          );
+        }
         if (!response.ok)
           throw new ClassroomRequestError(
             data?.error?.message || "공동 실습 요청에 실패했습니다",
@@ -67,18 +79,22 @@ async function educationRequest<T>(
             data?.error?.code || "",
             response.status,
           );
-        if (data === null)
+        if (data === null) {
+          serverConnection.reportUnavailable();
           throw new ClassroomRequestError(
-            "서버 응답을 읽지 못했습니다",
+            serverUnavailableMessage(body !== undefined),
             body !== undefined,
           );
+        }
         return data as T;
       },
       { mutation: body !== undefined, timeoutMs },
     );
   } catch (error) {
-    if (error instanceof RequestTimeoutError)
+    if (error instanceof RequestTimeoutError) {
+      serverConnection.reportUnavailable();
       throw new ClassroomRequestError(error.message, body !== undefined);
+    }
     throw error;
   }
 }

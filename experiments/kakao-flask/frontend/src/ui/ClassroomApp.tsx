@@ -13,6 +13,7 @@ import { useTheme } from "./useTheme";
 import type { ThemePreference } from "../theme";
 import { TeamNavigation } from "./TeamNavigation";
 import { uiText } from "../copy";
+import { useConnectionMessage } from "./ServerConnection";
 import {
   ROOM_KEY,
   roomRequest,
@@ -75,6 +76,9 @@ export function ClassroomApp({
     }
   }, []);
   const room = useClassroom(credential, updateCredential);
+  const joinErrorMessage = useConnectionMessage(joinError);
+  const saveErrorMessage = useConnectionMessage(saveError);
+  const roomErrorMessage = useConnectionMessage(room.error);
   const me = room.state?.participants.find(
     (p) => p.id === credential?.participantId,
   );
@@ -283,7 +287,7 @@ export function ClassroomApp({
                 }}
               />
             )}
-            {joinError && <p role="alert">{joinError}</p>}
+            {joinError && <p role="alert">{joinErrorMessage}</p>}
           </Panel>
         ) : (
           <>
@@ -347,14 +351,14 @@ export function ClassroomApp({
                 {teamMode ? " · 서버가 재시작돼도 이 링크에서 기록을 이어갑니다" : " · 아래 QR로 참가할 수 있습니다"}
               </p>
               {teamMode && <p>{savedAt || room.state?.storage?.savedAt ? "저장됨 · 같은 링크로 이어가기" : "변경 내용 자동 저장"}</p>}
-              {saveError && <p role="alert">{saveError}</p>}
+              {saveError && <p role="alert">{saveErrorMessage}</p>}
             </Panel>
             {controls && (
               <ShareRoom code={credential.code} publicUrl={publicUrl} />
             )}
             {room.error && (
               <p role="alert" className="notice">
-                {room.error}
+                {roomErrorMessage}
               </p>
             )}
             {room.pending && (

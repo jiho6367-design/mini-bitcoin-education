@@ -9,6 +9,7 @@ import type {
 import type { MiningState } from "./useLab";
 import { Code, Notice, Panel } from "./shared";
 import { uiText } from "../copy";
+import { useConnectionMessage } from "./ServerConnection";
 
 const statuses = {
   idle: "준비",
@@ -34,6 +35,7 @@ export function MiningView({
   goNetwork: () => void;
 }) {
   const interaction = useInteraction();
+  const connectionMessage = useConnectionMessage(mining.message || "");
   const [selectedSample, setSelectedSample] = useState<MiningSample | null>(
     null,
   );
@@ -161,7 +163,7 @@ export function MiningView({
               <button onClick={goNetwork}>노드 전파 확인 →</button>
             </div>
           )}
-          {mining.message && <p role="alert">{uiText(mining.message)}</p>}
+          {mining.message && <p role="alert">{uiText(connectionMessage)}</p>}
         </Panel>
         <div className="stack">
           <Panel title="이번 실습의 난이도" eyebrow="DIFFICULTY">

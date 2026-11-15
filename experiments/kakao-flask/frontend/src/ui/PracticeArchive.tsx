@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import type { AnySnapshot } from "../api/types";
-import { withRequestTimeout } from "../api/transport";
+import { RequestTimeoutError, withRequestTimeout } from "../api/transport";
+import { ApiError } from "../api/client";
+import { PREPARING_MESSAGE, serverConnection, serverUnavailableMessage } from "../api/serverConnection";
+import { useConnectionMessage } from "./ServerConnection";
 import type { Credential } from "./useClassroom";
 import { Panel } from "./shared";
 import { archiveSearchParams, type ArchiveFilters } from "./archiveSearch";
@@ -25,31 +28,50 @@ export async function archiveRequest<T>(
   body?: unknown,
   token = "",
 ): Promise<T> {
-  return withRequestTimeout(
+  const mutation = method !== "GET";
+  try { return await withRequestTimeout(
     async (signal) => {
-      const response = await fetch(path, {
-        signal,
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: body === undefined ? undefined : JSON.stringify(body),
-      });
+      let response: Response;
+      try {
+        response = await fetch(path, {
+          signal,
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+      } catch {
+        serverConnection.reportUnavailable();
+        throw new ApiError(0, "BACKEND_UNREACHABLE", serverUnavailableMessage(mutation));
+      }
       if (!response.ok) {
         const data = await response.json().catch(() => null);
-        throw new Error(
-          uiText(data?.error?.message || "저장소 요청을 처리하지 못했습니다"),
-        );
+        if ([408, 502, 503, 504].includes(response.status)) {
+          serverConnection.reportUnavailable();
+          throw new ApiError(response.status, data?.error?.code || "BACKEND_UNREACHABLE",
+            data?.error?.message ? `${data.error.message} ${PREPARING_MESSAGE}` : serverUnavailableMessage(mutation));
+        }
+        throw new ApiError(response.status, data?.error?.code || "ARCHIVE_FAILED",
+          data?.error?.message || "저장소 요청을 처리하지 못했습니다");
       }
-      return (
-        response.headers.get("content-type")?.includes("text/html")
-          ? await response.text()
-          : await response.json()
-      ) as T;
+      if (response.status === 204) return undefined as T;
+      // Only the explicit HTML export accepts HTML; a host's loading page is not an archive response.
+      if (method === "GET" && path.endsWith("/html") && response.headers.get("content-type")?.includes("text/html"))
+        return await response.text() as T;
+      const data: unknown = await response.json().catch(() => null);
+      if (data === null) {
+        serverConnection.reportUnavailable();
+        throw new ApiError(response.status, "BACKEND_UNREACHABLE", serverUnavailableMessage(mutation));
+      }
+      return data as T;
     },
-    { mutation: method !== "GET" },
-  );
+    { mutation },
+  ); } catch (error) {
+    if (error instanceof RequestTimeoutError) serverConnection.reportUnavailable();
+    throw error;
+  }
 }
 
 export function PracticeArchive({
@@ -79,7 +101,10 @@ export function PracticeArchive({
   useEffect(() => {
     if (!storage?.id) return;
     let active = true;
+    let updating = false;
     async function update() {
+      if (updating || serverConnection.getSnapshot().phase !== "ready") return;
+      updating = true;
       try {
         const next = await archiveRequest<StorageStatus>(
           `${base}/${storage!.id}/status`,
@@ -90,6 +115,8 @@ export function PracticeArchive({
         if (active) setStatus(next);
       } catch {
         /* main API displays connection errors; never claim a newer save */
+      } finally {
+        updating = false;
       }
     }
     void update();
@@ -104,6 +131,7 @@ export function PracticeArchive({
   const [editing, setEditing] = useState("");
   const [title, setTitle] = useState("");
   const [deleting, setDeleting] = useState("");
+  const connectionError = useConnectionMessage(error || current?.error || "");
   async function run(action: () => Promise<void>) {
     if (busy) return;
     setBusy(true);
@@ -180,7 +208,7 @@ export function PracticeArchive({
         )}
       </div>
       {(error || current?.error) && (
-        <p role="alert">{uiText(error || current?.error || "")}</p>
+        <p role="alert">{uiText(connectionError)}</p>
       )}
       {items && (
         <Panel title={classroom ? "저장된 수업" : "저장된 실습"}>

@@ -17,6 +17,7 @@ import { LearningGuide, LessonRecap } from "./LearningGuide";
 import { PracticeArchive } from "./PracticeArchive";
 import { useInteraction } from "./useInteraction";
 import { TeamNavigation } from "./TeamNavigation";
+import { useConnectionMessage } from "./ServerConnection";
 
 const pages = [
   { title: "실습 안내", sub: "지갑 → 거래 → 채굴 → 노드 검증", icon: "◈" },
@@ -39,6 +40,7 @@ const flows = [
 export function App({ entry }: { entry?: ReactNode } = {}) {
   const { preference, selectTheme } = useTheme();
   const controller = useLab();
+  const connectionError = useConnectionMessage(controller.error);
   const {
     lab,
     guided,
@@ -357,7 +359,7 @@ export function App({ entry }: { entry?: ReactNode } = {}) {
           )}
           {error && (
             <div className="result bad" role="alert">
-              {error}
+              {connectionError}
               <button className="text-button" onClick={() => setError("")}>
                 닫기
               </button>

@@ -20,9 +20,9 @@ import type {
 } from "./types";
 import { RequestTimeoutError, withRequestTimeout } from "./transport";
 import { uiText } from "../copy";
+import { PREPARING_MESSAGE, serverConnection, serverUnavailableMessage } from "./serverConnection";
 
-export const UNREACHABLE_MESSAGE =
-  "백엔드에 연결할 수 없습니다 Flask 서버 실행 상태를 확인한 뒤 다시 시도하세요";
+export const UNREACHABLE_MESSAGE = PREPARING_MESSAGE;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -44,8 +44,10 @@ async function request<T>(
       mutation: method !== "GET",
     });
   } catch (error) {
-    if (error instanceof RequestTimeoutError)
+    if (error instanceof RequestTimeoutError) {
+      serverConnection.reportUnavailable();
       throw new ApiError(0, "REQUEST_TIMEOUT", error.message);
+    }
     throw error;
   }
 }
@@ -66,7 +68,8 @@ async function readResponse<T>(
       signal,
     });
   } catch {
-    throw new ApiError(0, "BACKEND_UNREACHABLE", UNREACHABLE_MESSAGE);
+    serverConnection.reportUnavailable();
+    throw new ApiError(0, "BACKEND_UNREACHABLE", serverUnavailableMessage(method !== "GET"));
   }
   if (response.status === 204) return undefined as T;
   const data: unknown = await response.json().catch(() => null);
@@ -74,14 +77,24 @@ async function readResponse<T>(
     const error = (
       data as { error?: { code?: string; message?: string } } | null
     )?.error;
-    // 백엔드가 꺼져 있으면 개발 서버의 프록시가 JSON이 아닌 오류를 돌려준다
+    if ([408, 502, 503, 504].includes(response.status)) {
+      serverConnection.reportUnavailable();
+      const known = typeof error?.code === "string" && typeof error.message === "string";
+      throw new ApiError(response.status, known ? error.code! : "BACKEND_UNREACHABLE",
+        known ? `${error.message} ${PREPARING_MESSAGE}` : serverUnavailableMessage(method !== "GET"));
+    }
     if (!error?.code || !error.message)
       throw new ApiError(
         response.status,
-        "BACKEND_UNREACHABLE",
-        UNREACHABLE_MESSAGE,
+        "REQUEST_FAILED",
+        response.status >= 500 ? "서버에서 요청을 처리하지 못했습니다 잠시 후 다시 시도하세요"
+          : "요청을 처리하지 못했습니다 입력 내용과 접속 권한을 확인하세요",
       );
     throw new ApiError(response.status, error.code, error.message);
+  }
+  if (data === null) {
+    serverConnection.reportUnavailable();
+    throw new ApiError(response.status, "BACKEND_UNREACHABLE", serverUnavailableMessage(method !== "GET"));
   }
   return data as T;
 }

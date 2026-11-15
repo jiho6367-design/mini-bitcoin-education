@@ -6,7 +6,7 @@ const startButton = (page: Page) =>
 // 개발 서버가 제공하는 화면 소스(/src/api/...)와 구분해 실제 API 요청만 고른다
 const isApi = (url: URL) => url.pathname.startsWith("/api/");
 
-test("백엔드에 연결할 수 없으면 이유를 안내하고 복구 후 다시 시작할 수 있다", async ({
+test("서버가 준비되면 자동으로 연결하고 실습은 직접 시작한다", async ({
   page,
 }) => {
   // 백엔드가 꺼져 있을 때 개발 서버의 프록시가 돌려주는 것과 같은, JSON이 아닌 오류 응답
@@ -18,13 +18,12 @@ test("백엔드에 연결할 수 없으면 이유를 안내하고 복구 후 다
     }),
   );
   await page.goto("/");
-  await startButton(page).click();
-  await expect(page.getByRole("alert")).toContainText(
-    "백엔드에 연결할 수 없습니다",
-  );
-  await expect(startButton(page)).toBeVisible();
+  await expect(page.getByTestId("server-connection")).toContainText("서버 준비 중");
+  await expect(startButton(page)).toHaveCount(0);
   await expect(page.getByTestId("balance-0")).toHaveCount(0);
   await page.unroute(isApi);
+  await expect(startButton(page)).toBeVisible();
+  await expect(page.getByTestId("server-connection")).toHaveCount(0);
   await startButton(page).click();
   await expect(page.getByTestId("balance-0")).toHaveText("100코인");
   await expect(page.getByRole("alert")).toHaveCount(0);

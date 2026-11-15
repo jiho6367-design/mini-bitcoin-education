@@ -54,7 +54,87 @@ const model = {
   confirmation: null,
   recoveryNotices: new Set(),
   saveProblem: "",
+  serverReady: false,
 };
+const preparingMessage = "서버 준비 중 준비되면 자동으로 연결됩니다";
+let recoveryTimer = null;
+let recoveryRunning = false;
+let recoveryDelay = 2000;
+let recoveryUncertain = false;
+let pageActive = true;
+
+function beginConnectionRecovery(uncertain = false) {
+  model.serverReady = false;
+  recoveryUncertain ||= uncertain;
+  stopMineLoop();
+  stopTamperLoop();
+  notice(navigator.onLine === false
+    ? "인터넷 연결을 기다리는 중 연결되면 자동으로 다시 연결됩니다"
+    : preparingMessage);
+  renderControls();
+  renderSaveStatus();
+  if (navigator.onLine === false) {
+    clearTimeout(recoveryTimer);
+    recoveryTimer = null;
+    return;
+  }
+  if (!pageActive || navigator.onLine === false || recoveryTimer !== null || recoveryRunning) return;
+  recoveryTimer = setTimeout(async () => {
+    recoveryTimer = null;
+    recoveryRunning = true;
+    let retry = false;
+    try {
+      // Read the actual persisted state, never repeat the action whose response was lost.
+      await refreshAll();
+      if (!model.serverReady) return;
+      recoveryDelay = 2000;
+      notice(recoveryUncertain
+        ? "서버 연결이 복구되었습니다 작업이 처리됐을 수 있으므로 현재 상태를 확인하세요"
+        : "서버 연결이 복구되었습니다", "success");
+      recoveryUncertain = false;
+    } catch (error) {
+      retry = error.code === "SERVER_PREPARING" || error instanceof TypeError;
+      if (!retry) notice(error.message, "danger");
+    } finally {
+      recoveryRunning = false;
+      renderControls();
+      renderSaveStatus();
+      if (retry && !model.serverReady && pageActive) {
+        recoveryDelay = Math.max(2000, Math.min(recoveryDelay * 2, 10000));
+        beginConnectionRecovery();
+      }
+    }
+  }, recoveryDelay);
+}
+
+async function readBasicResponse(path, options) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(path, { ...options, signal: controller.signal });
+    const data = await response.json().catch(() => null);
+    const transient = [408, 502, 503, 504].includes(response.status)
+      || (response.ok && data === null)
+      || (response.status >= 500 && !data?.code);
+    if (transient) {
+      const uncertain = options.method !== "GET" && !data?.code;
+      beginConnectionRecovery(uncertain);
+      throw new ApiError(
+        data?.reason || `${preparingMessage}${uncertain ? " 작업이 처리됐을 수 있으므로 현재 상태를 확인하세요" : ""}`,
+        "SERVER_PREPARING", response.status,
+      );
+    }
+    if (data === null) throw new ApiError("서버 응답을 읽지 못했습니다 접속 주소를 확인하세요", "BAD_RESPONSE", response.status);
+    return { response, data };
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    const uncertain = options.method !== "GET";
+    beginConnectionRecovery(uncertain);
+    throw new ApiError(`${preparingMessage}${uncertain ? " 작업이 처리됐을 수 있으므로 현재 상태를 확인하세요" : ""}`, "SERVER_PREPARING", 0);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 const number = (n) =>
   Number.isFinite(n) ? n.toLocaleString("ko-KR") : String(n ?? "—");
 const short = (s, n = 12) => (s ? String(s).slice(0, n) + "…" : "—");
@@ -170,6 +250,8 @@ function rememberMeta(data, response, allowPracticeChange = false) {
   renderSaveStatus();
 }
 async function api(path, method = "GET", payload, options = {}) {
+  if (method !== "GET" && !model.serverReady)
+    throw new ApiError(preparingMessage, "SERVER_PREPARING", 0);
   const epoch = model.epoch;
   const body =
     method === "GET"
@@ -183,19 +265,12 @@ async function api(path, method = "GET", payload, options = {}) {
               }
             : {}),
         };
-  const response = await fetch(path, {
+  const { response, data } = await readBasicResponse(path, {
     method,
     credentials: "same-origin",
     cache: "no-store",
     headers: body ? { "Content-Type": "application/json" } : {},
     body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await response.json().catch(() => {
-    throw new ApiError(
-      "서버 응답 오류 · 새로고침 후 다시 시도하세요",
-      "BAD_RESPONSE",
-      response.status,
-    );
   });
   if (epoch !== model.epoch) throw new Superseded("다른 실습의 응답");
   if (!response.ok)
@@ -238,12 +313,7 @@ function execute(label, action, { queued = false, control = false } = {}) {
             /* Preserve the original actionable error. */
           }
         }
-        notice(
-          error instanceof TypeError
-            ? "서버 연결 실패 · 서버 실행 후 새로고침하세요"
-            : error.message,
-          "danger",
-        );
+        if (error.code !== "SERVER_PREPARING") notice(error.message, "danger");
         $("#save-dot").className = "save-dot failed";
       }
       return false;
@@ -350,6 +420,7 @@ async function refreshAll(retry = 0) {
     notice(recovery);
     model.recoveryNotices.add(`${model.practice?.id}:${recovery}`);
   }
+  model.serverReady = navigator.onLine !== false;
   renderAll();
 }
 function renderSaveStatus(label = "") {
@@ -359,6 +430,10 @@ function renderSaveStatus(label = "") {
     : "실습 불러오는 중";
   $("#save-dot").className =
     `save-dot${model.saveProblem ? " failed" : busy() ? " pending" : ""}`;
+  if (!model.serverReady) {
+    $("#save-status").textContent = navigator.onLine === false ? "인터넷 연결 대기" : "서버 준비 중";
+    return;
+  }
   if (model.saveProblem) {
     $("#save-status").textContent = model.saveProblem;
     return;
@@ -801,7 +876,7 @@ function renderEvents() {
       .join("") || "<li><p>기록 없음</p></li>";
 }
 function renderControls() {
-  const ready = Boolean(model.state);
+  const ready = Boolean(model.state) && model.serverReady;
   const work = activeWork();
   const locked = !ready || busy() || work;
   const set = (id, disabled) => {
@@ -819,8 +894,8 @@ function renderControls() {
   ].forEach((id) => set(id, locked));
   set("#wallet-name", locked);
   set("#node-select", !ready || busy() || work);
-  set("#refresh", busy());
-  set("#practice-new", busy());
+  set("#refresh", !model.serverReady || busy());
+  set("#practice-new", !model.serverReady || busy());
   set("#practice-reset", !ready || busy());
   const validChain = model.chain?.valid !== false;
   set("#tx-prepare", locked || model.wallets.length < 2 || !validChain);
@@ -868,7 +943,7 @@ function renderControls() {
       !$("#tamper-block").value,
   );
   $("#tamper-start").textContent = activeTamper() ? "재채굴 계속" : "변조하기";
-  set("#tamper-cancel", !activeTamper() || model.controlPending);
+  set("#tamper-cancel", !ready || !activeTamper() || model.controlPending);
   set("#chain-sync", locked || !currentNode()?.online);
   set("#invalid-sync", locked || !currentNode()?.online);
   $("#integrity-warning").hidden = !ready || validChain;
@@ -1555,8 +1630,24 @@ window.addEventListener("hashchange", () => {
   if (pages[page]) setPage(page, false);
 });
 window.addEventListener("pagehide", () => {
+  pageActive = false;
+  clearTimeout(recoveryTimer);
+  recoveryTimer = null;
   stopMineLoop();
   stopTamperLoop();
+});
+window.addEventListener("offline", () => beginConnectionRecovery());
+window.addEventListener("online", () => {
+  if (!model.serverReady) {
+    clearTimeout(recoveryTimer);
+    recoveryTimer = null;
+    recoveryDelay = 0;
+    beginConnectionRecovery();
+  }
+});
+window.addEventListener("pageshow", () => {
+  pageActive = true;
+  if (!model.serverReady && !busy()) beginConnectionRecovery();
 });
 setPage(location.hash.slice(1) || "home", false);
 renderControls();

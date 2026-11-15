@@ -1,10 +1,8 @@
+import { serverUnavailableMessage } from "./serverConnection";
+
 export class RequestTimeoutError extends Error {
   constructor(mutation: boolean) {
-    super(
-      mutation
-        ? "서버 응답이 지연되어 기다리기를 멈췄습니다 작업이 처리됐을 수 있으므로 현재 상태를 확인한 뒤 다시 시도하세요"
-        : "서버 응답이 지연되어 기다리기를 멈췄습니다 연결 상태를 확인한 뒤 다시 조회하세요",
-    );
+    super(serverUnavailableMessage(mutation));
     this.name = "RequestTimeoutError";
   }
 }

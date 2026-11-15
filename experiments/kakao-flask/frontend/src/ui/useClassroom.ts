@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { uiText } from "../copy";
+import { serverConnection } from "../api/serverConnection";
 import type {
   LabSnapshot,
   NodeId,
@@ -225,6 +226,7 @@ export function useClassroom(
       ws.onclose = () => {
         if (cancelled || ended) return;
         setConnection("재연결 중 · 조작 대기");
+        serverConnection.reportUnavailable();
         timer = setTimeout(connect, retry);
         retry = Math.min(retry * 2, 5000);
       };

@@ -5,6 +5,7 @@ import { useInteraction } from "./useInteraction";
 import { TransactionTrace } from "./TransactionTrace";
 import { Code, Notice, Panel, Validation } from "./shared";
 import { errorMessage, type LabActions } from "./useLab";
+import { useConnectionMessage } from "./ServerConnection";
 
 function PrivateKey({
   address,
@@ -14,6 +15,7 @@ function PrivateKey({
   reveal: LabActions["privateKey"];
 }) {
   const [text, setText] = useState("");
+  const connectionText = useConnectionMessage(text);
   return (
     <details
       className="private-key"
@@ -30,7 +32,7 @@ function PrivateKey({
         백엔드가 보관하며 이 실습의 서명에만 사용합니다 실제 자산을 보관하는
         지갑이 아닙니다
       </p>
-      <Code>{text || "개인키를 불러오는 중입니다"}</Code>
+      <Code>{connectionText || "개인키를 불러오는 중입니다"}</Code>
     </details>
   );
 }
@@ -72,6 +74,7 @@ export function WalletView({
   const draft = lesson?.draft;
   const signed = lesson?.signed;
   const [error, setError] = useState("");
+  const connectionError = useConnectionMessage(error);
   // 작성 조건을 바꾸면 값이 달라져, 그 전에 보낸 요청의 늦은 응답을 버릴 수 있다
   const generation = useRef(0);
   useEffect(
@@ -421,7 +424,7 @@ export function WalletView({
           </p>
           {error && (
             <div role="alert" className="result bad">
-              {error}
+              {connectionError}
             </div>
           )}
           {submitted && lesson?.validation?.valid && (
