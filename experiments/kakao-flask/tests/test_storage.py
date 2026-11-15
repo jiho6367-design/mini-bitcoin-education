@@ -21,6 +21,14 @@ class StorageTests(unittest.TestCase):
         self.store.close()
         self.folder.cleanup()
 
+    def test_creation_limit_preserves_previously_saved_practices(self):
+        self.store.max_practices = 1
+        self.store.create("kept", {"value": "saved"})
+        with self.assertRaises(StorageError):
+            self.store.create("extra", {"value": "rejected"})
+        self.assertEqual(self.store.read("kept")["payload"], {"value": "saved"})
+        self.assertIsNone(self.store.read("extra"))
+
     def test_lazy_creation_and_durable_round_trip(self):
         self.assertFalse(Path(self.path).exists())
         self.store.create("practice", {"version": 1, "value": "한글"})

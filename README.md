@@ -1,8 +1,8 @@
 # Mini Bitcoin Education Lab
 
-> 이 브랜치의 카카오톡 Flask 2.0 개선판: [실행 안내](experiments/kakao-flask/README.md) · [자막 포함 시연 영상 (3분 44초)](experiments/kakao-flask/static/media/blockchain-demo-ko.mp4)
+> 이 브랜치의 팀 블록체인 Flask 3.0 통합판: [실행 안내](experiments/kakao-flask/README.md) · [자막 포함 시연 영상 (3분 44초)](experiments/kakao-flask/static/media/blockchain-demo-ko.mp4)
 >
-> 단계별 실습 안내, 실습별 저장·복원, 채굴 제어와 검증 규칙을 개선했습니다. 첫 화면의 영상은 이전 UI로 녹화한 기본 원리 시연입니다. 아래는 기존 React 앱의 안내입니다.
+> 개인 본체의 UTXO·경쟁·보관함·협업 기능과 화면을 팀 Flask 서버 하나로 통합했습니다. 실행은 experiments/kakao-flask/Start-Team.cmd 또는 실행 안내를 따릅니다. 아래는 이 브랜치에 남아 있는 초기 React 모델의 기록입니다.
 
 ## 포트폴리오 개요 및 현재 상태
 

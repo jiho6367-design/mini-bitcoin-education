@@ -14,7 +14,7 @@ from operations import OperationError, PracticeManager, TamperJob, chain_fingerp
 from storage import PracticeStore, StorageError
 from transaction import FAUCET, TRANSFER, Transaction
 
-APP_VERSION = "2.0.0"
+APP_VERSION = "3.0.0"
 COOKIE_NAME = "mini_bitcoin_practice"
 MAX_BATCH = 5000
 MAX_INTEGER = 2 ** 53 - 1
@@ -63,7 +63,15 @@ def create_app(config=None, *, database_path=None):
                       DATABASE=database_path or os.environ.get("KAKAO_PRACTICE_DB") or str(Path(app.instance_path) / "practices.sqlite3"))
     if config:
         app.config.update(config)
-    store = PracticeStore(app.config["DATABASE"])
+    app.config.setdefault("TEAM_APP_VERSION", APP_VERSION)
+    app.config.setdefault("TEAM_PUBLIC_URL", os.environ.get("TEAM_PUBLIC_URL", ""))
+    app.config.setdefault("EDUCATION_ENABLED", not app.testing)
+    app.config.setdefault("EDUCATION_RUNNER_ENABLED", not app.testing and os.environ.get("TEAM_EDUCATION_RUNNER", "1") == "1")
+    app.config.setdefault("EDUCATION_FRONTEND", str(Path(__file__).parent / "frontend" / "dist"))
+    if os.environ.get("TEAM_TRUST_PROXY") == "1":
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+    store = PracticeStore(app.config["DATABASE"], max_practices=app.config.get("BASIC_MAX_PRACTICES", 500))
     manager = PracticeManager(store)
     app.extensions["practice_store"] = store
     app.extensions["practice_manager"] = manager
@@ -98,6 +106,10 @@ def create_app(config=None, *, database_path=None):
         if not n.blockchain.is_valid():
             raise OperationError("INVALID_CHAIN", "선택한 체인의 검증이 실패했습니다. 먼저 동기화로 복구하세요.", 409)
         return n
+
+    def pending_space(n):
+        if len(n.mempool) >= app.config.get("BASIC_MAX_PENDING", 300):
+            raise OperationError("MEMPOOL_LIMIT", "대기 거래 한도에 도달했습니다. 먼저 채굴하세요.", 409)
 
     def active_mining(p):
         return any(n.candidate is not None for n in p.network.nodes.values())
@@ -142,7 +154,16 @@ def create_app(config=None, *, database_path=None):
 
     @app.before_request
     def choose_practice():
-        if request.path.startswith("/api/") and request.path != "/api/health":
+        if request.path.startswith("/api/") and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            origin = request.headers.get("Origin")
+            if origin and origin.rstrip("/") != request.host_url.rstrip("/"):
+                message = "다른 출처의 변경 요청은 허용하지 않습니다"
+                if request.path.startswith("/api/education/"):
+                    return jsonify(error={"code": "ORIGIN_REJECTED", "message": message}), 403
+                return jsonify(ok=False, code="ORIGIN_REJECTED", reason=message), 403
+        if (request.endpoint is not None and request.path.startswith("/api/")
+                and not request.path.startswith("/api/education/")
+                and request.path != "/api/health"):
             g.practice = manager.get(request.cookies.get(COOKIE_NAME))
 
     @app.after_request
@@ -177,7 +198,24 @@ def create_app(config=None, *, database_path=None):
 
     @app.get("/")
     def index():
-        return send_from_directory(app.static_folder, "index.html")
+        frontend = Path(app.config["EDUCATION_FRONTEND"])
+        if (frontend / "index.html").is_file():
+            result = send_from_directory(frontend, "index.html")
+            result.headers["Cache-Control"] = "no-cache"
+            return result
+        if app.testing:
+            return send_from_directory(app.static_folder, "index.html")
+        return "통합 화면 빌드가 필요합니다: frontend에서 npm ci && npm run build", 503
+
+    @app.get("/basic")
+    def basic():
+        result = send_from_directory(app.static_folder, "index.html")
+        result.headers["Cache-Control"] = "no-cache"
+        return result
+
+    @app.get("/education-assets/<path:filename>")
+    def education_asset(filename):
+        return send_from_directory(app.config["EDUCATION_FRONTEND"], filename)
 
     @app.get("/architecture")
     def architecture():
@@ -219,6 +257,7 @@ def create_app(config=None, *, database_path=None):
             n = valid_node(p, body.get("node", "A"))
             if not n.online:
                 raise OperationError("NODE_OFFLINE", "오프라인 노드에는 지급 거래를 제출할 수 없습니다.", 409)
+            pending_space(n)
             if len(p.network.wallets) >= 100:
                 raise OperationError("WALLET_LIMIT", "한 실습에서는 최대 100개 지갑을 사용할 수 있습니다.", 409)
             w = p.network.create_wallet(name)
@@ -234,6 +273,7 @@ def create_app(config=None, *, database_path=None):
         def action(p):
             w = wallet(p, body.get("address"))
             n = valid_node(p, body.get("node", "A"))
+            pending_space(n)
             ok, why = n.receive_transaction(Transaction(FAUCET, "", w.address, FAUCET_AMOUNT))
             return {"ok": ok, "reason": why}
         return change(body, action)
@@ -269,6 +309,7 @@ def create_app(config=None, *, database_path=None):
         tx = transaction(body)
         def action(p):
             n = valid_node(p, body.get("node", "A"))
+            pending_space(n)
             ok, why = n.receive_transaction(tx)
             return {"ok": ok, "reason": why, "txid": tx.txid()}
         return change(body, action)
@@ -297,6 +338,8 @@ def create_app(config=None, *, database_path=None):
         body = json_body(empty=True)
         def action(p):
             n = valid_node(p, nid)
+            if len(n.blockchain.chain) - 1 >= app.config.get("BASIC_MAX_HEIGHT", 500):
+                raise OperationError("CHAIN_LIMIT", "기초 실습의 블록 한도에 도달했습니다. 새 실습을 시작하세요.", 409)
             if n.candidate is not None:
                 raise OperationError("ALREADY_MINING", "현재 채굴을 중지한 뒤 새 후보를 만드세요.", 409)
             miner = body.get("miner")
@@ -489,6 +532,23 @@ def create_app(config=None, *, database_path=None):
                 raise OperationError("STALE_REVISION", "현재 실습이 변경됐습니다. 상태를 다시 확인하세요.", 409)
             g.practice = manager.create()
             return response({"ok": True, **state_data(g.practice)})
+
+    if app.config["EDUCATION_ENABLED"]:
+        from education_api import register_education
+        legacy_database = app.config["DATABASE"]
+        education_database = (app.config.get("EDUCATION_DATABASE")
+                              or os.environ.get("TEAM_EDUCATION_DB")
+                              or (":memory:" if legacy_database == ":memory:" else
+                                  str(Path(legacy_database).parent / "education.sqlite3")))
+        if legacy_database != ":memory:" and education_database != ":memory:":
+            legacy_path = Path(legacy_database).resolve()
+            education_path = Path(education_database).resolve()
+            same_file = (legacy_path == education_path or
+                         (legacy_path.exists() and education_path.exists()
+                          and os.path.samefile(legacy_path, education_path)))
+            if same_file:
+                raise ValueError("기초 실습 DB와 통합 실습 DB는 서로 다른 파일이어야 합니다")
+        register_education(app, education_database)
 
     return app
 

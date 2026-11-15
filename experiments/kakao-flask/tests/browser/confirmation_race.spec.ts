@@ -13,7 +13,7 @@ async function state(page: Page): Promise<PracticeState> {
 }
 
 async function openSlowPractice(page: Page) {
-  await page.goto("/");
+  await page.goto("/basic");
   await expect
     .poll(async () =>
       (await page.context().cookies()).some(

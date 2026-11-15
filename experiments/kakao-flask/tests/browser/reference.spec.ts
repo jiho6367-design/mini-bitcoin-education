@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 async function openPractice(page: Page) {
-  await page.goto("/");
+  await page.goto("/basic");
   await expect(page.getByTestId("node-select")).toBeEnabled();
 }
 
@@ -71,7 +71,7 @@ test("the architecture page describes current behavior and inherits the chosen t
   await page
     .getByRole("link", { name: "실습실로 돌아가기 →", exact: true })
     .click();
-  await expect(page).toHaveURL(/\/#home$/);
+  await expect(page).toHaveURL(/\/basic#home$/);
   await expect(page.locator("#page-home")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   expect(errors).toEqual([]);

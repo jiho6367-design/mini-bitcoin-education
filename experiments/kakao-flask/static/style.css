@@ -1602,3 +1602,8 @@ h3 {
   word-break: keep-all;
   overflow-wrap: break-word;
 }
+
+.mode-switch { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 24px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.mode-switch a { padding: 5px 12px; border-radius: 7px; text-decoration: none; font-size: 12px; }
+.mode-switch a[aria-current="page"] { background: var(--accent-soft); font-weight: 700; }
+@media (max-width: 640px) { .mode-switch { padding: 8px 12px; } }

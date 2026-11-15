@@ -64,6 +64,8 @@ try:
 finally:
     server.shutdown()
     server.server_close()
+    if 'education' in app.extensions:
+        app.extensions['education'].close()
     app.extensions['practice_store'].close()
 """
                 process = subprocess.Popen(

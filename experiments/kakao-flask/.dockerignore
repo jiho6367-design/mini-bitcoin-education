@@ -1,0 +1,14 @@
+.venv
+venv
+instance
+__pycache__
+*.pyc
+*.sqlite*
+*.log
+frontend/node_modules
+frontend/dist
+frontend/playwright-report
+frontend/test-results
+tests
+.git
+AGENTS.md

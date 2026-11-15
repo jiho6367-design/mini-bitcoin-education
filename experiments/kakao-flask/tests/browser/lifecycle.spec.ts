@@ -23,7 +23,7 @@ async function state(page: Page): Promise<State> {
   return response.json();
 }
 async function open(page: Page) {
-  await page.goto("/");
+  await page.goto("/basic");
   await expect
     .poll(async () =>
       (await page.context().cookies()).some(

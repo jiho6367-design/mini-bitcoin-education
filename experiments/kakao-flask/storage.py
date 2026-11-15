@@ -20,8 +20,9 @@ def timestamp():
 
 
 class PracticeStore:
-    def __init__(self, path):
+    def __init__(self, path, *, max_practices=500):
         self.path = str(path)
+        self.max_practices = max_practices
         self._db = None
         self._lock = threading.RLock()
 
@@ -72,6 +73,8 @@ class PracticeStore:
             with self._lock:
                 db = self._connect()
                 with db:
+                    if db.execute("SELECT COUNT(*) FROM practices").fetchone()[0] >= self.max_practices:
+                        raise StorageError("저장된 기초 실습 수가 한도에 도달했습니다")
                     db.execute("INSERT INTO practices (id, revision, created_at, saved_at, payload, digest) VALUES (?, 0, ?, ?, ?, ?)",
                                (practice_id, now, now, raw, digest))
         except (sqlite3.Error, OSError) as error:

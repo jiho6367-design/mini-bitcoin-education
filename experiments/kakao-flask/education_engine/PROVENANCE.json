@@ -1,0 +1,148 @@
+{
+  "format_version": 1,
+  "source_label": "Personal Mini Bitcoin Education Lab working tree, copied read-only",
+  "source_head": "42024d71c603dfd1b98b538158e7978b7d820e73",
+  "source_version": "3.2.0",
+  "source_worktree_dirty": true,
+  "source_dirty_copied_files": [
+    "backend/src/mini_bitcoin_backend/service/classroom.py",
+    "backend/src/mini_bitcoin_backend/service/session.py",
+    "backend/src/mini_bitcoin_backend/service/storage.py"
+  ],
+  "copied_files": {
+    "core/__init__.py": {
+      "source_sha256": "8e76f888cc93128afff306ad2e5351cce2ba1d3dfe217845c5378b55eb10585a",
+      "source_bytes": 101,
+      "ported_sha256": "8e76f888cc93128afff306ad2e5351cce2ba1d3dfe217845c5378b55eb10585a"
+    },
+    "core/block.py": {
+      "source_sha256": "fe853c5336df34a42cbaf81fac9901ab8500543e643c3cf42e732bd248faa8fd",
+      "source_bytes": 10285,
+      "ported_sha256": "fe853c5336df34a42cbaf81fac9901ab8500543e643c3cf42e732bd248faa8fd"
+    },
+    "core/crypto.py": {
+      "source_sha256": "f46b8094b9197e69ff676ee619dff0ddd71c776fa9c370ea1fe13ae9f47edbe9",
+      "source_bytes": 4185,
+      "ported_sha256": "f46b8094b9197e69ff676ee619dff0ddd71c776fa9c370ea1fe13ae9f47edbe9"
+    },
+    "core/encoding.py": {
+      "source_sha256": "8f11d841c782f1f505d259fcb1ebbeb5029b4bd1b16accce406815da15b06bfb",
+      "source_bytes": 870,
+      "ported_sha256": "8f11d841c782f1f505d259fcb1ebbeb5029b4bd1b16accce406815da15b06bfb"
+    },
+    "core/errors.py": {
+      "source_sha256": "04ade3e0ce194cf49e9a98b42e0dfc33d25583ec98e621b0a2e636ea9ace90e9",
+      "source_bytes": 944,
+      "ported_sha256": "04ade3e0ce194cf49e9a98b42e0dfc33d25583ec98e621b0a2e636ea9ace90e9"
+    },
+    "core/experiments.py": {
+      "source_sha256": "763c937f762b2df0c742dd1a6adc5d8eb63d428dddb3f22e2f216554ffa552ef",
+      "source_bytes": 5586,
+      "ported_sha256": "763c937f762b2df0c742dd1a6adc5d8eb63d428dddb3f22e2f216554ffa552ef"
+    },
+    "core/lab.py": {
+      "source_sha256": "6a5611c10b3cf4a66201b49f9087e5067550ac5ee0154cd2793042c828e60144",
+      "source_bytes": 11393,
+      "ported_sha256": "6a5611c10b3cf4a66201b49f9087e5067550ac5ee0154cd2793042c828e60144"
+    },
+    "core/mining.py": {
+      "source_sha256": "1290d24af87b7a2b561f2280608fb96b2f48628aed192baca53818fcd661c7ef",
+      "source_bytes": 4337,
+      "ported_sha256": "1290d24af87b7a2b561f2280608fb96b2f48628aed192baca53818fcd661c7ef"
+    },
+    "core/rewards.py": {
+      "source_sha256": "12ba98864f896629cb18068799905c7ebf1075cbca680d8c3fc7e698d8a7d711",
+      "source_bytes": 2510,
+      "ported_sha256": "12ba98864f896629cb18068799905c7ebf1075cbca680d8c3fc7e698d8a7d711"
+    },
+    "core/transaction.py": {
+      "source_sha256": "16d0a409d2e9f6349000d9176163edf518c708e02b3325beb2eccfbfe3216096",
+      "source_bytes": 10503,
+      "ported_sha256": "16d0a409d2e9f6349000d9176163edf518c708e02b3325beb2eccfbfe3216096"
+    },
+    "core/types.py": {
+      "source_sha256": "2bde70237590131853702cc568f5399322a29d700d5ec15051cd4dc1358e390b",
+      "source_bytes": 2831,
+      "ported_sha256": "2bde70237590131853702cc568f5399322a29d700d5ec15051cd4dc1358e390b"
+    },
+    "core/wire.py": {
+      "source_sha256": "6a0c0dde0077e54672818c0e3a62009fceb8875f82d8bca6487a7051fc915e00",
+      "source_bytes": 1685,
+      "ported_sha256": "6a0c0dde0077e54672818c0e3a62009fceb8875f82d8bca6487a7051fc915e00"
+    },
+    "service/__init__.py": {
+      "source_sha256": "28e0070b2fc696adc5d030798c04c49aadc5b54f545af5b57d5314fc1ffc0ff9",
+      "source_bytes": 102,
+      "ported_sha256": "28e0070b2fc696adc5d030798c04c49aadc5b54f545af5b57d5314fc1ffc0ff9"
+    },
+    "service/archive_html.py": {
+      "source_sha256": "601cb082a8296056bae40a6e20a8e934afdf5a52cb5f06692b0d541bfeeecea2",
+      "source_bytes": 6107,
+      "ported_sha256": "601cb082a8296056bae40a6e20a8e934afdf5a52cb5f06692b0d541bfeeecea2"
+    },
+    "service/autosave.py": {
+      "source_sha256": "debca2d9091677ae0874bc9b1b6ea9ae5f395c4c82dcfd7b4c7d39bf4fa135b4",
+      "source_bytes": 5553,
+      "ported_sha256": "debca2d9091677ae0874bc9b1b6ea9ae5f395c4c82dcfd7b4c7d39bf4fa135b4"
+    },
+    "service/backup.py": {
+      "source_sha256": "b8bd0a545e0ecbc2a43c884cdbbd0f2dd16df4f0e22612c26e392fe31a68e6d4",
+      "source_bytes": 1606,
+      "ported_sha256": "b8bd0a545e0ecbc2a43c884cdbbd0f2dd16df4f0e22612c26e392fe31a68e6d4"
+    },
+    "service/checkpoint.py": {
+      "source_sha256": "dd7e46292191b47a840e31453aeddca5a948ceb000880d6bd4e2b9092a37484b",
+      "source_bytes": 7322,
+      "ported_sha256": "dd7e46292191b47a840e31453aeddca5a948ceb000880d6bd4e2b9092a37484b"
+    },
+    "service/classroom.py": {
+      "source_sha256": "5d17a95bf85fe48a5b756262662b50db25151246004fd3d1888951583145d3e5",
+      "source_bytes": 21902,
+      "ported_sha256": "5d17a95bf85fe48a5b756262662b50db25151246004fd3d1888951583145d3e5"
+    },
+    "service/race.py": {
+      "source_sha256": "953f587d7819bb19d9b7b82f522506e7161fea9c59cc2187f08627edadb4b1d9",
+      "source_bytes": 7373,
+      "ported_sha256": "953f587d7819bb19d9b7b82f522506e7161fea9c59cc2187f08627edadb4b1d9"
+    },
+    "service/registry.py": {
+      "source_sha256": "f313fc36b69f18517b7dae23e917460b155773b89c27f02d13bbaf47bfbdc90f",
+      "source_bytes": 3115,
+      "ported_sha256": "f313fc36b69f18517b7dae23e917460b155773b89c27f02d13bbaf47bfbdc90f"
+    },
+    "service/session.py": {
+      "source_sha256": "5b7455b942f2dd1632c8af8a35e90d52bdc068a6cbd3729c711d46f87ef17d15",
+      "source_bytes": 12041,
+      "ported_sha256": "5b7455b942f2dd1632c8af8a35e90d52bdc068a6cbd3729c711d46f87ef17d15"
+    },
+    "service/snapshot.py": {
+      "source_sha256": "451a2843459f8c6e0158f3b35efe3f074e2506857c79dcbb9e878e39ac966635",
+      "source_bytes": 4866,
+      "ported_sha256": "451a2843459f8c6e0158f3b35efe3f074e2506857c79dcbb9e878e39ac966635"
+    },
+    "service/storage.py": {
+      "source_sha256": "1d108b8279c4b9fa89a4ee6e4d9e5800a5cd8cae5a9b88d3fccad9bb9bf2428e",
+      "source_bytes": 10062,
+      "ported_sha256": "099af20e37de7b466b15055a545b43a03007b643e547a1b54352f7b4c399a3b6"
+    },
+    "api/__init__.py": {
+      "source_sha256": "be778fc0fdc43e8f41620276199829f02b15d87a12ab21cda1d5b4960df9bacd",
+      "source_bytes": 40,
+      "ported_sha256": "01591895095e9cca46023a989671fd72e7b31a624e1101b5c221903398973da5"
+    },
+    "api/schemas.py": {
+      "source_sha256": "619e00cef7473032462c25e976782c8f277e8c25a329e04b71ce07b53de9b352",
+      "source_bytes": 1442,
+      "ported_sha256": "619e00cef7473032462c25e976782c8f277e8c25a329e04b71ce07b53de9b352"
+    }
+  },
+  "port_adjustments": [
+    "Minimal package __init__ defines the source version without distribution metadata lookup or application startup",
+    "service/storage.py default_path uses TEAM_EDUCATION_DB or this project instance/education.sqlite3",
+    "FastAPI app and transport modules were deliberately excluded; the Flask adapter owns transport",
+    "No personal database, runtime token, teacher secret, or AGENTS.md was copied",
+    "service/storage.py closes backup and read-only restore connections explicitly to release Windows file locks",
+    "api/__init__.py describes the transport-independent schemas rather than a FastAPI server",
+    "service/storage.py validates existing archive table shapes before writes so legacy account-model databases are rejected unchanged"
+  ]
+}
