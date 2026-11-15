@@ -36,6 +36,7 @@ const steps: GuideStep[] = [
   {
     title: "거래 만들기",
     instructions: [
+      <>이미 대기 중인 거래가 있으면 새로 작성하지 말고 <strong>4단계</strong>에서 이어가세요</>,
       <>A 담당이 <strong>팀 A 초기 지갑</strong>에서 받는 팀 <strong>B</strong>를 선택하세요</>,
       <>잔액 범위 안에서 예를 들어 <strong>송금액 10 · 수수료 1</strong>을 입력하세요</>,
       <><strong>1. 거래 작성 → 2. 전자서명 → 3. 검증·전파</strong> 순서로 누르세요</>,
@@ -47,7 +48,7 @@ const steps: GuideStep[] = [
   {
     title: "거래 전달 확인",
     instructions: [
-      <>거래 화면의 <strong>관찰 거래</strong>에서 방금 만든 거래를 선택하세요</>,
+      <>거래 화면의 <strong>관찰 거래</strong>에서 방금 만들었거나 이전에 대기 중이던 거래를 선택하세요</>,
       <>A·B·C 모두 <strong>Mempool 대기</strong>인지 확인하세요 이미 채굴했다면 블록 포함 표시를 확인하세요</>,
     ],
     check: "아직 미수신·미등록인 노드가 있으면 자동 전달 설정을 확인하고 잠시 기다리세요",

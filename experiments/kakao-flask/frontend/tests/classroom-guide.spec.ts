@@ -99,6 +99,12 @@ test("팀원 둘이 화면 가이드대로 실제 송금과 채굴·전파를 �
     await a.getByRole("button", { name: "2. 전자서명", exact: true }).click();
     const signed = (await (await signedResponse).json()).signed as { id: string };
     await a.getByRole("button", { name: "3. 검증·전파", exact: true }).click();
+    // Reopening the saved room keeps the pending transaction and starts the guide at roles.
+    await a.reload();
+    await expect(a.getByText("연결됨", { exact: true })).toBeVisible();
+    await expect(guide(a)).toHaveAttribute("data-current-step", "1");
+    await step(a, 3, "거래 만들기").click();
+    await expect(guide(a).getByText(/이미 대기 중인 거래가 있으면 새로 작성하지 말고/)).toBeVisible();
     await step(a, 4, "거래 전달 확인").click();
     await expect.poll(async () => {
       const current = await roomState(a, code);
