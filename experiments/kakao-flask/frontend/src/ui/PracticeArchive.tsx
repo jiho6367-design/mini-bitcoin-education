@@ -185,8 +185,8 @@ export function PracticeArchive({
       {items && (
         <Panel title={classroom ? "저장된 수업" : "저장된 실습"}>
           <p>
-            서버 PC에 자동 저장됩니다 이어 하기는 멈춘 상태로 열립니다 HTML은
-            서버 없이 결과를 보는 파일입니다
+            실습 기록은 서버에 자동 저장됩니다 이어 하기는 멈춘 상태로 열립니다
+            HTML은 결과 확인용 파일입니다
           </p>
           <button
             className="text-button"

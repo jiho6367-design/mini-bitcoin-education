@@ -1,6 +1,6 @@
 # 팀 Flask 배포 안내
 
-팀 전용 브랜치 `codex/kakao-flask-run`의 기본 공개 배포는 **Render Free + Neon Free**입니다. Flask·실시간 연결은 Render, 기초·통합·공동 기록과 소유자 정보는 Neon PostgreSQL에 저장합니다. 로컬 실행은 기존 SQLite를 사용합니다. 공개 호스팅 생성·실제 HTTPS/WSS·재시작 검사는 완료 후 검증 기록에 따로 표시합니다.
+팀 전용 브랜치 `codex/kakao-flask-run`을 **Render Free + Neon Free**로 배포했습니다. 공개 주소는 **https://kakao-team-flask.onrender.com**입니다. Flask·실시간 연결은 Render, 기초·통합·공동 기록과 소유자 정보는 Neon PostgreSQL에 저장합니다. 로컬 실행은 기존 SQLite를 사용합니다. 실제 HTTPS/WSS와 Render 재시작 뒤 복원을 확인했으며 결과는 검증 기록에 있습니다.
 
 ## 실행 구조
 
@@ -9,7 +9,7 @@
                                                    ├ 통합 React 화면
                                                    ├ 기초 화면
                                                    ├ HTTP API·실시간 수업
-                                                   └ 영속 볼륨의 DB 두 개
+                                                   └ Neon PostgreSQL (기초·통합 스키마)
 ```
 
 교실의 활성 방·채굴 실행기·활성 실습은 한 프로세스가 관리합니다. `gunicorn.conf.py`의 worker 수를 늘리거나 여러 인스턴스로 자동 확장하지 않습니다. 현재 구조에서 다중 프로세스는 같은 실습의 작업 중지·캐시 충돌을 일으킬 수 있습니다. 많은 서버로 확장하려면 상태와 실행기를 별도 공유 서비스로 분리해야 합니다.
@@ -91,9 +91,9 @@ SQLite 로컬 배포는 `python -m education_engine.service.backup`으로 통합
 
 ## 확인 근거와 남은 배포 검사
 
-- 현재 수행: Windows 단일 Flask HTTP·실제 WebSocket, 두 엔진 회귀 검사, Chrome·Edge 전체 실습과 모드 이동, Linux Docker·Gunicorn·같은 볼륨의 새 컨테이너 복원
-- 남은 검사: 실제 Render 호스팅의 HTTPS/WSS·영속 볼륨·재시작·백업 복구·부하
-- Render 생성 화면에 서버·디스크를 구성했으며, 유료 리소스 생성·결제와 공개 서비스 생성은 아직 하지 않음
+- 현재 수행: Windows 두 엔진 회귀 검사, Chrome·Edge 전체 실습, 실제 Neon PostgreSQL 18 검사 8개, Linux 볼륨 없는 앱 교체·DB 복원, 공개 HTTPS/WSS·보안 쿠키·Render 실제 재시작 복원
+- 남은 범위: 대규모 부하·장기 운영·PostgreSQL 운영자 백업의 별도 복구 훈련
+- Render 서비스 Free, Neon 프로젝트 Free, Render Hobby 청구액 $0.00·결제 카드 없음 확인
 
 Flask 개발 서버를 운영에 사용하지 않는 원칙은 [Flask 공식 배포 안내](https://flask.palletsprojects.com/en/stable/deploying/), threaded Gunicorn의 WebSocket 구성은 [Flask-Sock 공식 문서](https://flask-sock.readthedocs.io/en/latest/web_servers.html)를 참고했습니다. [Render 디스크 안내](https://render.com/docs/disks)는 기본 파일시스템이 임시이며 영속 디스크가 있는 서비스는 단일 인스턴스로 제한됨을 설명합니다. 플랫폼 요금은 실제 생성 화면에서 다시 확인합니다.
 

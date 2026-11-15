@@ -146,7 +146,7 @@ export function App({ entry }: { entry?: ReactNode } = {}) {
           ))}
         </nav>
         <div className="sidebar-note">
-          <span className="mini-dot" /> 로컬 교육용 환경
+          <span className="mini-dot" /> 블록체인 실습 환경
           <p>모의 노드 3개 · 실제 자산 연결 없음</p>
         </div>
         <div className="sidebar-footer">

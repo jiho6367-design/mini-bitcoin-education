@@ -2,6 +2,10 @@
 
 개인 프로젝트에서 만든 UTXO·거래 추적·경쟁 채굴·저장·공동 수업 기능과 화면을 팀 Flask 앱 안으로 가져온 통합판입니다. 개인 프로젝트를 실행하거나 그 DB를 참조하지 않으며, 팀 저장소의 코드와 DB만 사용합니다.
 
+**[무료 온라인 실습실 열기](https://kakao-team-flask.onrender.com)** · [공동 실습 참여](https://kakao-team-flask.onrender.com/?classroom=join) · [교사 화면](https://kakao-team-flask.onrender.com/?classroom=teacher)
+
+Render Free와 Neon Free를 사용하며 결제 카드를 등록하지 않았습니다. 온라인 기록은 PostgreSQL에 저장해 서버 재시작 뒤에도 유지합니다. 한동안 쓰지 않았을 때 첫 접속은 약 1분이 걸릴 수 있습니다. 공동 수업은 교사가 방을 만들고 화면의 참여 링크를 팀원에게 공유합니다.
+
 ## 실행
 
 Windows에서는 Python 3.13과 Node.js 24가 필요합니다. 이 폴더의 **Start-Team.cmd**를 실행하면 팀 전용 가상환경·화면 빌드를 준비한 뒤 Flask 서버를 시작합니다. 기본 주소는 `http://127.0.0.1:5003`이며 Ctrl+C로 종료합니다. 포트가 이미 사용 중이면 기존 프로세스를 종료하지 않고 안내합니다.
@@ -62,6 +66,7 @@ $env:PORT = '5003'
 통합 실습은 같은 브라우저의 서명된 소유자 쿠키로 보관함 접근을 제한합니다. 쿠키를 지우면 이전 개인 보관함에 접근할 수 없으므로 결과 HTML·운영자 백업을 별도로 보관하세요. 공동 수업 권한은 참가 토큰으로 확인하며 서버 재시작 후 교사가 저장 수업을 새 방으로 복원·재배정합니다. 계정 로그인 서비스는 아닙니다.
 
 운영 중 통합 DB의 일관된 백업과 서버 종료 후 복원을 지원합니다.
+아래 명령은 로컬 SQLite용입니다. 공개 Neon 배포에는 PostgreSQL 백업을 사용합니다.
 
 ```powershell
 .\.venv\Scripts\python.exe -m education_engine.service.backup backup instance/education-backup.sqlite3
@@ -85,7 +90,7 @@ npm.cmd run test:e2e:single
 
 ## 운영 배포
 
-Dockerfile·단일 프로세스 Gunicorn 설정을 제공하며 절차와 한계는 [배포 안내](DEPLOYMENT.md)를 따릅니다. `app.py`의 Flask 개발 서버는 로컬 확인용입니다. 외부 호스팅 계정 생성·실제 인터넷 배포는 이번 통합 작업에서 수행하지 않았습니다.
+단일 프로세스 Gunicorn과 외부 PostgreSQL로 무료 공개 배포했습니다. 실제 HTTPS·WSS와 Render 재시작 전후 기록·소유권 복원을 확인했습니다. 절차·무료 한도·수업 복구 방법은 [배포 안내](DEPLOYMENT.md), 검사 결과는 [검증 기록](VERIFICATION.md)에 있습니다. `app.py`의 Flask 개발 서버는 로컬 확인용입니다.
 
 이 앱은 하나의 서버 안에서 A/B/C 모의 노드를 실행하는 교육 모델입니다. 실제 Bitcoin P2P 노드·실제 자산 지갑·상시 다중 서버 서비스가 아닙니다. 기초 모드는 잔액·순번, 통합 모드는 교육용 UTXO를 사용하며 주소·직렬화·발행·난이도는 실제 Bitcoin과 다릅니다.
 

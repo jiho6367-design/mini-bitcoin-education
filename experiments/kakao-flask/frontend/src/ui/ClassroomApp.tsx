@@ -194,9 +194,7 @@ export function ClassroomApp({
                     </select>
                   </label>
                   <p>
-                    시작할 때 열린 교사 준비 화면에서 비밀코드를 복사하세요
-                    서버를 직접 실행했다면 실행 창에서 확인할 수 있습니다 난이도는 방 생성 때
-                    정하며, 바꾸려면 새 방을 만듭니다
+                    교사용 비밀코드를 입력하세요 난이도는 방을 만들 때 정합니다
                   </p>
                 </>
               ) : (
@@ -225,8 +223,8 @@ export function ClassroomApp({
               </button>
             </form>
             <p>
-              교사 1명 · 팀 대표 3명 · 관찰자 최대 26명 수업 기록은 서버 PC에
-              자동 저장됩니다 서버 종료 후에도 교사가 다시 열 수 있습니다
+              교사 1명 · 팀 대표 3명 · 관찰자 최대 26명
+              수업 기록은 서버에 자동 저장됩니다
             </p>
             {teacherForm && (
               <PracticeArchive
@@ -541,8 +539,7 @@ export function ClassroomApp({
         )}
       </main>
       <footer>
-        무료 수업용 · 실습 기록은 서버 PC에 저장됩니다 서버 종료 시 접속은
-        끊어집니다
+        학습용 모의 환경 · 실습 기록은 서버에 자동 저장됩니다
       </footer>
     </div>
   );
