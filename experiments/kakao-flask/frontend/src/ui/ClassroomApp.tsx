@@ -14,6 +14,7 @@ import type { ThemePreference } from "../theme";
 import { TeamNavigation } from "./TeamNavigation";
 import { uiText } from "../copy";
 import { useConnectionMessage } from "./ServerConnection";
+import { TeamPracticeGuide, type GuidePage } from "./TeamPracticeGuide";
 import {
   ROOM_KEY,
   roomRequest,
@@ -88,6 +89,17 @@ export function ClassroomApp({
   const disabled = room.busy || !!room.pending || room.connection !== "연결됨";
   const learningDisabled =
     disabled || !!room.state?.storage?.error || !!room.state?.limited;
+  function focusGuideTarget(id: string) {
+    requestAnimationFrame(() => {
+      const target = document.getElementById(id);
+      target?.scrollIntoView({ block: "start", behavior: "instant" });
+      target?.focus({ preventScroll: true });
+    });
+  }
+  function navigateFromGuide(next: GuidePage) {
+    setPage(next);
+    focusGuideTarget("team-practice-content");
+  }
   async function enter() {
     if (joining) return;
     if (
@@ -398,16 +410,26 @@ export function ClassroomApp({
             )}
             {room.state && (
               <>
+                {teamMode ? (
+                  <TeamPracticeGuide
+                    page={page}
+                    team={me?.team || null}
+                    automatic={room.state.automatic}
+                    connected={room.connection === "연결됨"}
+                    onNavigate={navigateFromGuide}
+                    onRoles={() => focusGuideTarget("team-role-selection")}
+                  />
+                ) : (
                 <Notice>
-                  {teamMode
-                    ? "거래 → 채굴 → 전파 순서로 함께 진행하세요 팀 A·B·C를 직접 맡으면 해당 지갑과 채굴에 참여할 수 있습니다"
-                    : teacher
+                  {teacher
                     ? "교사: 참가자 목록에서 세 팀 대표를 지정하세요 거래를 전달한 뒤 후보 준비 → 대표의 채굴 참여 → 전체 시작 순으로 진행합니다"
                     : me?.team
                       ? `팀 ${me.team} 대표입니다 거래 작성 → 전자서명 → 검증·전파를 누르세요 채굴 화면에서는 교사가 후보를 준비한 뒤 내 채굴 참여를 켭니다`
                       : "관찰자입니다 거래와 채굴 결과를 볼 수 있습니다 직접 실습하려면 교사에게 팀 대표 지정을 요청하세요"}
                 </Notice>
+                )}
                 {teamMode && (
+                  <section id="team-role-selection" tabIndex={-1} aria-label="팀 역할 선택">
                   <Panel title="내 팀 선택">
                     <div className="button-row">
                       {NODE_IDS.map((team) => {
@@ -427,6 +449,7 @@ export function ClassroomApp({
                     </div>
                     <p>공통 채굴·전파는 누구나 조작할 수 있습니다 팀 대표는 한 명씩 맡습니다</p>
                   </Panel>
+                  </section>
                 )}
                 <Notice>
                   각 팀의 지갑은 서명하고 노드는 검증합니다 채굴 계산은 공유
@@ -508,7 +531,13 @@ export function ClassroomApp({
                       {p}
                     </button>
                   ))}
+                  {teamMode && (
+                    <button className="text-button" onClick={() => focusGuideTarget("team-practice-guide")}>
+                      가이드로 돌아가기
+                    </button>
+                  )}
                 </nav>
+                <section id="team-practice-content" className="team-practice-content" tabIndex={-1} aria-label={`${page} 실습 화면`}>
                 <div hidden={page !== "거래"}>
                   <TeamWallet
                     key={`${credential.runId}:${credential.participantId}:${me?.assignmentId ?? `${me?.role}:${me?.team}`}`}
@@ -618,6 +647,7 @@ export function ClassroomApp({
                     </ol>
                   </Panel>
                 )}
+                </section>
               </>
             )}
           </>

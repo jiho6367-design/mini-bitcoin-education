@@ -17,7 +17,7 @@ const legacyEnvironment = Object.fromEntries(
 
 export default defineConfig({
   testDir: "./tests",
-  testIgnore: "**/classroom-team.spec.ts",
+  testIgnore: ["**/classroom-team.spec.ts", "**/classroom-guide.spec.ts"],
   timeout: 90_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,

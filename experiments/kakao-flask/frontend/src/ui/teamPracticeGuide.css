@@ -1,0 +1,136 @@
+.team-practice-guide {
+  min-width: 0;
+  scroll-margin-top: 20px;
+}
+.team-practice-guide:focus-visible,
+#team-role-selection:focus-visible,
+.team-practice-content:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+#team-role-selection,
+.team-practice-content {
+  scroll-margin-top: 20px;
+}
+.team-practice-content {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.team-guide-header,
+.team-guide-actions,
+.team-guide-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.team-guide-header h2 {
+  margin: 0 0 3px;
+}
+.team-guide-position,
+.team-guide-intro {
+  color: var(--muted);
+  font-size: 12px;
+}
+.team-guide-intro {
+  margin: 16px 0 12px;
+}
+.team-guide-nav {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+.team-guide-nav .team-guide-step-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 10px;
+  min-width: 0;
+  min-height: 48px;
+  background: var(--surface-subtle);
+  border-color: var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: left;
+  word-break: keep-all;
+}
+.team-guide-step-button > span {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.team-guide-nav .team-guide-step-button[aria-current="step"] {
+  background: var(--selected-bg);
+  border-color: var(--selected-border);
+  color: var(--accent);
+}
+.team-guide-nav .team-guide-step-button:hover:not(:disabled) {
+  background: var(--selected-bg);
+  color: var(--accent);
+}
+.team-guide-step {
+  padding: 18px 0 8px;
+}
+.team-guide-step h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+.team-guide-step ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.team-guide-step li + li {
+  margin-top: 6px;
+}
+.team-guide-check {
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  margin: 14px 0 4px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-subtle);
+  font-size: 12px;
+}
+.team-guide-state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 8px 0 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.team-guide-actions {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.team-guide-pagination {
+  justify-content: flex-end;
+}
+@media (max-width: 850px) {
+  .team-guide-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .team-guide-header {
+    align-items: flex-start;
+  }
+  .team-guide-header > button {
+    padding: 10px 12px;
+  }
+  .team-guide-nav .team-guide-step-button {
+    padding: 8px;
+    min-height: 54px;
+    gap: 5px;
+  }
+  .team-guide-actions > button,
+  .team-guide-pagination {
+    width: 100%;
+  }
+  .team-guide-pagination > button {
+    flex: 1;
+    min-width: 0;
+  }
+}
