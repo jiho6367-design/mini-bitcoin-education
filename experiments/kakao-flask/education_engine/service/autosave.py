@@ -137,7 +137,8 @@ def durable_room(method):
                 if error.code == "SAVE_FAILED":
                     restore(self.session, before, fresh=False, validate=False)
                     self.__dict__.update(attrs)
-                    self.teacher = next(p for p in self.people.values() if p.role == "teacher")
+                    self.teacher = (next(iter(self.people.values()), None) if getattr(self, "team_mode", False)
+                                    else next((p for p in self.people.values() if p.role == "teacher"), None))
                     pause(self.session)
                     self.automatic = False
                     self.storage_error = error.message

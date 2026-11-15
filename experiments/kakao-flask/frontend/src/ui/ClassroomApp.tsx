@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { PracticeArchive } from "./PracticeArchive";
 import qrcode from "qrcode-generator";
 import {
@@ -16,6 +16,7 @@ import { uiText } from "../copy";
 import {
   ROOM_KEY,
   roomRequest,
+  teamRequest,
   savedCredential,
   useClassroom,
   type Credential,
@@ -25,21 +26,27 @@ import {
 export function ClassroomApp({
   mode,
   publicUrl,
+  defaultTeamCode,
   personal,
   back,
 }: {
   mode: string;
   publicUrl: string;
+  defaultTeamCode?: string;
   personal: boolean;
   back: () => void;
 }) {
   const [credential, setCredential] = useState<Credential | null>(
     savedCredential,
   );
-  const [teacherForm, setTeacherForm] = useState(mode === "teacher");
+  const credentialRef = useRef(credential);
+  credentialRef.current = credential;
+  const [stableTeamCode, setStableTeamCode] = useState(defaultTeamCode || "");
+  const [teacherForm, setTeacherForm] = useState(mode === "teacher" && !defaultTeamCode);
+  const [teamForm, setTeamForm] = useState(mode === "team" || (mode === "teacher" && !!defaultTeamCode));
   const [name, setName] = useState("");
   const [code, setCode] = useState(
-    new URLSearchParams(location.search).get("room") || "",
+    new URLSearchParams(location.search).get("room") || defaultTeamCode || "",
   );
   const [secret, setSecret] = useState("");
   const [difficulty, setDifficulty] = useState(1);
@@ -47,30 +54,53 @@ export function ClassroomApp({
   const [joinError, setJoinError] = useState("");
   const [page, setPage] = useState("거래");
   const [removing, setRemoving] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [savedAt, setSavedAt] = useState<string | null>(null);
   const { preference, selectTheme } = useTheme();
-  const room = useClassroom(credential);
+  const updateCredential = useCallback((next: Credential | null, message = "") => {
+    try {
+      if (next) sessionStorage.setItem(ROOM_KEY, JSON.stringify(next));
+      else sessionStorage.removeItem(ROOM_KEY);
+    } catch { /* reconnect still works while this page is open */ }
+    if (!next && credentialRef.current) setCode(credentialRef.current.code);
+    if (next?.teamMode) setStableTeamCode(next.code);
+    setCredential(next);
+    setJoinError(message);
+    setPage("거래");
+    setRemoving(null);
+    if (!next) {
+      setTeacherForm(false);
+      setTeamForm(false);
+    }
+  }, []);
+  const room = useClassroom(credential, updateCredential);
   const me = room.state?.participants.find(
     (p) => p.id === credential?.participantId,
   );
-  const teacher = me?.role === "teacher";
+  const teamMode = !!(credential?.teamMode || room.state?.teamMode);
+  const teacher = !teamMode && me?.role === "teacher";
+  const controls = teamMode || teacher;
   const disabled = room.busy || !!room.pending || room.connection !== "연결됨";
   const learningDisabled =
     disabled || !!room.state?.storage?.error || !!room.state?.limited;
   async function enter() {
     if (joining) return;
     if (
-      !teacherForm &&
+      !teacherForm && !teamForm &&
       !/^[A-HJ-NP-Z2-9]{8}$/.test(code.trim().toUpperCase())
     ) {
       setJoinError(
-        "참가용 방 코드는 영문·숫자 8자리입니다 긴 교사용 비밀코드가 아니라, PC에서 방 생성 후 표시된 코드를 입력하거나 QR을 스캔하세요",
+        "방 코드 8자리를 입력하거나 공유 링크로 접속하세요",
       );
       return;
     }
     setJoining(true);
     setJoinError("");
     try {
-      const c = await roomRequest<Credential>(
+      const c = teamForm
+        ? await teamRequest<Credential>("/rooms", { name, difficulty: 1 })
+        : await roomRequest<Credential>(
         teacherForm ? "/rooms" : `/rooms/${code.trim().toUpperCase()}/join`,
         teacherForm ? { secret, name, difficulty } : { name },
       );
@@ -82,6 +112,9 @@ export function ClassroomApp({
         );
       }
       setCredential(c);
+      if (c.teamMode) setStableTeamCode(c.code);
+      setCode(c.code);
+      history.replaceState(null, "", `${location.pathname}?classroom=join&room=${c.code}`);
       setSecret("");
     } catch (e) {
       setJoinError(e instanceof Error ? e.message : "접속 실패");
@@ -90,6 +123,7 @@ export function ClassroomApp({
     }
   }
   function forget(nextTeacher = false) {
+    const previousCode = teamMode ? credential?.code || code : "";
     try {
       sessionStorage.removeItem(ROOM_KEY);
     } catch {
@@ -97,15 +131,16 @@ export function ClassroomApp({
     }
     setCredential(null);
     setTeacherForm(nextTeacher);
+    setTeamForm(false);
     setPage("거래");
     setRemoving(null);
-    setCode("");
+    setCode(previousCode);
     setSecret("");
     setJoinError("");
     history.replaceState(
       null,
       "",
-      `${location.pathname}?classroom=${nextTeacher ? "teacher" : "join"}`,
+      `${location.pathname}?classroom=${nextTeacher ? "teacher" : "join"}${previousCode ? `&room=${previousCode}` : ""}`,
     );
   }
   return (
@@ -116,7 +151,7 @@ export function ClassroomApp({
       <header className="classroom-header">
         <div>
           <strong>팀 블록체인 · 공동 실습</strong>
-          <p>교사·대표·관찰자 실습</p>
+          <p>{teacherForm || teacher ? "교사·대표·관찰자 실습" : "같은 링크에서 함께 이어가는 실습"}</p>
         </div>
         <TeamNavigation classroom />
         <label>
@@ -133,20 +168,26 @@ export function ClassroomApp({
       </header>
       <main id="classroom-main" tabIndex={-1}>
         {!credential ? (
-          <Panel title={teacherForm ? "교사 방 만들기" : "공동 실습 참여"}>
+          <Panel title={teacherForm ? "교사 방 만들기" : teamForm ? "팀 실습 시작" : "공동 실습 참여"}>
             <div className="button-row">
               <button
                 className="secondary"
-                onClick={() => setTeacherForm(false)}
+                onClick={() => { setTeacherForm(false); setTeamForm(false); }}
               >
                 공동 실습 참여
               </button>
               <button
                 className="secondary"
-                onClick={() => setTeacherForm(true)}
+                onClick={() => { setTeacherForm(false); setTeamForm(true); }}
+              >
+                팀 실습 시작
+              </button>
+              {!stableTeamCode && <button
+                className="text-button"
+                onClick={() => { setTeacherForm(true); setTeamForm(false); }}
               >
                 교사 방 만들기
-              </button>
+              </button>}
               {personal && (
                 <button className="secondary" onClick={back}>
                   통합 실습
@@ -197,7 +238,7 @@ export function ClassroomApp({
                     교사용 비밀코드를 입력하세요 난이도는 방을 만들 때 정합니다
                   </p>
                 </>
-              ) : (
+              ) : !teamForm ? (
                 <label>
                   방 코드
                   <input
@@ -212,19 +253,17 @@ export function ClassroomApp({
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                   />
                   <small id="room-code-help">
-                    참가용 영문·숫자 8자리입니다 기호가 있는 긴 교사용
-                    비밀코드는 여기에 넣지 않습니다 QR로 접속하면 자동
-                    입력됩니다
+                    공유 링크나 QR로 접속하면 자동 입력됩니다
                   </small>
                 </label>
-              )}
+              ) : <p>교사 없이 팀원끼리 실습합니다 기존 팀 기록을 이어서 엽니다</p>}
               <button disabled={joining}>
-                {joining ? "접속 중…" : teacherForm ? "방 생성" : "입장"}
+                {joining ? "접속 중…" : teacherForm ? "방 생성" : teamForm ? "팀 실습 시작" : "입장"}
               </button>
             </form>
             <p>
-              교사 1명 · 팀 대표 3명 · 관찰자 최대 26명
-              수업 기록은 서버에 자동 저장됩니다
+              {teacherForm ? "교사 1명 · 팀 대표 3명 · 관찰자 최대 26명" : "팀 A·B·C를 직접 맡고 함께 조작할 수 있습니다"}
+              {" "}기록은 자동 저장되며 같은 링크로 이어갑니다
             </p>
             {teacherForm && (
               <PracticeArchive
@@ -265,8 +304,26 @@ export function ClassroomApp({
                     ? "교사"
                     : me?.team
                       ? `팀 ${me.team} 대표`
-                      : "관찰자"}
+                      : teamMode ? "팀원" : "관찰자"}
                 </span>
+                {teamMode && (
+                  <button
+                    className="secondary"
+                    disabled={disabled || saving}
+                    onClick={async () => {
+                      setSaving(true);
+                      setSaveError("");
+                      try {
+                        const result = await teamRequest<{ savedAt: string }>(`/rooms/${credential.code}/save`, {}, credential.token);
+                        setSavedAt(result.savedAt);
+                      } catch (error) {
+                        setSaveError(error instanceof Error ? error.message : "저장에 실패했습니다");
+                      } finally { setSaving(false); }
+                    }}
+                  >
+                    {saving ? "저장 중…" : "지금 저장"}
+                  </button>
+                )}
                 <button
                   className="secondary"
                   disabled={disabled}
@@ -286,13 +343,13 @@ export function ClassroomApp({
                 )}
               </div>
               <p>
-                휴대폰에 입력할 참가용 방 코드:{" "}
-                <strong>{credential.code}</strong> (영문·숫자 8자리, 기호 없음).
-                교사용 비밀코드와 다릅니다 아래 QR을 이용하면 직접 입력할
-                필요가 없습니다
+                방 코드 <strong>{credential.code}</strong>
+                {teamMode ? " · 서버가 재시작돼도 이 링크에서 기록을 이어갑니다" : " · 아래 QR로 참가할 수 있습니다"}
               </p>
+              {teamMode && <p>{savedAt || room.state?.storage?.savedAt ? "저장됨 · 같은 링크로 이어가기" : "변경 내용 자동 저장"}</p>}
+              {saveError && <p role="alert">{saveError}</p>}
             </Panel>
-            {teacher && (
+            {controls && (
               <ShareRoom code={credential.code} publicUrl={publicUrl} />
             )}
             {room.error && (
@@ -316,21 +373,21 @@ export function ClassroomApp({
             )}
             {credential && room.connection !== "연결됨" && room.connection !== "수업 종료" && (
               <Notice>
-                서버 연결을 복구하고 있습니다 마지막으로 받은 상태를 표시하며 조작은 멈춥니다
-                교사 PC·인터넷·공유 주소가 유지되는지 확인하세요 연결이 돌아오면 역할과 상태를 다시 받습니다
+                서버 연결을 복구하고 있습니다 연결되면 저장된 기록과 현재 역할을 다시 받습니다
               </Notice>
             )}
             {room.state?.storage?.error && (
               <Notice>
-                저장 오류로 실습 조작을 멈췄습니다 교사는 PC의 디스크 공간·저장 권한을
-                확인한 뒤 위의 ‘지금 저장’을 누르세요 저장 복구 후 채굴 참여와 실행을 직접 재개합니다
+                저장 오류로 조작을 멈췄습니다 연결과 저장이 복구되면 실습을 다시 시작하세요
               </Notice>
             )}
             {room.state?.limited && (
               <Notice>
                 이 수업의 실행 한도에 도달했습니다 현재 결과는 보관할 수 있지만 같은 기록을
                 이어 열어도 한도는 초기화되지 않습니다
-                {teacher
+                {teamMode
+                  ? " 이미 저장된 결과는 같은 링크에서 계속 확인할 수 있습니다"
+                  : teacher
                   ? " 저장된 수업에서 결과를 확인한 뒤 방 종료를 누르고 새 수업을 준비하세요 이전 기록은 삭제되지 않습니다"
                   : " 교사가 다음 수업을 열면 새 참가 링크로 입장하세요"}
               </Notice>
@@ -338,12 +395,35 @@ export function ClassroomApp({
             {room.state && (
               <>
                 <Notice>
-                  {teacher
+                  {teamMode
+                    ? "거래 → 채굴 → 전파 순서로 함께 진행하세요 팀 A·B·C를 직접 맡으면 해당 지갑과 채굴에 참여할 수 있습니다"
+                    : teacher
                     ? "교사: 참가자 목록에서 세 팀 대표를 지정하세요 거래를 전달한 뒤 후보 준비 → 대표의 채굴 참여 → 전체 시작 순으로 진행합니다"
                     : me?.team
                       ? `팀 ${me.team} 대표입니다 거래 작성 → 전자서명 → 검증·전파를 누르세요 채굴 화면에서는 교사가 후보를 준비한 뒤 내 채굴 참여를 켭니다`
                       : "관찰자입니다 거래와 채굴 결과를 볼 수 있습니다 직접 실습하려면 교사에게 팀 대표 지정을 요청하세요"}
                 </Notice>
+                {teamMode && (
+                  <Panel title="내 팀 선택">
+                    <div className="button-row">
+                      {NODE_IDS.map((team) => {
+                        const owner = room.state!.participants.find((p) => p.team === team);
+                        return (
+                          <button
+                            key={team}
+                            disabled={disabled || !!owner}
+                            className={me?.team === team ? "" : "secondary"}
+                            onClick={() => void room.command("claim", { team })}
+                          >
+                            {me?.team === team ? `팀 ${team} 맡는 중` : owner ? `팀 ${team} · ${owner.name}` : `팀 ${team} 맡기`}
+                          </button>
+                        );
+                      })}
+                      {me?.team && <button className="text-button" disabled={disabled} onClick={() => void room.command("release")}>대표 내려놓기</button>}
+                    </div>
+                    <p>공통 채굴·전파는 누구나 조작할 수 있습니다 팀 대표는 한 명씩 맡습니다</p>
+                  </Panel>
+                )}
                 <Notice>
                   각 팀의 지갑은 서명하고 노드는 검증합니다 채굴 계산은 공유
                   서버에서 수행합니다 학생 기기가 독립 노드로 실행되는 방식은
@@ -351,7 +431,7 @@ export function ClassroomApp({
                 </Notice>
                 <details className="classroom-participants">
                   <summary>
-                    참가자 {room.state.participants.length}/30 · 역할 배정
+                    참가자 {room.state.participants.length}/30{teamMode ? "" : " · 역할 배정"}
                     {teacher ? " (교사)" : ""}
                   </summary>
                   <div className="classroom-people">
@@ -363,7 +443,7 @@ export function ClassroomApp({
                           ? "교사"
                           : p.team
                             ? `팀 ${p.team}`
-                            : "관찰자"}
+                            : teamMode ? "팀원" : "관찰자"}
                         {teacher && p.role !== "teacher" && (
                           <div className="button-row">
                             {NODE_IDS.map((n) => (
@@ -427,8 +507,9 @@ export function ClassroomApp({
                 </nav>
                 <div hidden={page !== "거래"}>
                   <TeamWallet
-                    key={`${credential.participantId}:${me?.assignmentId ?? `${me?.role}:${me?.team}`}`}
+                    key={`${credential.runId}:${credential.participantId}:${me?.assignmentId ?? `${me?.role}:${me?.team}`}`}
                     lab={room.state.lab}
+                    teamMode={teamMode}
                     team={me?.team || null}
                     disabled={learningDisabled}
                     command={room.command}
@@ -437,7 +518,7 @@ export function ClassroomApp({
                 {page === "채굴" && (
                   <ClassRace
                     state={room.state}
-                    teacher={teacher}
+                    teacher={controls}
                     team={me?.team || null}
                     disabled={learningDisabled}
                     command={room.command}
@@ -450,7 +531,7 @@ export function ClassroomApp({
                         메시지 {room.state.lab.queue.length}개 대기 · 각 수신
                         노드가 검증한 뒤 자기 체인과 멤풀을 변경합니다
                       </p>
-                      {teacher && (
+                      {controls && (
                         <div className="button-row">
                           <button
                             disabled={disabled || !room.state.lab.queue.length}
@@ -548,11 +629,13 @@ export function ClassroomApp({
 type Command = ReturnType<typeof useClassroom>["command"];
 function TeamWallet({
   lab,
+  teamMode,
   team,
   disabled,
   command,
 }: {
   lab: LabSnapshot;
+  teamMode: boolean;
   team: NodeId | null;
   disabled: boolean;
   command: Command;
@@ -640,8 +723,9 @@ function TeamWallet({
       </div>
       {!team ? (
         <Notice>
-          팀 대표의 송금과 각 노드의 상태를 관찰하세요 교사가 대표를 지정하면
-          거래를 작성할 수 있습니다
+          {teamMode
+            ? "위에서 내 팀을 선택하면 송금과 채굴에 참여할 수 있습니다"
+            : "팀 대표의 송금과 각 노드의 상태를 관찰하세요 교사가 대표를 지정하면 거래를 작성할 수 있습니다"}
         </Notice>
       ) : (
         <Panel title={`팀 ${team} · UTXO 선택 → 서명 → 검증·전파`}>
@@ -851,7 +935,9 @@ function ClassRace({
       <Panel title="세 팀의 채굴 경쟁">
         <p>
           {race?.message ||
-            "교사가 후보를 준비하면 팀 대표가 채굴 참여를 켭니다"}
+            (state.teamMode
+              ? "세 후보 준비 → 내 채굴 참여 → 전체 시작 순으로 진행하세요"
+              : "교사가 후보를 준비하면 팀 대표가 채굴 참여를 켭니다")}
         </p>
         <p>
           전체 상태: {race?.status || "준비 전"} ·{" "}

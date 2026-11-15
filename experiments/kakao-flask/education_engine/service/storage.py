@@ -6,7 +6,7 @@ import os
 import sqlite3
 import threading
 import uuid
-from contextlib import closing
+from contextlib import closing, nullcontext
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -85,7 +85,7 @@ class PracticeStore:
         digest = hashlib.sha256(checkpoint.encode()).hexdigest()
         stamp = now()
         try:
-            with self.lock, self.db:
+            with self.lock, (nullcontext() if self.db.in_transaction else self.db):
                 self.db.execute(
                     """INSERT INTO practices VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET updated=excluded.updated,

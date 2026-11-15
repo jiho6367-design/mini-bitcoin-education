@@ -7,6 +7,7 @@ export function Root() {
   const [config, setConfig] = useState<{
     classroomOnly: boolean;
     publicUrl?: string;
+    defaultTeamCode?: string;
   } | null>(null);
   const [error, setError] = useState(false);
   const [mode, setMode] = useState(
@@ -32,8 +33,9 @@ export function Root() {
   if (mode || config.classroomOnly)
     return (
       <ClassroomApp
-        mode={mode || "join"}
+        mode={mode || "team"}
         publicUrl={config.publicUrl || ""}
+        defaultTeamCode={config.defaultTeamCode}
         personal={!config.classroomOnly}
         back={() => {
           setMode("");
@@ -47,8 +49,8 @@ export function Root() {
         <div className="classroom-entry" aria-label="실습 선택">
           <strong>실습 모드</strong>
           <button onClick={() => setMode("join")}>공동 실습 참여</button>
-          <button className="secondary" onClick={() => setMode("teacher")}>
-            교사 방 만들기
+          <button className="secondary" onClick={() => setMode("team")}>
+            팀 실습 시작
           </button>
           {error && <span>Flask 서버 연결 확인 필요</span>}
         </div>

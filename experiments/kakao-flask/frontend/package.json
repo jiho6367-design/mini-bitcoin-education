@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:single": "npm run build && playwright test --config playwright.single.config.ts",
+    "test:e2e:team": "npm run build && playwright test --config playwright.team.config.ts",
     "check": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "dependencies": {

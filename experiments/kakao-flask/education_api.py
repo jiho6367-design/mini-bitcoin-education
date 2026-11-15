@@ -50,6 +50,10 @@ class JoinRoom(BaseModel):
     name: str = Field(min_length=1, max_length=30, pattern=r".*\S.*")
 
 
+class CreateTeamRoom(JoinRoom):
+    difficulty: int = Field(default=1, ge=1, le=4)
+
+
 class RoomCommand(BaseModel):
     runId: str = Field(max_length=50)
     assignmentId: str | None = Field(default=None, max_length=50)
@@ -57,7 +61,7 @@ class RoomCommand(BaseModel):
     action: Literal[
         "leave", "close", "remove", "assign", "draft", "sign", "submit",
         "participate", "prepare", "fork", "resume", "pause", "stop", "step",
-        "configure", "advance", "deliver", "automatic",
+        "configure", "advance", "deliver", "automatic", "claim", "release",
     ]
     payload: dict[str, Any] = Field(default_factory=dict)
 
@@ -77,7 +81,8 @@ class ArchiveQuery(BaseModel):
 
 def credential(room, person):
     return {"code": room.code, "runId": room.run_id,
-            "participantId": person.id, "token": person.token}
+            "participantId": person.id, "token": person.token,
+            "teamMode": bool(getattr(room, "team_mode", False))}
 
 
 class PersonalOwnership:
@@ -172,6 +177,8 @@ class EducationRuntime:
         self.hub = ClassroomHub(app.config.get("TEAM_TEACHER_SECRET")
                                 or os.environ.get("TEAM_TEACHER_SECRET"), store=self.store)
         self.creation_lock = threading.RLock()
+        from team_rooms import TeamRooms
+        self.team_rooms = TeamRooms(self)
         self.stop_event = threading.Event()
         self.runner = None
         self._closed = False
@@ -258,6 +265,8 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
             if not classroom_enabled:
                 raise LabError("CLASSROOM_DISABLED", "공동 수업을 사용할 수 없습니다", 404)
             return
+        if request.path.startswith(PREFIX + "/team") and not classroom_enabled:
+            raise LabError("CLASSROOM_DISABLED", "공동 실습을 사용할 수 없습니다", 404)
         if request.path == PREFIX + "/health":
             return
         choose_owner()
@@ -482,7 +491,7 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
         if token and hub.room and not hub.room.closed:
             with hub.room.lock:
                 person = hub.room.auth(token)
-                if person.role == "teacher":
+                if person.role == "teacher" and not getattr(hub.room, "team_mode", False):
                     return
         raise LabError("FORBIDDEN", "교사용 비밀코드로 저장된 수업을 열어 주세요", 403)
 
@@ -527,6 +536,8 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
 
         def delete(practice_id):
             checked(practice_id)
+            if classroom and runtime.team_rooms.is_practice(practice_id):
+                raise LabError("PRACTICE_LINKED", "공유 링크에 연결된 팀 실습은 삭제할 수 없습니다", 409)
             with hub.lock if classroom else registry._lock:
                 if classroom:
                     if hub.room and not hub.room.closed and hub.room.practice_id == practice_id:
@@ -546,12 +557,16 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
 
         def resume(practice_id):
             checked(practice_id)
+            if classroom and runtime.team_rooms.is_practice(practice_id):
+                raise LabError("PRACTICE_LINKED", "팀 실습은 기존 참여 링크에서 이어서 진행하세요", 409)
             data = body(ArchiveAction, empty=True)
             with hub.lock if classroom else registry._lock:
                 item = store.read(practice_id, mode)
                 try:
                     if not classroom:
                         return {"lab": registry.resume(item).snapshot()}
+                    if runtime.team_rooms.default_code():
+                        raise LabError("ROOM_EXISTS", "공유 팀 실습은 기존 참여 링크에서 이어서 진행하세요", 409)
                     if hub.room and not hub.room.closed:
                         raise LabError("ROOM_EXISTS", "진행 중인 방을 먼저 종료하세요", 409)
                     room = Classroom(data.name.strip() or "교사", 1, hub.clock)
@@ -621,18 +636,55 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
         archives(True)
 
     def authorized(code):
-        room = hub.get(code)
+        room = room_by_code(code)
         with room.lock:
             return room, room.auth(request.headers.get("Authorization", "").removeprefix("Bearer "))
 
+    def room_by_code(code):
+        return runtime.team_rooms.get(code) if runtime.team_rooms.is_team(code) else hub.get(code)
+
     @bp.get("/classroom/config")
     def classroom_config():
-        return {"classroomOnly": False, "publicUrl": app.config.get("TEAM_PUBLIC_URL", "")}
+        code = runtime.team_rooms.default_code()
+        return {"classroomOnly": False, "publicUrl": app.config.get("TEAM_PUBLIC_URL", ""),
+                "defaultTeamCode": code, "teamMode": bool(code)}
+
+    @bp.post("/team/rooms")
+    def create_team_room():
+        data = body(CreateTeamRoom)
+        with runtime.creation_lock, hub.lock:
+            hub.throttle()
+            if not runtime.team_rooms.default_code():
+                creation_limit()
+            room, person = runtime.team_rooms.create(data.name.strip(), data.difficulty, g.education_owner)
+            runtime.publish(room)
+            return credential(room, person), 201
+
+    @bp.post("/team/rooms/<code>/reconnect")
+    def reconnect_team_room(code):
+        with runtime.creation_lock, hub.lock:
+            hub.throttle()
+            room, person = runtime.team_rooms.reconnect(code, g.education_owner)
+            runtime.publish(room)
+            return credential(room, person)
+
+    @bp.post("/team/rooms/<code>/save")
+    def save_team_room(code):
+        if not runtime.team_rooms.is_team(code):
+            raise LabError("TEAM_ROOM_NOT_FOUND", "팀 실습을 찾을 수 없습니다", 404)
+        room, _person = authorized(code)
+        with room.lock:
+            persist_room(room, [])
+            room.seq += 1
+            runtime.publish(room)
+            return {"savedAt": room.saved_at}
 
     @bp.post("/classroom/rooms")
     def create_room():
         data = body(CreateRoom)
         with runtime.creation_lock, hub.lock:
+            if runtime.team_rooms.default_code():
+                raise LabError("ROOM_EXISTS", "공유 팀 실습은 기존 참여 링크에서 이어서 진행하세요", 409)
             creation_limit()
             room, person = hub.create(data.secret, data.name.strip(), data.difficulty)
         runtime.publish(room)
@@ -641,10 +693,14 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
     @bp.post("/classroom/rooms/<code>/join")
     def join_room(code):
         data = body(JoinRoom)
-        with hub.lock:
+        with runtime.creation_lock, hub.lock:
             hub.throttle()
-            room = hub.get(code)
-            person = room.add(data.name.strip())
+            if runtime.team_rooms.is_team(code):
+                choose_owner()
+                room, person = runtime.team_rooms.join(code, data.name.strip(), g.education_owner)
+            else:
+                room = hub.get(code)
+                person = room.add(data.name.strip())
             runtime.publish(room)
             return credential(room, person), 201
 
@@ -690,7 +746,7 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
             auth = json.loads(raw)
             if not isinstance(auth, dict):
                 raise LabError("UNAUTHORIZED", "참가자 인증을 확인하세요", 401)
-            room = hub.get(code)
+            room = room_by_code(code)
             with room.lock:
                 person = room.auth(str(auth.get("token", "")))
                 if person.connections >= 2:
@@ -726,7 +782,7 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
                     last_ping = now
         except LabError as exc:
             try:
-                ws.send(json.dumps({"type": "ended", "message": exc.message}, ensure_ascii=False))
+                ws.send(json.dumps({"type": "ended", "code": exc.code, "message": exc.message}, ensure_ascii=False))
             except ConnectionClosed:
                 pass
         except (ConnectionClosed, TimeoutError, ValueError, TypeError, AttributeError, RuntimeError):

@@ -3,7 +3,12 @@ import { uiText } from "../copy";
 
 /** A timed-out mutation may already have succeeded. Keep its ID until confirmed. */
 export class ClassroomRequestError extends Error {
-  constructor(message: string, readonly uncertain = false) {
+  constructor(
+    message: string,
+    readonly uncertain = false,
+    readonly code = "",
+    readonly status = 0,
+  ) {
     super(uiText(message));
     this.name = "ClassroomRequestError";
   }
@@ -15,12 +20,31 @@ export async function roomRequest<T>(
   token?: string,
   timeoutMs = 15_000,
 ): Promise<T> {
+  return educationRequest<T>("classroom", path, body, token, timeoutMs);
+}
+
+export async function teamRequest<T>(
+  path: string,
+  body?: unknown,
+  token?: string,
+  timeoutMs = 15_000,
+): Promise<T> {
+  return educationRequest<T>("team", path, body, token, timeoutMs);
+}
+
+async function educationRequest<T>(
+  namespace: string,
+  path: string,
+  body: unknown,
+  token: string | undefined,
+  timeoutMs: number,
+): Promise<T> {
   try {
     return await withRequestTimeout(
       async (signal) => {
         let response: Response;
         try {
-          response = await fetch(`/api/education/classroom${path}`, {
+          response = await fetch(`/api/education/${namespace}${path}`, {
             method: body === undefined ? "GET" : "POST",
             headers: {
               "Content-Type": "application/json",
@@ -31,7 +55,7 @@ export async function roomRequest<T>(
           });
         } catch {
           throw new ClassroomRequestError(
-            "서버에 연결할 수 없습니다 인터넷과 교사 PC의 실행 상태를 확인하세요",
+            "서버에 연결할 수 없습니다 인터넷 연결을 확인하세요",
             body !== undefined,
           );
         }
@@ -40,6 +64,8 @@ export async function roomRequest<T>(
           throw new ClassroomRequestError(
             data?.error?.message || "공동 실습 요청에 실패했습니다",
             body !== undefined && response.status >= 500 && !data?.error?.code,
+            data?.error?.code || "",
+            response.status,
           );
         if (data === null)
           throw new ClassroomRequestError(
@@ -146,6 +172,9 @@ export function createClassroomCommands<T>(
     },
     retry() {
       if (current) void send(current);
+    },
+    isLeaving() {
+      return !!current && ["leave", "close"].includes(current.body.action);
     },
     confirmEnded(result: T) {
       // The authoritative stream can report leave before its HTTP response arrives.

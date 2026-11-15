@@ -271,6 +271,73 @@ class PostgresDeploymentTests(unittest.TestCase):
         self.assertEqual(replacement.extensions["practice_store"].read("kept-writer")["payload"], {"value": 2})
         self.assertEqual(replacement.extensions["practice_store"].read("kept-writer")["revision"], 1)
 
+    def test_factory_shared_link_migration_claims_writer_only_after_complete_success(self):
+        from test_team_rooms import saved_transfer
+
+        self.basic.create("migration-writer", {"version": 0})
+        credential = self.call("POST", PREFIX + "/classroom/rooms", {
+            "secret": TEACHER_SECRET, "name": "기존 팀", "difficulty": 1,
+        }, status=201)
+        legacy = self.app.extensions["education"].hub.room
+        _, block_hash, _ = saved_transfer(legacy)
+        practice, code = legacy.practice_id, credential["code"]
+        original = self.education.read(practice, "classroom")
+
+        def raw_record():
+            with self.backend.transaction() as connection:
+                row = connection.execute(f"SELECT * FROM {self.education.practices} WHERE id=%s",
+                                         (practice,)).fetchone()
+                events = connection.execute(f"SELECT * FROM {self.education.events} "
+                                            "WHERE practice_id=%s ORDER BY id", (practice,)).fetchall()
+                return dict(row), [dict(event) for event in events]
+
+        exact_original = raw_record()
+        missing = "ZZZZZZZZ" if code != "ZZZZZZZZ" else "YYYYYYYY"
+        with self.assertRaises(RuntimeError):
+            self.make_app(TEAM_SHARED_ROOM_CODE=missing)
+        self.assertEqual(raw_record(), exact_original)
+        self.basic.save("migration-writer", 0, {"version": 1})
+
+        # A valid digest with an invalid engine checkpoint reaches migration,
+        # after activation was attempted. Its failed factory must roll back
+        # both the writer claim and every original archive/event byte.
+        corrupt = json.dumps({"session": {"version": 999}}, ensure_ascii=False)
+        with self.backend.transaction(write=True) as connection:
+            connection.execute(f"UPDATE {self.education.practices} SET checkpoint=%s,digest=%s WHERE id=%s",
+                               (corrupt, hashlib.sha256(corrupt.encode()).hexdigest(), practice))
+        exact_corrupt = raw_record()
+        with self.assertRaises(self.LabError) as rejected:
+            self.make_app(TEAM_SHARED_ROOM_CODE=code)
+        self.assertEqual(rejected.exception.code, "CHECKPOINT_INVALID")
+        self.assertEqual(raw_record(), exact_corrupt)
+        self.basic.save("migration-writer", 1, {"version": 2})
+        with self.backend.transaction(write=True) as connection:
+            connection.execute(f"UPDATE {self.education.practices} SET checkpoint=%s,digest=%s WHERE id=%s",
+                               (exact_original[0]["checkpoint"], exact_original[0]["digest"], practice))
+        self.assertEqual(raw_record(), exact_original)
+
+        replacement, teammate = self.make_app(TEAM_SHARED_ROOM_CODE=code)
+        runtime = replacement.extensions["education"]
+        migrated = runtime.team_rooms.get(code)
+        self.assertEqual((migrated.code, migrated.practice_id, migrated.team_mode), (code, practice, True))
+        self.assertEqual(migrated.people, {})
+        self.assertEqual(migrated.session.lab.nodes["A"].chain[-1].hash, block_hash)
+        self.assertEqual(runtime.store.read(practice, "classroom")["checkpoint"]["session"],
+                         original["checkpoint"]["session"])
+        config = self.call("GET", PREFIX + "/classroom/config", client=teammate)
+        self.assertEqual(config["defaultTeamCode"], code)
+        joined = self.call("POST", PREFIX + f"/classroom/rooms/{code}/join", {"name": "팀원"},
+                           status=201, client=teammate)
+        self.assertTrue(joined["teamMode"])
+        self.assertEqual(joined["code"], code)
+        denied = teammate.get(PREFIX + "/classroom/practices",
+                              headers={"Authorization": "Bearer " + joined["token"]})
+        self.assertEqual(denied.status_code, 403)
+        with self.assertRaises(self.StorageError):
+            self.basic.save("migration-writer", 2, {"version": 999})
+        self.assertEqual(replacement.extensions["practice_store"].read("migration-writer")["payload"],
+                         {"version": 2})
+
     def test_incompatible_existing_tables_are_rejected_without_replacing_records(self):
         self.basic.create("keep-basic", {"original": "보존"})
         lab = self.lab()

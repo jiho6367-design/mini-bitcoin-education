@@ -154,7 +154,7 @@ test("참가 화면은 긴 교사용 비밀코드를 잘라 숨기지 않고 방
   );
   await page.getByRole("button", { name: "입장", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText(
-    "참가용 방 코드는 영문·숫자 8자리",
+    "방 코드 8자리",
   );
   await page.goto("/?classroom=join&room=ABCD2345");
   await expect(page.getByLabel("방 코드", { exact: true })).toHaveValue(

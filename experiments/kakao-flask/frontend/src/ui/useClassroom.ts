@@ -8,17 +8,21 @@ import type {
 } from "../api/types";
 import {
   createClassroomCommands,
+  ClassroomRequestError,
+  teamRequest,
   type CommandFeedback,
 } from "./classroomCommands";
-export { roomRequest } from "./classroomCommands";
+export { roomRequest, teamRequest } from "./classroomCommands";
 
 export interface Credential {
   code: string;
   runId: string;
   participantId: string;
   token: string;
+  teamMode?: boolean;
 }
 export interface RoomState {
+  teamMode?: boolean;
   storage?: { id: string; savedAt: string | null; error: string };
   runId: string;
   code: string;
@@ -50,7 +54,9 @@ export const ROOM_KEY = "team-blockchain-classroom";
 export function savedCredential(): Credential | null {
   try {
     const c = JSON.parse(sessionStorage.getItem(ROOM_KEY) || "null");
+    const linkedCode = new URLSearchParams(location.search).get("room");
     return c &&
+      (!linkedCode || c.code === linkedCode.toUpperCase()) &&
       typeof c.token === "string" &&
       typeof c.code === "string" &&
       typeof c.runId === "string" &&
@@ -59,6 +65,28 @@ export function savedCredential(): Credential | null {
       : null;
   } catch {
     return null;
+  }
+}
+
+/** Renew identity through the owner cookie, never reuse commands from an old run. */
+export async function recoverTeamCredential(
+  credential: Credential,
+  request: typeof teamRequest = teamRequest,
+): Promise<Credential | "join" | "ended"> {
+  try {
+    const next = await request<Credential>(`/rooms/${credential.code}/reconnect`, {});
+    if (
+      next.code !== credential.code || !next.teamMode ||
+      !next.runId || !next.participantId || !next.token
+    ) throw new ClassroomRequestError("접속 정보를 다시 확인하고 있습니다");
+    return next;
+  } catch (error) {
+    if (error instanceof ClassroomRequestError) {
+      if (error.code === "MEMBERSHIP_REQUIRED") return "join";
+      if (error.code === "TEAM_ROOM_NOT_FOUND" ||
+          (error.code === "ROOM_GONE" && error.status === 410)) return "ended";
+    }
+    throw error;
   }
 }
 export function mergePatch(previous: unknown, patch: unknown): unknown {
@@ -71,7 +99,10 @@ export function mergePatch(previous: unknown, patch: unknown): unknown {
     result[key] = mergePatch(result[key], value);
   return result;
 }
-export function useClassroom(credential: Credential | null) {
+export function useClassroom(
+  credential: Credential | null,
+  onCredential: (next: Credential | null, message?: string) => void,
+) {
   const [state, setState] = useState<RoomState | null>(null);
   const [connection, setConnection] = useState("연결 대기");
   const [error, setError] = useState("");
@@ -101,13 +132,42 @@ export function useClassroom(credential: Credential | null) {
     }
   }, [authorityKey, authority, commands]);
   useEffect(() => {
-    if (!credential) return;
+    setState(null);
+    setError("");
+    if (!credential) {
+      setConnection("연결 대기");
+      return;
+    }
     let cancelled = false,
       ended = false;
     let socket: WebSocket | undefined;
     let timer: ReturnType<typeof setTimeout>;
     let retry = 500;
     let current: RoomState | null = null;
+    const recover = async (message: string) => {
+      ended = true;
+      commands.cancel();
+      setState(null);
+      setConnection("기록 복구 중 · 조작 대기");
+      socket?.close();
+      try {
+        const next = await recoverTeamCredential(credential);
+        if (cancelled) return;
+        if (next === "join") {
+          onCredential(null, "이름을 입력해 같은 방에 입장하세요 저장한 기록은 이어집니다");
+        } else if (next === "ended") {
+          setConnection("수업 종료");
+          setError(uiText(message));
+        } else {
+          onCredential(next);
+        }
+      } catch {
+        if (cancelled) return;
+        setError("서버가 준비되면 같은 방의 기록을 자동으로 이어갑니다");
+        timer = setTimeout(() => void recover(message), retry);
+        retry = Math.min(retry * 2, 5000);
+      }
+    };
     const connect = () => {
       if (cancelled || ended) return;
       setConnection("연결 중");
@@ -119,13 +179,18 @@ export function useClassroom(credential: Credential | null) {
         if (!cancelled) ws.send(JSON.stringify({ token: credential.token }));
       };
       ws.onmessage = (event) => {
-        if (cancelled) return;
+        if (cancelled || ended) return;
         const message = JSON.parse(event.data);
         if (message.type === "ping") {
           ws.send("pong");
           return;
         }
         if (message.type === "ended") {
+          if (!commands.isLeaving() && (credential.teamMode ||
+              ["ROOM_GONE", "UNAUTHORIZED"].includes(message.code))) {
+            void recover(message.message || "이 방의 실습이 종료되었습니다");
+            return;
+          }
           ended = true;
           setConnection("수업 종료");
           setError(uiText(message.message));
@@ -135,11 +200,7 @@ export function useClassroom(credential: Credential | null) {
         }
         if (message.type === "snapshot") {
           if (message.state.runId !== credential.runId) {
-            ended = true;
-            setConnection("수업 종료");
-            setError("서버가 재시작되었습니다 새 방에 입장하세요");
-            commands.cancel();
-            ws.close();
+            void recover("서버가 재시작되었습니다 입장 정보를 확인하세요");
             return;
           }
           current = message.state;
@@ -177,7 +238,7 @@ export function useClassroom(credential: Credential | null) {
       if (socket?.readyState === WebSocket.OPEN) socket.close();
       else if (socket) socket.onopen = () => socket?.close();
     };
-  }, [credential, commands]);
+  }, [credential, commands, onCredential]);
   const command = async (
     action: string,
     payload: object = {},

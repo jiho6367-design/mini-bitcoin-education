@@ -83,7 +83,7 @@
     "service/autosave.py": {
       "source_sha256": "debca2d9091677ae0874bc9b1b6ea9ae5f395c4c82dcfd7b4c7d39bf4fa135b4",
       "source_bytes": 5553,
-      "ported_sha256": "debca2d9091677ae0874bc9b1b6ea9ae5f395c4c82dcfd7b4c7d39bf4fa135b4"
+      "ported_sha256": "ee0bfacd3ca585edc76d5a4b4182ac780269b4cef3ee6010ad3fdc352e95e077"
     },
     "service/backup.py": {
       "source_sha256": "b8bd0a545e0ecbc2a43c884cdbbd0f2dd16df4f0e22612c26e392fe31a68e6d4",
@@ -98,7 +98,7 @@
     "service/classroom.py": {
       "source_sha256": "5d17a95bf85fe48a5b756262662b50db25151246004fd3d1888951583145d3e5",
       "source_bytes": 21902,
-      "ported_sha256": "5d17a95bf85fe48a5b756262662b50db25151246004fd3d1888951583145d3e5"
+      "ported_sha256": "e25dfb4808ede79670899c34779929d590ac4db020e9ef1935b36bde8c79ab29"
     },
     "service/race.py": {
       "source_sha256": "953f587d7819bb19d9b7b82f522506e7161fea9c59cc2187f08627edadb4b1d9",
@@ -123,7 +123,7 @@
     "service/storage.py": {
       "source_sha256": "1d108b8279c4b9fa89a4ee6e4d9e5800a5cd8cae5a9b88d3fccad9bb9bf2428e",
       "source_bytes": 10062,
-      "ported_sha256": "099af20e37de7b466b15055a545b43a03007b643e547a1b54352f7b4c399a3b6"
+      "ported_sha256": "1c5efeecdf66d026364208983ada711b08e4b4e0843478e672c882651d57831f"
     },
     "api/__init__.py": {
       "source_sha256": "be778fc0fdc43e8f41620276199829f02b15d87a12ab21cda1d5b4960df9bacd",
@@ -144,6 +144,9 @@
     "service/storage.py closes backup and read-only restore connections explicitly to release Windows file locks",
     "api/__init__.py describes the transport-independent schemas rather than a FastAPI server",
     "service/storage.py validates existing archive table shapes before writes so legacy account-model databases are rejected unchanged",
-    "service/backup.py refuses the SQLite backup command in PostgreSQL deployments to avoid a misleading empty backup"
+    "service/backup.py refuses the SQLite backup command in PostgreSQL deployments to avoid a misleading empty backup",
+    "service/classroom.py adds ordinary-member team controls, exclusive self claims and teacher-independent connection lifecycle while preserving legacy teacher mode",
+    "service/autosave.py restores team participants without requiring a teacher during failed-write rollback",
+    "service/storage.py respects an outer SQLite transaction so stable-link membership and checkpoint save atomically"
   ]
 }

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mergePatch } from "./useClassroom";
+import { mergePatch, recoverTeamCredential, savedCredential } from "./useClassroom";
 import {
   ClassroomRequestError,
   createClassroomCommands,
@@ -149,5 +149,64 @@ describe("classroom deltas", () => {
         { lab: { race: null } },
       ),
     ).toEqual({ lab: { race: null, difficulty: 1 } });
+  });
+});
+
+describe("stable team identity recovery", () => {
+  const old = { code: "ABCD2345", runId: "before", participantId: "old-member", token: "expired", teamMode: true };
+
+  it("renews through the owner cookie without sending the old bearer token or command", async () => {
+    const next = { ...old, runId: "after", participantId: "member", token: "fresh" };
+    const fetch = vi.fn().mockResolvedValue(Response.json(next));
+    vi.stubGlobal("fetch", fetch);
+    await expect(recoverTeamCredential(old)).resolves.toEqual(next);
+    expect(fetch.mock.calls[0][0]).toBe("/api/education/team/rooms/ABCD2345/reconnect");
+    expect(fetch.mock.calls[0][1].headers).not.toHaveProperty("Authorization");
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({});
+  });
+
+  it("requests a name for a migrated classroom without membership but preserves ordinary closed-room behavior", async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(Response.json({ error: { code: "MEMBERSHIP_REQUIRED" } }, { status: 404 }))
+      .mockResolvedValueOnce(Response.json({ error: { code: "TEAM_ROOM_NOT_FOUND" } }, { status: 404 }))
+      .mockResolvedValueOnce(Response.json({ error: { code: "ROOM_GONE" } }, { status: 410 }));
+    vi.stubGlobal("fetch", fetch);
+    await expect(recoverTeamCredential({ ...old, teamMode: undefined })).resolves.toBe("join");
+    await expect(recoverTeamCredential(old)).resolves.toBe("ended");
+    await expect(recoverTeamCredential(old)).resolves.toBe("ended");
+  });
+
+  it("keeps transient database errors retryable and rejects credentials for a different stable link", async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(Response.json({ error: { code: "DATABASE_UNAVAILABLE" } }, { status: 503 }))
+      .mockResolvedValueOnce(Response.json({ ...old, code: "WXYZ2345" }));
+    vi.stubGlobal("fetch", fetch);
+    await expect(recoverTeamCredential(old)).rejects.toMatchObject({ status: 503 });
+    await expect(recoverTeamCredential(old)).rejects.toBeInstanceOf(ClassroomRequestError);
+  });
+
+  it("does not restore a different room's session when a shared link names a room", () => {
+    vi.stubGlobal("sessionStorage", { getItem: () => JSON.stringify(old) });
+    vi.stubGlobal("location", { search: "?classroom=join&room=WXYZ2345" });
+    expect(savedCredential()).toBeNull();
+    vi.stubGlobal("location", { search: "?classroom=join&room=ABCD2345" });
+    expect(savedCredential()).toEqual(old);
+  });
+
+  it("cancels an uncertain old-run command before renewing and cannot replay it", async () => {
+    const fetch = vi.fn().mockRejectedValueOnce(new TypeError("connection lost"))
+      .mockResolvedValueOnce(Response.json({ ...old, runId: "after", token: "fresh" }));
+    vi.stubGlobal("fetch", fetch);
+    let status: CommandFeedback | undefined;
+    const commands = createClassroomCommands((next) => { status = next; });
+    const original = commands.execute(old, "submit", { transactionId: "signed-before-restart" });
+    await vi.waitFor(() => expect(status?.pending?.action).toBe("submit"));
+    commands.cancel();
+    await expect(original).resolves.toBeUndefined();
+    await recoverTeamCredential(old);
+    commands.retry();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch.mock.calls[1][0]).toContain("/reconnect");
+    expect(status?.pending).toBeNull();
   });
 });

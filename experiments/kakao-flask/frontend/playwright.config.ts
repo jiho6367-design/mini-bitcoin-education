@@ -2,9 +2,11 @@ import { defineConfig, devices } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 
 const flaskDirectory = fileURLToPath(new URL("..", import.meta.url));
 const workspaceDirectory = resolve(flaskDirectory, "../..");
+const databaseRun = randomUUID();
 const windowsPython = resolve(flaskDirectory, ".venv/Scripts/python.exe");
 const pythonExecutable = existsSync(windowsPython)
   ? windowsPython
@@ -15,6 +17,7 @@ const legacyEnvironment = Object.fromEntries(
 
 export default defineConfig({
   testDir: "./tests",
+  testIgnore: "**/classroom-team.spec.ts",
   timeout: 90_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
@@ -52,8 +55,8 @@ export default defineConfig({
     env: {
       ...legacyEnvironment,
       PORT: "4173",
-      KAKAO_PRACTICE_DB: resolve(workspaceDirectory, "work/team-merge/e2e-basic.sqlite3"),
-      TEAM_EDUCATION_DB: resolve(workspaceDirectory, "work/team-merge/e2e-education.sqlite3"),
+      KAKAO_PRACTICE_DB: resolve(workspaceDirectory, `work/team-merge/e2e-${databaseRun}-basic.sqlite3`),
+      TEAM_EDUCATION_DB: resolve(workspaceDirectory, `work/team-merge/e2e-${databaseRun}-education.sqlite3`),
       TEAM_TEACHER_SECRET: "classroom-test-only",
     },
     url: "http://127.0.0.1:4173/api/education/health",

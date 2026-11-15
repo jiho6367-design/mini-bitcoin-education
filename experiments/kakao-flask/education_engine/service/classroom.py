@@ -18,6 +18,7 @@ from .session import LabSession
 from .storage import now
 
 OBSERVER_RECLAIM_SECONDS = 300
+REPRESENTATIVE_GRACE_SECONDS = 15
 
 
 def fail(code, message, status=409):
@@ -41,7 +42,7 @@ class Participant:
 
 
 class Classroom:
-    def __init__(self, name, difficulty, clock=time.monotonic):
+    def __init__(self, name, difficulty, clock=time.monotonic, *, team_mode=False, code=None):
         self.store = None
         self.practice_id = str(uuid.uuid4())
         self.saved_at = None
@@ -49,8 +50,17 @@ class Classroom:
         self.pending_events = []
         self.lock = threading.RLock()
         self.clock = clock
+        self.team_mode = bool(team_mode)
         self.run_id = str(uuid.uuid4())
-        self.code = "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(8))
+        if code is not None and (
+            not isinstance(code, str)
+            or len(code) != 8
+            or any(c not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" for c in code)
+        ):
+            fail("INVALID_ROOM_CODE", "방 코드를 확인하세요.", 400)
+        self.code = code or "".join(
+            secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(8)
+        )
         self.session = LabSession(str(uuid.uuid4()))  # Not registered in personal LabRegistry.
         self.session.lab = Lab(
             [create_wallet(f"팀 {n}") for n in NODE_IDS], difficulty, team_allocations=True
@@ -63,8 +73,9 @@ class Classroom:
         self.limited = False
         self.activity = []
         self.empty_since = clock()
-        self.teacher = self.add(name, teacher=True)
-        self.note("교사", "방 생성 · 각 팀에 학습용 100 코인 배정")
+        # Keep the creator alias for existing callers; it grants no authority in team mode.
+        self.teacher = self.add(name, teacher=not self.team_mode)
+        self.note("팀" if self.team_mode else "교사", "방 생성 · 각 팀에 학습용 100 코인 배정")
 
     def note(self, name, message):
         self.seq += 1
@@ -92,14 +103,16 @@ class Classroom:
                 if not abandoned:
                     fail(
                         "ROOM_FULL",
-                        "최대 30명까지 참여할 수 있습니다. 교사에게 이탈 참가자 정리를 요청하세요.",
+                        "최대 30명까지 참여할 수 있습니다. 잠시 뒤 다시 입장하세요."
+                        if self.team_mode
+                        else "최대 30명까지 참여할 수 있습니다. 교사에게 이탈 참가자 정리를 요청하세요.",
                     )
                 self._remove_participant(abandoned[0], "서버", expired=True)
             p = Participant(
                 str(uuid.uuid4()),
                 name,
                 secrets.token_urlsafe(32),
-                "teacher" if teacher else "observer",
+                "teacher" if teacher and not self.team_mode else "observer",
                 disconnected=self.clock(),
             )
             self.people[p.id] = p
@@ -120,13 +133,27 @@ class Classroom:
             p = self.people.get(p.id)
             if p is None:
                 return
+            if (
+                self.team_mode
+                and delta > 0
+                and not p.connections
+                and p.team
+                and self.clock() - p.disconnected >= REPRESENTATIVE_GRACE_SECONDS
+            ):
+                self._expire_representative(p)
             p.connections = max(0, p.connections + delta)
             if p.connections == 0:
                 p.disconnected = self.clock()
             else:
                 p.suspended = False
                 self.empty_since = None
-            self.note(p.name, "접속" if delta > 0 else "연결 끊김 · 15초 후 실행 일시정지")
+            self.note(
+                p.name,
+                "접속" if delta > 0 else (
+                    "연결 끊김 · 15초 후 팀 역할 해제" if self.team_mode
+                    else "연결 끊김 · 15초 후 실행 일시정지"
+                ),
+            )
             if self.store and not self.closed:
                 try:
                     persist_room(self, self.pending_events)
@@ -142,6 +169,35 @@ class Classroom:
                     self.seq += 1
                 else:
                     self.pending_events = []
+
+    def _release_assignment(self, person):
+        """Revoke a representative's work and in-flight authority, retaining the ledger."""
+        if person.team and self.session.race:
+            race = self.session.race
+            race.enabled[person.team] = False
+            if race.advance_node == person.team and race.target_reward:
+                race.command("stop")
+            elif not any(race.enabled.values()):
+                race.command("pause")
+        person.commands.clear()
+        person.assignment_id = str(uuid.uuid4())
+        person.team, person.role, person.draft, person.signed = None, "observer", None, None
+
+    def _expire_representative(self, person):
+        self._release_assignment(person)
+        person.suspended = True
+        self.note("서버", f"{person.name} 연결 대기 · 팀 역할 해제")
+
+    def _pause_empty_team(self):
+        from .autosave import pause
+
+        running = self.automatic or (
+            self.session.race and self.session.race.status == "running"
+        ) or (self.session.mining and self.session.mining.status == "running")
+        pause(self.session)
+        self.automatic = False
+        if running:
+            self.note("서버", "접속자 없음 · 실습 일시정지 · 기록 유지")
 
     def _remove_participant(self, target, actor, *, expired=False):
         if target.team and self.session.race:
@@ -169,6 +225,7 @@ class Classroom:
                     },
                     "runId": self.run_id,
                     "code": self.code,
+                    "teamMode": self.team_mode,
                     "seq": self.seq,
                     "closed": self.closed,
                     "automatic": self.automatic,
@@ -197,11 +254,18 @@ class Classroom:
             p = self.people[p.id]
             if request.runId != self.run_id:
                 fail("STALE_ROOM", "이전 수업의 요청입니다.")
+            key, fingerprint = request.commandId, request.model_dump_json()
+            # Claim/release rotate their own assignment. A lost acknowledgement may
+            # replay that exact transition, but revoked commands were already cleared.
+            if self.team_mode and request.action in {"claim", "release"} and key in p.commands:
+                old, result = p.commands[key]
+                if old != fingerprint:
+                    fail("COMMAND_CONFLICT", "같은 명령 ID를 다른 요청에 사용할 수 없습니다.")
+                return copy.deepcopy(result)
             if request.assignmentId is not None and request.assignmentId != p.assignment_id:
                 fail("STALE_ROLE", "역할이 변경되었습니다. 현재 역할을 확인한 뒤 다시 조작하세요.")
             if p.connections == 0 and request.action != "leave":
                 fail("OFFLINE", "실시간 연결을 복구한 뒤 조작하세요.")
-            key, fingerprint = request.commandId, request.model_dump_json()
             if key in p.commands:
                 old, result = p.commands[key]
                 if old != fingerprint:
@@ -214,7 +278,7 @@ class Classroom:
             return result
 
     def _command(self, p, action, data):
-        teacher = p.role == "teacher"
+        teacher = not self.team_mode and p.role == "teacher"
         if self.limited and action in {
             "prepare",
             "resume",
@@ -225,7 +289,11 @@ class Classroom:
             "sign",
             "submit",
         }:
-            fail("ROOM_LIMIT", "수업 실행 한도입니다. 방을 종료하고 새 방을 만드세요.")
+            fail(
+                "ROOM_LIMIT",
+                "실습 실행 한도입니다 저장한 기록을 확인하세요"
+                if self.team_mode else "수업 실행 한도입니다. 방을 종료하고 새 방을 만드세요.",
+            )
         if action == "leave":
             if teacher:
                 self.closed = True
@@ -233,9 +301,13 @@ class Classroom:
                 if self.session.race:
                     self.session.race.command("stop")
             else:
-                if p.team and self.session.race:
+                if self.team_mode:
+                    self._release_assignment(p)
+                elif p.team and self.session.race:
                     self.session.race.enabled[p.team] = False
                 del self.people[p.id]
+                if self.team_mode and not any(x.connections for x in self.people.values()):
+                    self._pause_empty_team()
             self.note(p.name, "퇴장" if not teacher else "방 종료")
             return {"ok": True}
         teacher_actions = {
@@ -253,12 +325,39 @@ class Classroom:
             "close",
             "remove",
         }
-        if action in teacher_actions and not teacher:
+        if self.team_mode and action in {"assign", "remove", "close", "reset"}:
+            fail("FORBIDDEN", "팀 실습에서는 다른 참가자나 저장한 방을 변경할 수 없습니다.", 403)
+        if action in teacher_actions and not teacher and not self.team_mode:
             fail("FORBIDDEN", "교사만 실행할 수 있습니다.", 403)
-        if action in {"draft", "sign", "submit", "participate"} and not p.team:
+        if action in {"draft", "sign", "submit", "participate"} and (
+            p.team not in NODE_IDS or (self.team_mode and p.role != "representative")
+        ):
             fail("FORBIDDEN", "팀 대표만 실행할 수 있습니다.", 403)
         lab = self.session.lab
         result = {"ok": True}
+        if action in {"claim", "release"}:
+            if not self.team_mode:
+                fail("FORBIDDEN", "팀 역할은 교사가 지정합니다.", 403)
+            if data.get("participantId", p.id) != p.id:
+                fail("FORBIDDEN", "자신의 팀 역할만 변경할 수 있습니다.", 403)
+            if action == "claim":
+                team = data.get("team")
+                if team not in NODE_IDS:
+                    fail("INVALID_ASSIGNMENT", "참여할 팀을 확인하세요.", 400)
+                holder = next((x for x in self.people.values() if x.team == team), None)
+                if holder and holder.id != p.id:
+                    if holder.connections or self.clock() - holder.disconnected < REPRESENTATIVE_GRACE_SECONDS:
+                        fail("TEAM_TAKEN", "이미 참여 중인 팀입니다. 다른 팀을 선택하세요.")
+                    self._expire_representative(holder)
+                if p.team == team and p.role == "representative":
+                    return result
+                self._release_assignment(p)
+                p.team, p.role = team, "representative"
+                self.note(p.name, f"팀 {team} 대표 참여 · 채굴 참여는 직접 재개")
+            elif p.team or p.role != "observer":
+                self._release_assignment(p)
+                self.note(p.name, "팀 역할 해제")
+            return result
         if action == "remove":
             target_id = data.get("participantId")
             target = self.people.get(target_id) if isinstance(target_id, str) else None
@@ -400,14 +499,25 @@ class Classroom:
             if self.closed:
                 return
             now = self.clock()
+            if self.team_mode:
+                for p in self.people.values():
+                    if (
+                        p.team
+                        and not p.connections
+                        and now - p.disconnected >= REPRESENTATIVE_GRACE_SECONDS
+                    ):
+                        self._expire_representative(p)
             if not any(p.connections for p in self.people.values()):
                 if self.empty_since is None:
                     self.empty_since = now
+                if self.team_mode:
+                    self._pause_empty_team()
+                    return
                 if now - self.empty_since >= 1800:
                     self.closed = True
                     self.note("서버", "모두 퇴장한 뒤 30분 경과 · 방 종료")
                     return
-            for p in self.people.values():
+            for p in (() if self.team_mode else self.people.values()):
                 if p.connections == 0 and not p.suspended and now - p.disconnected >= 15:
                     p.suspended = True
                     if p.role == "teacher":
@@ -423,7 +533,7 @@ class Classroom:
                             self.session.race.command("pause")
                     self.note("서버", f"{p.name} 연결 대기 · 담당 실행 일시정지")
             # Disconnected teacher cannot restart the loop with a late HTTP command.
-            if self.teacher.connections == 0 and self.teacher.suspended:
+            if not self.team_mode and self.teacher.connections == 0 and self.teacher.suspended:
                 return
             if self.session.race and self.session.race.status == "running":
                 before = len(lab_queue := self.session.lab.queue)
@@ -442,7 +552,11 @@ class Classroom:
                 if self.session.race:
                     self.session.race.command("pause")
                 self.automatic = False
-                self.note("서버", "수업 실행 한도 도달 · 방을 종료하고 새 실습을 시작하세요")
+                self.note(
+                    "서버",
+                    "실습 실행 한도 도달 · 기록 유지"
+                    if self.team_mode else "수업 실행 한도 도달 · 방을 종료하고 새 실습을 시작하세요",
+                )
 
 
 class ClassroomHub:

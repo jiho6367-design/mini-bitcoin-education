@@ -71,6 +71,7 @@ jobs:
             docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
             docker volume rm "$VOLUME_NAME" >/dev/null 2>&1 || true
             rm -f -- "$private_dir/state.json" "$private_dir/prepare.json" "$private_dir/verify.json"
+            rm -f -- "$private_dir/team-state.json" "$private_dir/team-prepare.json" "$private_dir/team-verify.json"
             rm -f -- "$private_dir/graceful-ready.json" "$private_dir/graceful.log"
             rm -f -- "$private_dir/resources-first.json" "$private_dir/resources-replacement.json"
             rmdir -- "$private_dir" 2>/dev/null || true
@@ -204,6 +205,20 @@ jobs:
               /probes/persistence_probe.py "$@"
           }
 
+          team_probe() {
+            docker run --rm --network host \
+              --user "$(id -u):$(id -g)" \
+              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/probes,readonly" \
+              --mount "type=bind,source=${private_dir},target=/probe-state" \
+              --entrypoint python "$IMAGE_TAG" -B -X utf8 \
+              /probes/team_restart_probe.py "$@"
+          }
+
+          docker run --rm --user 10001:10001 \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/app/tests,readonly" \
+            --entrypoint python "$IMAGE_TAG" -B -m unittest discover \
+            -s tests -p 'test_team*.py' -v
+
           docker volume create "$VOLUME_NAME" >/dev/null
           # Simulate a fresh host disk owned by root rather than the image's /data owner.
           docker run --rm --user 0:0 --entrypoint python \
@@ -259,7 +274,21 @@ jobs:
           assert all(result.get(key) is True for key in required), "A required persistence check did not pass"
           PY
           capture_resource_usage replacement
+          # The legacy probe has closed its restored room. Create the shared
+          # peer room now, then replace the app again without replacing its disk.
+          team_probe prepare --base-url "$PROBE_BASE_URL" \
+            --state-file /probe-state/team-state.json --result-file /probe-state/team-prepare.json
+          docker stop --time 20 "$CONTAINER_NAME" >/dev/null
+          test "$(docker inspect --format '{{.State.ExitCode}}' "$CONTAINER_NAME")" = 0
+          docker rm "$CONTAINER_NAME" >/dev/null
+          start_server
+          third_id="$(docker inspect --format '{{.Id}}' "$CONTAINER_NAME")"
+          test "$second_id" != "$third_id"
+          check_server_identity
+          team_probe verify --state-file /probe-state/team-state.json \
+            --result-file /probe-state/team-verify.json
           printf 'Verified new container identity, HTTP, actual WS, and persisted records\n'
+          printf 'Verified teacherless peer controls, signed-cookie reconnect, and the same team link/ledger after another full container replacement\n'
           printf 'No public endpoint was deployed; private probe state is deleted on exit\n'
 
   postgres-restart:
@@ -323,6 +352,7 @@ jobs:
             docker rm -f -v "$PG_CONTAINER_NAME" >/dev/null 2>&1 || true
             docker network rm "$NETWORK_NAME" >/dev/null 2>&1 || true
             rm -f -- "$private_dir/state.json" "$private_dir/prepare.json" "$private_dir/verify.json"
+            rm -f -- "$private_dir/team-state.json" "$private_dir/team-prepare.json" "$private_dir/team-verify.json"
             rmdir -- "$private_dir" 2>/dev/null || true
             exit "$status"
           }
@@ -371,6 +401,15 @@ jobs:
               /probes/persistence_probe.py "$@"
           }
 
+          team_probe() {
+            docker run --rm --network host \
+              --user "$(id -u):$(id -g)" \
+              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/probes,readonly" \
+              --mount "type=bind,source=${private_dir},target=/probe-state" \
+              --entrypoint python "$IMAGE_TAG" -B -X utf8 \
+              /probes/team_restart_probe.py "$@"
+          }
+
           docker network create "$NETWORK_NAME" >/dev/null
           docker run --detach --name "$PG_CONTAINER_NAME" \
             --network "$NETWORK_NAME" --network-alias postgres \
@@ -399,6 +438,11 @@ jobs:
             --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/app/tests,readonly" \
             --entrypoint python "$IMAGE_TAG" -B -m unittest discover \
             -s tests -p test_postgres_deployment.py -v
+          docker run --rm --network "$NETWORK_NAME" --user 10001:10001 \
+            --env TEST_POSTGRES_URL \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/app/tests,readonly" \
+            --entrypoint python "$IMAGE_TAG" -B -m unittest discover \
+            -s tests -p 'test_team*.py' -v
 
           start_server
           first_id="$(docker inspect --format '{{.Id}}' "$CONTAINER_NAME")"
@@ -437,7 +481,23 @@ jobs:
           )
           assert all(result.get(key) is True for key in required), "A required PostgreSQL persistence check did not pass"
           PY
+          # Legacy authority is cleaned above; the stable peer room intentionally
+          # remains in this isolated PostgreSQL database until container cleanup.
+          team_probe prepare --base-url "$PROBE_BASE_URL" \
+            --state-file /probe-state/team-state.json --result-file /probe-state/team-prepare.json
+          docker stop --time 20 "$CONTAINER_NAME" >/dev/null
+          test "$(docker inspect --format '{{.State.ExitCode}}' "$CONTAINER_NAME")" = 0
+          docker rm "$CONTAINER_NAME" >/dev/null
+          start_server
+          third_id="$(docker inspect --format '{{.Id}}' "$CONTAINER_NAME")"
+          test "$second_id" != "$third_id"
+          check_diskless_identity
+          test "$(docker inspect --format '{{.Id}}' "$PG_CONTAINER_NAME")" = "$postgres_id"
+          test "$(docker inspect --format '{{.State.StartedAt}}' "$PG_CONTAINER_NAME")" = "$postgres_started"
+          team_probe verify --state-file /probe-state/team-state.json \
+            --result-file /probe-state/team-verify.json
           printf '## PostgreSQL diskless app replacement\n\n' >>"$GITHUB_STEP_SUMMARY"
           printf 'PostgreSQL 18 integration tests, HTTP, actual WS, owner isolation, and saved records passed after complete app-container replacement without a local data volume\n' >>"$GITHUB_STEP_SUMMARY"
+          printf 'Teacherless peer controls and the same signed-cookie team link, practice, and ledger passed after a second full app replacement\n' >>"$GITHUB_STEP_SUMMARY"
           printf 'The database container stayed running; test data, credentials, and private probe state are removed on exit\n' >>"$GITHUB_STEP_SUMMARY"
           printf 'No public endpoint or paid hosting resource was created\n' >>"$GITHUB_STEP_SUMMARY"

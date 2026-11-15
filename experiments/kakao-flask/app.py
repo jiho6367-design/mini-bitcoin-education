@@ -3,6 +3,7 @@ import math
 import os
 import re
 import time
+from contextlib import nullcontext
 from pathlib import Path
 
 from flask import Flask, g, jsonify, request, send_from_directory
@@ -66,6 +67,7 @@ def create_app(config=None, *, database_path=None):
     app.config.setdefault("TEAM_APP_VERSION", APP_VERSION)
     app.config.setdefault("TEAM_DATABASE_URL", os.environ.get("TEAM_DATABASE_URL", ""))
     app.config.setdefault("TEAM_DATABASE_PREFIX", os.environ.get("TEAM_DATABASE_PREFIX", "team"))
+    app.config.setdefault("TEAM_SHARED_ROOM_CODE", os.environ.get("TEAM_SHARED_ROOM_CODE", ""))
     app.config.setdefault("TEAM_PUBLIC_URL", os.environ.get("TEAM_PUBLIC_URL")
                           or os.environ.get("RENDER_EXTERNAL_URL", ""))
     app.config.setdefault("EDUCATION_ENABLED", not app.testing)
@@ -573,15 +575,22 @@ def create_app(config=None, *, database_path=None):
             raise
 
     backend = app.extensions.get("postgres_backend")
-    if backend is not None:
-        try:
-            backend.activate()
-        except Exception:
-            runtime = app.extensions.get("education")
-            if runtime is not None:
-                runtime.close()
-            store.close()
-            raise
+    try:
+        # Keep the prior deployment's writer lease if link migration fails.
+        # Claiming and migrating commit together, fencing old writes only once ready.
+        with backend.transaction(write=True) if backend is not None else nullcontext():
+            if backend is not None:
+                backend.activate()
+            shared_code = app.config["TEAM_SHARED_ROOM_CODE"].strip()
+            if shared_code and "education" in app.extensions:
+                if not app.extensions["education"].team_rooms.migrate_existing(shared_code):
+                    raise RuntimeError("Configured shared room has no saved checkpoint")
+    except Exception:
+        runtime = app.extensions.get("education")
+        if runtime is not None:
+            runtime.close()
+        store.close()
+        raise
 
     return app
 
