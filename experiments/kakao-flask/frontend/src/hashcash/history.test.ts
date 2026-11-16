@@ -14,6 +14,27 @@ describe("nonce result browser history", () => {
     expect(parseHistory(JSON.stringify([record, large]))).toEqual([record, large]);
   });
 
+  it("keeps old CPU records and new actual device metadata in the same storage", () => {
+    const gpu = { ...record, id: "gpu-proof", requestedMode: "gpu", backend: "gpu", deviceLabel: "NVIDIA · WebGPU",
+      cpuChecked: "0", gpuChecked: "4096", checked: "4096", winnerBackend: "gpu" };
+    const hybrid = { ...record, id: "hybrid-proof", requestedMode: "hybrid", backend: "hybrid",
+      cpuChecked: "37", gpuChecked: "4096", checked: "4133", winnerBackend: "cpu" };
+    const fallback = { ...record, id: "fallback-proof", requestedMode: "auto", backend: "cpu",
+      deviceLabel: "브라우저 CPU", reason: "GPU를 사용할 수 없어 CPU로 전환했습니다", cpuChecked: "3056", gpuChecked: "0" };
+    const native = { ...hybrid, id: "native-proof", requestedMode: "c-native", deviceLabel: "C CPU+CUDA" };
+    expect(parseHistory(JSON.stringify([record, gpu, hybrid, fallback, native]))).toEqual([record, gpu, hybrid, fallback, native]);
+  });
+
+  it("rejects corrupt optional device fields while preserving old records", () => {
+    const invalid = [
+      { ...record, requestedMode: "cuda" }, { ...record, backend: "native" },
+      { ...record, winnerBackend: "hybrid" }, { ...record, deviceLabel: 123 },
+      { ...record, reason: "x".repeat(2001) }, { ...record, cpuChecked: "-1" },
+      { ...record, gpuChecked: 4096 }, { ...record, gpuChecked: "1e10" },
+    ];
+    expect(parseHistory(JSON.stringify([...invalid, record]))).toEqual([record]);
+  });
+
   it("ignores malformed or incompatible records without losing valid ones", () => {
     const invalid = [null, {}, { ...record, nonce: 3055 }, { ...record, difficulty: 65 },
       { ...record, checked: "-3" }, { ...record, elapsedMs: -5 },

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { TeamNavigation } from "../ui/TeamNavigation";
 import { useTheme } from "../ui/useTheme";
 import type { ThemePreference } from "../theme";
-import { proofHash, validateSettings } from "./core";
+import { proofHash, validateSettings, type HashcashMode } from "./core";
 import { addHistory, HISTORY_KEY, NAME_KEY, parseHistory, type HistoryRecord } from "./history";
 import "./hashcash.css";
 
@@ -15,6 +15,14 @@ type WorkerUpdate = {
   hash: string | null;
   elapsedMs: number;
   error?: string;
+  backend?: "cpu" | "gpu" | "hybrid";
+  deviceLabel?: string;
+  reason?: string;
+  cpuChecked?: string;
+  gpuChecked?: string;
+  initializing?: boolean;
+  winnerBackend?: "cpu" | "gpu";
+  nativeJobId?: string;
 };
 type Search = {
   id: string;
@@ -25,6 +33,29 @@ type Search = {
   nonce: string | null;
   hash: string | null;
   elapsedMs: number;
+  requestedMode: HashcashMode;
+  backend?: "cpu" | "gpu" | "hybrid";
+  deviceLabel?: string;
+  reason?: string;
+  cpuChecked: string;
+  gpuChecked: string;
+  initializing: boolean;
+  winnerBackend?: "cpu" | "gpu";
+  nativeJobId?: string;
+};
+function stopNative(search: Search | null) {
+  if (!search?.nativeJobId || search.status !== "running") return;
+  void fetch("/api/hashcash-native/stop", { method: "POST", credentials: "same-origin", keepalive: true,
+    headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: search.nativeJobId }) }).catch(() => undefined);
+}
+const backendLabels = { cpu: "CPU", gpu: "GPU", hybrid: "CPU+GPU" };
+const modeHints = {
+  auto: "GPU를 확인해 사용할 수 있으면 GPU로 계산합니다 사용할 수 없으면 CPU로 전환합니다",
+  cpu: "이 기기의 CPU로 계산합니다 GPU를 준비하지 않고 바로 시작합니다",
+  gpu: "이 기기의 GPU로 여러 넌스를 함께 계산합니다 GPU를 사용할 수 없으면 CPU로 전환합니다",
+  hybrid: "CPU와 GPU가 서로 다른 넌스 구간을 동시에 계산합니다 GPU를 사용할 수 없으면 CPU로 전환합니다",
+  "python-native": "PC에서 실행한 팀 Flask의 Python·CUDA 엔진을 사용합니다 지원하지 않는 환경에서는 브라우저 CPU로 전환합니다",
+  "c-native": "PC에서 실행한 팀 Flask의 C·CUDA 엔진을 사용합니다 지원하지 않는 환경에서는 브라우저 CPU로 전환합니다",
 };
 const statuses = {
   running: "넌스를 찾는 중",
@@ -49,6 +80,7 @@ export function HashcashApp() {
   const { preference, selectTheme } = useTheme();
   const [message, setMessage] = useState("You are the best of best!!!!");
   const [difficulty, setDifficulty] = useState(3);
+  const [mode, setMode] = useState<HashcashMode>("auto");
   const [startNonce, setStartNonce] = useState("0");
   const [participantName, setParticipantName] = useState(readName);
   const [search, setSearch] = useState<Search | null>(null);
@@ -67,6 +99,7 @@ export function HashcashApp() {
 
   useEffect(() => () => {
     currentRun.current = "";
+    stopNative(searchRef.current);
     worker.current?.terminate();
     worker.current = null;
   }, []);
@@ -74,6 +107,7 @@ export function HashcashApp() {
   useEffect(() => {
     const hide = () => {
       currentRun.current = "";
+      stopNative(searchRef.current);
       worker.current?.terminate();
       worker.current = null;
       setVerifying(false);
@@ -109,6 +143,13 @@ export function HashcashApp() {
       hash: result.hash,
       checked: result.checked,
       elapsedMs: result.elapsedMs,
+      requestedMode: result.requestedMode,
+      backend: result.backend,
+      deviceLabel: result.deviceLabel,
+      reason: result.reason,
+      cpuChecked: result.cpuChecked,
+      gpuChecked: result.gpuChecked,
+      winnerBackend: result.winnerBackend,
       createdAt: new Date().toISOString(),
     };
     let previous = historyRef.current;
@@ -144,6 +185,7 @@ export function HashcashApp() {
     const initial: Search = {
       id, settings, participantName: participantName.trim() || "나", status: "running",
       checked: "0", nonce: null, hash: null, elapsedMs: 0,
+      requestedMode: mode, cpuChecked: "0", gpuChecked: "0", initializing: true,
     };
     setSearch(initial);
     setStartNonce(settings.startNonce);
@@ -154,14 +196,25 @@ export function HashcashApp() {
     try {
       const nextWorker = new Worker(new URL("./hashcash.worker.ts", import.meta.url), { type: "module" });
       worker.current = nextWorker;
+      let currentSearch = initial;
       nextWorker.onmessage = (event: MessageEvent<WorkerUpdate>) => {
         const update = event.data;
         if (currentRun.current !== id || update.runId !== id || worker.current !== nextWorker) return;
         const next: Search = {
-          ...initial,
+          ...currentSearch,
           status: update.type === "progress" ? "running" : update.type,
           checked: update.checked, nonce: update.nonce, hash: update.hash, elapsedMs: update.elapsedMs,
+          backend: update.backend ?? currentSearch.backend,
+          deviceLabel: update.deviceLabel ?? currentSearch.deviceLabel,
+          reason: update.reason ?? currentSearch.reason,
+          cpuChecked: update.cpuChecked ?? currentSearch.cpuChecked,
+          gpuChecked: update.gpuChecked ?? currentSearch.gpuChecked,
+          initializing: update.initializing ?? false,
+          winnerBackend: update.winnerBackend ?? currentSearch.winnerBackend,
+          nativeJobId: update.nativeJobId ?? currentSearch.nativeJobId,
         };
+        currentSearch = next;
+        searchRef.current = next;
         setSearch(next);
         if (update.type !== "progress") {
           nextWorker.terminate();
@@ -172,12 +225,13 @@ export function HashcashApp() {
       };
       nextWorker.onerror = () => {
         if (currentRun.current !== id || worker.current !== nextWorker) return;
+        stopNative(searchRef.current);
         nextWorker.terminate();
         worker.current = null;
         setSearch((previous) => previous?.id === id ? { ...previous, status: "error" } : previous);
         setError("브라우저에서 계산을 시작하지 못했습니다 최신 브라우저에서 다시 시도해 주세요");
       };
-      nextWorker.postMessage({ type: "start", runId: id, settings });
+      nextWorker.postMessage({ type: "start", runId: id, settings, mode });
     } catch {
       worker.current?.terminate();
       worker.current = null;
@@ -188,6 +242,7 @@ export function HashcashApp() {
 
   function stop() {
     currentRun.current = "";
+    stopNative(searchRef.current);
     worker.current?.terminate();
     worker.current = null;
     setSearch((previous) => previous?.status === "running" ? { ...previous, status: "stopped" } : previous);
@@ -217,6 +272,7 @@ export function HashcashApp() {
     setDifficulty(record.difficulty);
     setStartNonce(record.startNonce);
     setParticipantName(record.participantName);
+    setMode(record.requestedMode ?? "cpu");
     setError("");
     document.getElementById("nonce-message")?.focus();
   }
@@ -250,6 +306,11 @@ export function HashcashApp() {
               <label htmlFor="nonce-difficulty">목표 난이도<input id="nonce-difficulty" type="number" min={1} max={64} step={1} value={Number.isNaN(difficulty) ? "" : difficulty} onChange={(event) => setDifficulty(event.target.value === "" ? NaN : Number(event.target.value))} disabled={active} aria-describedby="nonce-difficulty-hint" /></label>
               <small id="nonce-difficulty-hint">해시 앞의 16진수 0 개수 · 처음에는 2~3을 추천합니다</small>
               <div className="nonce-target"><span>목표</span><code>{"0".repeat(Math.min(16, Math.max(0, Number.isFinite(difficulty) ? Math.trunc(difficulty) : 0)))}…</code><small>평균 {Number.isFinite(attempts) ? attempts < 1e9 ? decimalText(attempts) : attempts.toExponential(1) : "—"}회 계산</small></div>
+              <label htmlFor="nonce-mode">연산 방식<select id="nonce-mode" value={mode} onChange={(event) => setMode(event.target.value as HashcashMode)} disabled={active} aria-describedby="nonce-mode-hint">
+                <option value="auto">자동</option><option value="cpu">CPU</option><option value="gpu">GPU</option><option value="hybrid">CPU+GPU</option>
+                <optgroup label="PC 고급 모드"><option value="python-native">Python CPU+GPU · PC 전용</option><option value="c-native">C CPU+GPU · PC 전용</option></optgroup>
+              </select></label>
+              <small id="nonce-mode-hint">{modeHints[mode]}</small>
               <details className="nonce-options"><summary>추가 설정</summary>
                 <label htmlFor="nonce-start">시작 넌스<input id="nonce-start" inputMode="numeric" value={startNonce} onChange={(event) => setStartNonce(event.target.value)} disabled={active} autoComplete="off" /></label>
                 <label htmlFor="nonce-name">기록 이름<input id="nonce-name" value={participantName} maxLength={60} onChange={(event) => setParticipantName(event.target.value)} disabled={active} autoComplete="nickname" /></label>
@@ -261,7 +322,12 @@ export function HashcashApp() {
           </section>
           <section className="panel nonce-observation" aria-labelledby="nonce-observation-title">
             <h2 id="nonce-observation-title">2 결과 확인</h2>
-            <p className={`nonce-status ${search?.status === "found" ? "nonce-success" : ""}`} role="status" data-testid="nonce-status">{search ? statuses[search.status] : "입력 후 시작하세요"}</p>
+            <p className={`nonce-status ${search?.status === "found" ? "nonce-success" : ""}`} role="status" data-testid="nonce-status">{search ? search.initializing && active ? "연산 장치 확인 중" : statuses[search.status] : "입력 후 시작하세요"}</p>
+            <div className="nonce-engine" aria-label="실제 연산 장치">
+              <div className="nonce-engine-heading"><strong data-testid="nonce-backend">{search?.backend ? backendLabels[search.backend] : active ? "연산 장치 확인 중" : "시작하면 연산 장치를 표시합니다"}</strong>{search?.deviceLabel && <span data-testid="nonce-device">{search.deviceLabel}</span>}</div>
+              {search?.reason && <p role="status" data-testid="nonce-engine-reason">{search.reason}</p>}
+              <div className="nonce-device-counts" aria-label="장치별 완료 계산"><span>CPU <strong data-testid="nonce-cpu-checked">{numberText(search?.cpuChecked ?? "0")}</strong>회</span><span>GPU <strong data-testid="nonce-gpu-checked">{numberText(search?.gpuChecked ?? "0")}</strong>회</span></div>
+            </div>
             <dl className="nonce-metrics">
               <div><dt>계산한 횟수</dt><dd data-testid="nonce-checked">{numberText(search?.checked ?? "0")}<small>회</small></dd></div>
               <div><dt>경과 시간</dt><dd>{decimalText((search?.elapsedMs ?? 0) / 1000)}<small>초</small></dd></div>
@@ -275,12 +341,13 @@ export function HashcashApp() {
             </div>
             {search?.status === "found" && <div className="nonce-result">
               <p>앞의 0이 {search.settings.difficulty}개 이상인 해시를 찾았습니다</p>
+              {search.winnerBackend && <p>{backendLabels[search.winnerBackend]}에서 유효한 넌스를 발견했습니다</p>}
               <p className="nonce-input-proof">계산한 입력 <code>{JSON.stringify(search.settings.message)} + "{search.nonce}"</code></p>
               <button className="secondary" onClick={() => void verify()} disabled={verifying}>{verifying ? "다시 계산 중" : "해시 다시 검증"}</button>
               {verification && <p role="status" data-testid="nonce-verification">{verification}</p>}
             </div>}
             {storageMessage && <p role="status" className="nonce-storage-message">{storageMessage}</p>}
-            <p className="nonce-hint">이 기기의 브라우저 CPU로 실제 계산합니다 PC 전용 CUDA 가속은 사용하지 않으며 코인이나 공동 실습 장부는 바뀌지 않습니다</p>
+            <p className="nonce-hint">이 기기의 CPU·GPU로 실제 계산합니다 GPU는 여러 넌스를 한 번에 처리하므로 계산 수가 발견한 넌스보다 클 수 있습니다 CPU+GPU가 항상 더 빠르거나 가장 작은 넌스를 먼저 찾는 것은 아닙니다</p>
           </section>
         </div>
         <section className="panel nonce-history" aria-labelledby="nonce-history-title" data-testid="nonce-history">
@@ -291,11 +358,17 @@ export function HashcashApp() {
               <div className="nonce-record-heading"><strong>{record.participantName} · 난이도 {record.difficulty}</strong><time dateTime={record.createdAt}>{new Date(record.createdAt).toLocaleString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</time></div>
               <p className="nonce-record-message">{record.message || "(빈 메시지)"}</p>
               <p>넌스 <strong>{record.nonce}</strong> · {numberText(record.checked)}회 계산</p>
+              <p className="nonce-record-engine">{backendLabels[record.backend ?? "cpu"]}{record.deviceLabel ? ` · ${record.deviceLabel}` : ""}</p>
               <code>{record.hash}</code>
               <button className="secondary" onClick={() => loadRecord(record)} disabled={active}>결과 조건 불러오기</button>
             </li>)}
           </ol>}
         </section>
+        <details className="panel nonce-native-info">
+          <summary>Python·C 모드</summary>
+          <p>연산 방식의 PC 고급 모드에서 선택합니다 팀 Flask를 PC에서 실행하고 CUDA·네이티브 엔진이 준비된 경우에만 Python·C 연산을 사용합니다</p>
+          <p>무료 온라인 주소나 지원하지 않는 기기에서는 브라우저 CPU로 자동 전환합니다 별도 설치 없이 GPU를 쓰려면 일반 GPU·CPU+GPU 모드를 선택하세요 실제 연산 장치와 전환 이유는 결과에 표시됩니다</p>
+        </details>
       </main>
     </div>
   );

@@ -1,4 +1,5 @@
-import { scanHashcash, type HashcashWorkerRequest, type HashcashWorkerResponse } from "./core";
+import { type HashcashWorkerRequest, type HashcashWorkerResponse } from "./core";
+import { runHashcash } from "./runner";
 
 // This worker belongs to one browser search; the UI terminates it on stop or navigation.
 const worker = globalThis as unknown as {
@@ -12,7 +13,7 @@ worker.onmessage = (event) => {
   if (request?.type !== "start" || typeof request.runId !== "string" || started) return;
   started = true;
   const runId = request.runId;
-  void scanHashcash(request.settings, (progress) => worker.postMessage({ ...progress, runId }))
+  void runHashcash(request.settings, request.mode ?? "auto", (progress) => worker.postMessage({ ...progress, runId }))
     .then((result) => worker.postMessage({ ...result, runId }))
     .catch((error: unknown) => worker.postMessage({
       type: "error", runId, checked: "0", nonce: null, hash: null, elapsedMs: 0,

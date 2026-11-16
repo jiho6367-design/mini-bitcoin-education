@@ -89,7 +89,7 @@ class ApiTests(unittest.TestCase):
         return body
 
     def test_static_routes_and_health_do_not_create_database_or_cookie(self):
-        for path in ("/", "/architecture", "/api/health"):
+        for path in ("/", "/architecture", "/api/health", "/api/hashcash-native/capabilities"):
             r = self.client.get(path)
             self.assertEqual(r.status_code, 200)
             self.assertNotIn("Set-Cookie", r.headers)

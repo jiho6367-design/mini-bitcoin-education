@@ -1,4 +1,6 @@
-﻿param([int]$Port = 5003, [switch]$SkipInstall, [switch]$SkipBuild)
+﻿param([int]$Port = 5003, [switch]$SkipInstall, [switch]$SkipBuild,
+    [switch]$Native, [switch]$InstallGpu, [switch]$BuildNative,
+    [string]$Compiler = '', [string]$OpenSSLRoot = '')
 $ErrorActionPreference = 'Stop'
 $teamAppRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 Set-Location -LiteralPath $teamAppRoot
@@ -12,6 +14,27 @@ if (-not $SkipInstall) {
     & $teamPython -m pip install -r requirements.txt
     if ($LASTEXITCODE -ne 0) { throw 'Python 의존성 설치 실패' }
 }
+if ($InstallGpu) {
+    & $teamPython -m pip install -r native_hashcash/requirements-gpu.txt
+    if ($LASTEXITCODE -ne 0) { throw 'GPU 선택 의존성 설치 실패 · 기본 웹 연산은 계속 사용할 수 있습니다' }
+}
+if ($BuildNative) {
+    if (-not $Compiler) {
+        $teamGccCommand = Get-Command gcc.exe -ErrorAction SilentlyContinue
+        if ($teamGccCommand) { $Compiler = $teamGccCommand.Source }
+        else {
+            $teamKnownGcc = Join-Path $env:LOCALAPPDATA 'Programs/msys64/ucrt64/bin/gcc.exe'
+            if (Test-Path -LiteralPath $teamKnownGcc) { $Compiler = $teamKnownGcc }
+        }
+    }
+    if (-not $OpenSSLRoot -and $Compiler) { $OpenSSLRoot = Split-Path -Parent (Split-Path -Parent $Compiler) }
+    $teamNativeArgs = @('-m', 'native_hashcash.hashcash_lab.native_scheduler_experiment', '--build', '--self-test')
+    if ($Compiler) { $teamNativeArgs += @('--compiler', $Compiler) }
+    if ($OpenSSLRoot) { $teamNativeArgs += @('--openssl-root', $OpenSSLRoot) }
+    & $teamPython @teamNativeArgs
+    if ($LASTEXITCODE -ne 0) { throw 'C 선택 엔진 빌드 실패 · GCC와 OpenSSL 개발 환경을 확인하세요' }
+}
+if ($Native -or $InstallGpu -or $BuildNative) { $env:TEAM_NATIVE_HASHCASH = '1' }
 Push-Location -LiteralPath (Join-Path $teamAppRoot 'frontend')
 try {
     if (-not (Test-Path -LiteralPath 'node_modules')) {
@@ -39,7 +62,8 @@ if (-not $env:TEAM_TEACHER_SECRET) {
     Write-Host "교사용 비밀코드 파일: $teamSecretFile"
 }
 $env:PORT = [string]$Port
-Write-Host "통합 실습: http://127.0.0.1:$Port/"
-Write-Host "기초 실습: http://127.0.0.1:$Port/basic"
+Write-Host "기초 실습: http://127.0.0.1:$Port/"
+Write-Host "넌스 찾기: http://127.0.0.1:$Port/hashcash"
+if ($env:TEAM_NATIVE_HASHCASH -eq '1') { Write-Host 'Python/C 고급 모드: 이 PC에서만 활성화' }
 Write-Host '종료: Ctrl+C'
 & $teamPython -B app.py

@@ -1,4 +1,4 @@
-import { validateSettings } from "./core";
+import { validateSettings, type HashcashMode } from "./core";
 
 export const HISTORY_KEY = "team-hashcash-history-v1";
 export const NAME_KEY = "team-hashcash-name-v1";
@@ -15,6 +15,13 @@ export type HistoryRecord = {
   checked: string;
   elapsedMs: number;
   createdAt: string;
+  requestedMode?: HashcashMode;
+  backend?: "cpu" | "gpu" | "hybrid";
+  deviceLabel?: string;
+  reason?: string;
+  cpuChecked?: string;
+  gpuChecked?: string;
+  winnerBackend?: "cpu" | "gpu";
 };
 
 function isRecord(value: unknown): value is HistoryRecord {
@@ -28,6 +35,14 @@ function isRecord(value: unknown): value is HistoryRecord {
       typeof record.checked !== "string" || !/^[1-9][0-9]{0,19}$/.test(record.checked) ||
       typeof record.elapsedMs !== "number" || !Number.isFinite(record.elapsedMs) || record.elapsedMs < 0 ||
       typeof record.createdAt !== "string" || record.createdAt.length > 40 || !Number.isFinite(Date.parse(record.createdAt))) return false;
+  if (record.requestedMode !== undefined && !["auto", "cpu", "gpu", "hybrid", "python-native", "c-native"].includes(record.requestedMode)) return false;
+  if (record.backend !== undefined && !["cpu", "gpu", "hybrid"].includes(record.backend)) return false;
+  if (record.winnerBackend !== undefined && !["cpu", "gpu"].includes(record.winnerBackend)) return false;
+  if (record.deviceLabel !== undefined && (typeof record.deviceLabel !== "string" || record.deviceLabel.length > 300)) return false;
+  if (record.reason !== undefined && (typeof record.reason !== "string" || record.reason.length > 2000)) return false;
+  for (const count of [record.cpuChecked, record.gpuChecked]) {
+    if (count !== undefined && (typeof count !== "string" || !/^(0|[1-9][0-9]{0,19})$/.test(count))) return false;
+  }
   try {
     const settings = validateSettings({ message: record.message, difficulty: record.difficulty, startNonce: record.startNonce });
     const result = validateSettings({ ...settings, startNonce: record.nonce });

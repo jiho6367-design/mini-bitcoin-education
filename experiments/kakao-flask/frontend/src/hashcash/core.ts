@@ -9,6 +9,8 @@ export type HashcashSettings = {
   startNonce: string;
 };
 
+export type HashcashMode = "auto" | "cpu" | "gpu" | "hybrid" | "python-native" | "c-native";
+
 export type HashcashProgress = {
   type: "progress" | "found" | "exhausted" | "error";
   checked: string;
@@ -16,15 +18,66 @@ export type HashcashProgress = {
   hash: string | null;
   elapsedMs: number;
   error?: string;
+  backend?: "cpu" | "gpu" | "hybrid";
+  deviceLabel?: string;
+  reason?: string;
+  cpuChecked?: string;
+  gpuChecked?: string;
+  initializing?: boolean;
+  winnerBackend?: "cpu" | "gpu";
+  nativeJobId?: string;
 };
 
 export type HashcashWorkerRequest = {
   type: "start";
   runId: string;
   settings: HashcashSettings;
+  mode?: HashcashMode;
 };
 
 export type HashcashWorkerResponse = HashcashProgress & { runId: string };
+
+export type HashcashBatch = {
+  checked: number;
+  nonce: string | null;
+  hash: string | null;
+  lastNonce: string;
+  lastHash: string;
+  elapsedMs: number;
+};
+
+export async function scanCpuBatch(
+  settings: HashcashSettings, start: bigint, count: number,
+  cancelled: () => boolean = () => false,
+): Promise<HashcashBatch> {
+  const validated = validateSettings({ ...settings, startNonce: start.toString() });
+  if (!Number.isSafeInteger(count) || count < 1 || start + BigInt(count - 1) > MAX_NONCE) {
+    throw new Error("CPU 탐색 범위를 확인하세요");
+  }
+  const prefix = messageBytes(validated.message);
+  const target = "0".repeat(validated.difficulty);
+  const started = performance.now();
+  let checked = 0;
+  let lastNonce = start.toString();
+  let lastHash = "";
+  let foundNonce: string | null = null;
+  for (let offset = 0; offset < count && !cancelled(); offset += 1) {
+    const decimal = (start + BigInt(offset)).toString();
+    const suffix = encoder.encode(decimal);
+    const input = new Uint8Array(prefix.length + suffix.length);
+    input.set(prefix); input.set(suffix, prefix.length);
+    lastHash = hex(await cryptoDigest(input));
+    lastNonce = decimal;
+    checked += 1;
+    if (lastHash.startsWith(target)) {
+      if (await proofHash(validated.message, decimal) !== lastHash) throw new Error("CPU 해시 검증에 실패했습니다");
+      foundNonce = decimal;
+      break;
+    }
+  }
+  return { checked, nonce: foundNonce, hash: foundNonce === null ? null : lastHash,
+    lastNonce, lastHash, elapsedMs: performance.now() - started };
+}
 
 function messageBytes(message: unknown): Uint8Array<ArrayBuffer> {
   if (typeof message !== "string") throw new Error("메시지를 입력하세요");

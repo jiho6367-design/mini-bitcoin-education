@@ -1,0 +1,4 @@
+# Optional NVIDIA CUDA execution. CPU execution uses Python's standard library.
+# Component wheels include NVRTC/runtime; the compatible NVIDIA driver is required.
+cupy-cuda12x[ctk]==14.2.0
+numpy>=2.0,<2.5

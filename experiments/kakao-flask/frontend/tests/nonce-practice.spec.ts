@@ -9,6 +9,8 @@ const canonicalNonce = async (page: Page) => (await page.getByTestId("nonce-valu
 async function ready(page: Page) {
   await expect(page.getByRole("heading", { name: "넌스 찾기", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "탐색 시작", exact: true })).toBeEnabled();
+  // These regressions check the sequential scanner's exact first nonce/count.
+  await page.getByRole("combobox", { name: "연산 방식", exact: true }).selectOption("cpu");
 }
 
 async function settings(page: Page) {

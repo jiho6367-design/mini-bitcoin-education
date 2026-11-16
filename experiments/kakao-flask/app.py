@@ -181,6 +181,7 @@ def create_app(config=None, *, database_path=None):
                 return jsonify(ok=False, code="ORIGIN_REJECTED", reason=message), 403
         if (request.endpoint is not None and request.path.startswith("/api/")
                 and not request.path.startswith("/api/education/")
+                and not request.path.startswith("/api/hashcash-native/")
                 and request.path != "/api/health"):
             g.practice = manager.get(request.cookies.get(COOKIE_NAME))
 
@@ -647,10 +648,16 @@ def create_app(config=None, *, database_path=None):
         store.close()
         raise
 
+    from native_hashcash_api import register_native_hashcash
+    register_native_hashcash(app)
+
     return app
 
 
-app = create_app()
+# Spawned native CPU workers import the main module on Windows. They must not
+# create another Flask runtime or claim a database writer while hashing.
+if __name__ != "__mp_main__":
+    app = create_app()
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 5000)), debug=False, threaded=True)

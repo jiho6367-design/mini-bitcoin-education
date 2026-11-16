@@ -20,6 +20,13 @@
 .nonce-shell .nonce-hint { margin: 16px 0 0; }
 .nonce-shell .nonce-status { margin: 0 0 18px; padding: 12px 14px; border-radius: 8px; background: var(--surface-subtle); font-weight: 600; }
 .nonce-shell .nonce-success { background: var(--success-bg); color: var(--success); }
+.nonce-engine { margin: 0 0 20px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-subtle); }
+.nonce-engine-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; }
+.nonce-engine-heading > strong { color: var(--accent); }
+.nonce-engine-heading > span, .nonce-engine p { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.nonce-engine p { margin: 8px 0; }
+.nonce-device-counts { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.nonce-device-counts strong { color: var(--text); margin-left: 6px; margin-right: 3px; font-variant-numeric: tabular-nums; }
 .nonce-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 20px; }
 .nonce-metrics > div { min-width: 0; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .nonce-metrics dt { color: var(--muted); font-size: 12px; }
@@ -42,6 +49,10 @@
 .nonce-record-message { white-space: pre-wrap; max-height: 7em; overflow: auto; overflow-wrap: anywhere; }
 .nonce-history li > code { display: block; overflow-wrap: anywhere; font-size: 12px; color: var(--muted); margin: 12px 0; }
 .nonce-empty { color: var(--muted); padding: 18px 0; }
+.nonce-record-engine { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.nonce-native-info { margin-top: 20px; }
+.nonce-native-info summary { cursor: pointer; font-weight: 600; }
+.nonce-native-info p { color: var(--muted); font-size: 12px; }
 @media (max-width: 850px) {
   .nonce-workspace { grid-template-columns: 1fr; }
   .nonce-history ol { grid-template-columns: 1fr; }
