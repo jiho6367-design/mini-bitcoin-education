@@ -2,6 +2,29 @@
 
 현재 팀 브랜치는 `blockchain-practice`, 실행 폴더는 `experiments/blockchain-practice`입니다 이전 검증의 브랜치 이름·공개 주소·커밋은 당시의 사실로 보존합니다 폴더·브랜치 이름 변경은 DB·쿠키·브라우저 저장소 키를 바꾸지 않습니다
 
+## 현재 운영 검증 요약 (2026-11-17)
+
+검증된 운영 소스는 `9fca79179e4f93cfbde089dfb24d043aa9a8b952`이며 브랜치는 `blockchain-practice`, 폴더는 `experiments/blockchain-practice`입니다 **[블록체인 실습실](https://blockchain-practice.onrender.com)**과 이전 주소의 연결 전용 서비스 모두 이 커밋으로 Live임을 확인했습니다 아래 과거 검증은 당시 기록을 그대로 유지하며, 현재 기능과 검사 수는 이 요약을 기준으로 읽습니다
+
+- Python 총 235개 중 218개 통과·환경 의존 17개 조건부 건너뜀, 실패 없음
+- 프런트 단위 147개·TypeScript·ESLint·운영 빌드, 저장소 루트 lint 통과
+- [GitHub Actions 43961448887](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43961448887)의 `production-restart`·`postgres-restart` 모두 성공
+- 공개 메뉴 **기초 실습 · 공동 실습 · 넌스 찾기**, 기초 시작하기의 항상 보이는 6단계 안내와 기본 접힌 최신 시연 영상 확인
+- 영상 `/static/media/blockchain-practice-demo-20261117.mp4`: 실제 조작·클릭 설명 자막, 273.033초(4분 33초), 2880×1980, 11,743,597바이트 공개 파일 일치·206 Range·브라우저 실제 재생 확인
+- 넌스 찾기의 브라우저 CPU·GPU·CPU+GPU와 CPU 자동 전환 유지, Python·C는 선택적 로컬 PC 모드이며 공개 Render에서는 실행하지 않음
+- 같은 무료 서비스·공개 주소·Neon 연결·스키마·쿠키·브라우저 저장 키를 유지한 이름·폴더 정리 배포 확인
+- PostgreSQL을 READ ONLY로 읽은 배포 전후 비교에서 기초 저장 실습 10개·교육 실습 36개·교육 이벤트 1,803개·소유권 매핑 30개·팀 링크 6개·참여자 12명·교육 메타의 전체 행이 정확히 동일함
+- 기존 공동 코드 `V5JHT522`의 실습 ID·장부·이벤트 835개 동일, 기존 브라우저의 기초 실습을 유지한 새 홈·영상 확인
+- 이전 호스트는 DB 없는 `transfer` 모드이며 새 주소로 이동, 옛 API는 `410 SITE_MOVED`로 명령 재전송 없이 안내
+
+검증 근거는 로컬 비공개 작업 산출물 `work/team-rename-release/release-proof.json`, `rename-after-proof.json`, `rename-exact-row-proof.json`과 `work/team-demo-release/public-video-proof.json`, `browser-video-proof.json`에 보관합니다 이 경로의 원본 DB 스냅샷·소유 쿠키·비밀값은 Git에 포함하지 않습니다 집계는 해당 배포 시점의 기록이며 이후 정상 실습으로 달라질 수 있습니다 실제 Python·C CUDA 실행과 장기·대규모 부하 검증은 이 결과에 포함하지 않습니다
+
+위 검사 수는 `9fca791` 코드에서 실제 수행한 결과입니다 이번 문서 정리에서 전체 E2E를 다시 실행한 결과로 간주하지 않습니다 Linux PostgreSQL 통합·재시작 검사는 위 별도 CI 성공 기록으로 구분합니다
+
+## 과거 검증 이력
+
+이하 내용의 기능·검사 수·영상·주소는 각 검증 당시의 사실입니다 현재 요약으로 과거 결과를 덮어쓰지 않습니다
+
 ## 기초·공동 화면 색상과 테마 통일 (2026-11-17)
 
 기초·공동 화면이 `static/team-theme.css`의 같은 회색·청록색 팔레트를 사용합니다 배경·카드·입력·버튼·설명·테두리·선택·성공·오류·계산 콘솔 색을 공유하고 라이트/다크 모두 일치시켰습니다 기초·구성도·공동 화면은 `team-blockchain-theme`의 시스템/라이트/다크 선호를 사용하며 기존 기초 선호는 공통 설정이 없을 때만 읽어 이전합니다 이전 키와 개인 앱은 변경하지 않습니다

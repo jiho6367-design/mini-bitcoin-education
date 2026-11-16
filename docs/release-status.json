@@ -1,0 +1,61 @@
+{
+  "verified_on": "2026-11-17",
+  "timezone": "Asia/Seoul",
+  "product": "블록체인 실습실",
+  "branch": "blockchain-practice",
+  "app_path": "experiments/blockchain-practice",
+  "app_version": "3.0.0",
+  "education_engine_version": "3.2.0",
+  "legacy_root_react_version": "1.1.0",
+  "deployed_app_commit": "9fca79179e4f93cfbde089dfb24d043aa9a8b952",
+  "public_url": "https://blockchain-practice.onrender.com",
+  "hosting": {
+    "primary_service": "blockchain-practice",
+    "primary_status": "Live",
+    "legacy_service": "blockchain-practice-legacy",
+    "legacy_origin": "https://kakao-team-flask.onrender.com",
+    "legacy_mode": "transfer",
+    "plan": "Free",
+    "database": "Neon Free PostgreSQL",
+    "paid_persistent_disk": false,
+    "auto_deploy": false
+  },
+  "public_modes": ["기초 실습", "공동 실습", "넌스 찾기"],
+  "persistence": {
+    "basic_and_classroom": "server_postgresql",
+    "nonce_history": "browser_local_storage_latest_50",
+    "saved_records_preserved_after_deployment": true,
+    "access_keys_unchanged": true
+  },
+  "demo": {
+    "asset": "experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4",
+    "seconds": 273.033333,
+    "width": 2880,
+    "height": 1980,
+    "fps": 30,
+    "sha256": "1A2FFD7F97FABEC118394A9D9CE1C4AB571725425716E77CC4F1325A84AD3E62"
+  },
+  "verification": {
+    "source_commit": "9fca79179e4f93cfbde089dfb24d043aa9a8b952",
+    "python_total": 235,
+    "python_passed": 218,
+    "python_skipped": 17,
+    "frontend_unit_passed": 147,
+    "frontend_check": "passed",
+    "root_lint": "passed",
+    "browser_test_cases_collected": 34,
+    "all_browser_cases_rerun_in_rename_release": false,
+    "production_restart": "success",
+    "postgres_restart": "success",
+    "ci_url": "https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43961448887"
+  },
+  "documentation_audit": {
+    "current_markdown_files": 18,
+    "archived_markdown_files": 13,
+    "relative_links_checked": 164,
+    "broken_relative_links": 0,
+    "versions_and_video_hash_match": true,
+    "functional_code_changed": false
+  },
+  "notes": "마지막 확인 시점의 공개 가능한 요약이며 실시간 상태가 아닙니다 문서 정리 커밋과 실제 운영 앱 커밋을 구분합니다"
+}

@@ -2,9 +2,24 @@
 
 팀 전용 브랜치 `blockchain-practice`을 **Render Free + Neon Free**로 배포했습니다. 공개 주소는 **https://blockchain-practice.onrender.com**입니다. Flask·실시간 연결은 Render, 기초·통합·공동 기록과 소유자 정보는 Neon PostgreSQL에 저장합니다. 로컬 실행은 기존 SQLite를 사용합니다. 실제 HTTPS/WSS와 Render 재시작 뒤 복원을 확인했으며 결과는 검증 기록에 있습니다.
 
+## 현재 운영 상태와 유지보수 기준 (2026-11-17)
+
+아래 두 무료 서비스는 이미 생성돼 운영 중입니다 기존 서비스를 재배포하며 새 Render 서비스·Neon 프로젝트·유료 디스크를 만들 필요가 없습니다
+
+| 기존 서비스 | 공개 주소 | 역할 | 소스 브랜치 |
+| --- | --- | --- | --- |
+| `blockchain-practice` | `https://blockchain-practice.onrender.com` | `TEAM_SITE_MODE=primary`, 실습·HTTP·WSS·Neon 저장 | `blockchain-practice` |
+| `blockchain-practice-legacy` | `https://kakao-team-flask.onrender.com` | `TEAM_SITE_MODE=transfer`, 이전 접속 정보 연결 전용 | `blockchain-practice` |
+
+두 서비스 모두 Dockerfile은 `experiments/blockchain-practice/Dockerfile`, 빌드 컨텍스트는 `experiments/blockchain-practice`, Root Directory는 빈 값입니다 2026-11-17에는 두 서비스가 같은 `9fca79179e4f93cfbde089dfb24d043aa9a8b952` 커밋으로 Live임을 확인했습니다 브랜치·폴더 이름만 정리했으며 기존 무료 플랜·주소·DB·환경 변수 값·쿠키·브라우저 저장 키를 유지했습니다
+
+이 배포의 [GitHub CI 43961448887](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43961448887)은 로컬 볼륨 재시작과 PostgreSQL 재시작 검사 모두 성공했습니다 배포 전후 READ ONLY 감사에서 기초 10개·교육 실습 36개·이벤트 1,803개·소유권 30개·팀 링크 6개·참여자 12명의 전체 저장 행이 동일했습니다 기존 공동 코드 `V5JHT522`의 장부와 이벤트 835개도 유지됐습니다 이 집계는 해당 배포 시점의 보존 근거입니다
+
+유지보수 시 두 서비스의 위 소스 경로를 확인하고, primary만 기존 Neon 연결·`team` 접두어를 이어 사용하게 둡니다 기존 `TEAM_DATABASE_URL`, `TEAM_TEACHER_SECRET`, 소유 쿠키 서명 키와 두 서비스의 동일한 `TEAM_SITE_TRANSFER_KEY`를 새로 생성하거나 초기화하지 않습니다 legacy를 일반 실습 서버로 되돌리지 않습니다
+
 ## 주소 변경과 이전 기록 연결
 
-사이트명은 **블록체인 실습실**, 새 서비스명은 `blockchain-practice`입니다 기존 `kakao-team-flask.onrender.com` 호스트는 `blockchain-practice-legacy` 무료 서비스에서 접속 정보를 이전하는 용도로 유지합니다 서비스 이름만 바꿔서는 기존 Render 기본 호스트가 바뀌지 않으므로 새 무료 서비스를 사용합니다
+사이트명은 **블록체인 실습실**, 현재 실습 서비스명은 `blockchain-practice`입니다 기존 `kakao-team-flask.onrender.com` 호스트는 `blockchain-practice-legacy` 무료 서비스에서 접속 정보를 이전하는 용도로 유지합니다 주소를 바꿀 때 현재 primary를 별도로 생성했으며, 지금은 위 두 기존 서비스를 유지합니다
 
 새 서비스만 기존 Neon 데이터베이스·`team` 스키마·소유 쿠키 서명 키·공동 방 코드 `V5JHT522`를 이어 사용합니다 이전 서비스는 `TEAM_SITE_MODE=transfer`로 실행하며 Flask 저장소·실습 실행기·PostgreSQL 쓰기 소유권을 생성하지 않습니다 같은 DB를 두 실습 서버가 동시에 쓰지 않습니다
 
@@ -12,7 +27,7 @@
 
 첫 접속에서 새 호스트가 180초 유효한 브라우저 nonce를 만든 뒤 이전 호스트를 최상위 화면으로 엽니다 이전 호스트의 HttpOnly 실습·소유 쿠키는 원래 값을 URL에 넣지 않고 암호화된 POST 본문으로 보냅니다 새 호스트는 출처·대상·유효 시간·브라우저 nonce와 한 번만 사용 가능한 요청인지 확인한 뒤 쿠키를 재설정합니다 허용된 이 앱의 localStorage·sessionStorage만 복사하며 새 호스트에 이미 있는 값은 보존합니다
 
-이전 도중의 페이지는 캐시하지 않고 다른 사이트의 프레임에 표시할 수 없습니다 새 호스트에 기존 실습 쿠키가 있으면 자동 이전으로 덮어쓰지 않습니다 예전 주소에 이미 열어 둔 탭의 API는 이전 안내와 410을 반환하며 명령을 재전송하지 않습니다 탭을 새로고침하면 새 주소에서 이어갑니다
+이전 도중의 페이지는 캐시하지 않고 다른 사이트의 프레임에 표시할 수 없습니다 자동 POST를 보내는 이전 페이지만 `Referrer-Policy: origin`을 사용해 정확한 출처 검증을 유지하고, 나머지 이전 응답은 `no-referrer`를 사용합니다 새 호스트에 기존 실습 쿠키가 있으면 자동 이전으로 덮어쓰지 않습니다 예전 주소에 이미 열어 둔 탭의 API는 이전 안내와 410을 반환하며 명령을 재전송하지 않습니다 탭을 새로고침하면 새 주소에서 이어갑니다
 
 두 서비스 모두 Free 플랜이고 유료 디스크를 사용하지 않습니다 두 무료 웹 서비스는 Render 작업공간의 무료 인스턴스 시간 한도를 함께 사용합니다 이전 호스트가 비활성 상태였다면 최초 기록 연결에 추가 준비 시간이 걸릴 수 있습니다 브라우저 연결 정보 이전이 끝나기 전에 이전 호스트를 삭제하지 않습니다
 
@@ -33,20 +48,20 @@
 이 폴더를 빌드 컨텍스트로 사용합니다. Node 24 빌드 단계와 Python 3.13 실행 단계를 분리합니다. 시작 진입점은 새로 마운트한 디스크의 지정 DB 경로·SQLite 보조 파일 권한만 준비한 뒤 UID/GID 10001로 전환해 Gunicorn을 실행합니다. 쓰기 확인이나 교사 비밀코드 검증에 실패하면 서버를 시작하지 않습니다.
 
 ```powershell
-docker build -t team-blockchain:3.0.0 .
-docker volume create team-blockchain-data
+docker build -t blockchain-practice:3.0.0 .
+docker volume create blockchain-practice-local-data
 # 먼저 환경 변수에 실제 운영용 무작위 교사 비밀코드를 지정
-docker run --name team-blockchain --rm -p 8080:8080 `
-  --mount source=team-blockchain-data,target=/data `
+docker run --name blockchain-practice-local --rm -p 8080:8080 `
+  --mount source=blockchain-practice-local-data,target=/data `
   -e TEAM_TEACHER_SECRET `
-  team-blockchain:3.0.0
+  blockchain-practice:3.0.0
 ```
 
 로컬 확인 주소는 `http://127.0.0.1:8080`입니다. 외부 서비스에서는 호스팅 업체의 HTTPS와 WebSocket 지원을 설정합니다. `/data`가 재배포·재시작 후에도 유지되는 볼륨이어야 합니다. 임시 파일시스템에만 DB를 쓰면 저장 기록을 잃습니다.
 
 ## Render 구성
 
-이 폴더의 `render.yaml`은 선택한 구성을 재현하는 Blueprint입니다. Blueprint의 사용자 지정 경로를 `experiments/blockchain-practice/render.yaml`로 지정합니다. 경로는 YAML 파일 위치가 아닌 저장소 루트를 기준으로 해석합니다. 실제 서비스를 수동으로 만든 경우에는 같은 이름의 서비스를 중복 생성하지 않습니다.
+이 폴더의 `render.yaml`은 primary 구성을 재현하는 Blueprint입니다 legacy 서비스를 추가 생성하는 파일은 아닙니다 기존 운영 서비스는 Render 설정에서 소스 브랜치·빌드 경로만 맞춰 유지합니다 재구성이 필요한 별도 환경에서 Blueprint를 사용할 때 사용자 지정 경로는 `experiments/blockchain-practice/render.yaml`이며, 내부 경로는 YAML 파일 위치가 아닌 저장소 루트를 기준으로 해석합니다 기존 서비스를 중복 생성하거나 Blueprint의 비밀값 생성 설정으로 운영 키를 교체하지 않습니다
 
 | 항목 | 값 |
 | --- | --- |
@@ -57,12 +72,12 @@ docker run --name team-blockchain --rm -p 8080:8080 `
 | Docker 빌드 컨텍스트 | `experiments/blockchain-practice` |
 | Root Directory | 비워 둠 |
 | 서버 | `free` 한 인스턴스, 자동 확장 없음 |
-| 저장소 | Neon Free PostgreSQL 1GB, Render 디스크 사용 안 함 |
+| 저장소 | Neon Free PostgreSQL, Render 디스크 사용 안 함 |
 | 상태 검사 | `/api/education/health` |
-| 배포 | 수동, 검증 후 최신 커밋 배포 |
+| 배포 | 수동, CI를 통과한 정확한 커밋을 기존 서비스에 배포 |
 | 교사 비밀코드 | 운영 환경에서 32~100자의 무작위 값 생성·재사용 |
 
-2026-11-16 확인한 두 서비스의 Free 플랜 기본 요금은 **월 $0**입니다. 유료 서버·디스크·Render 자체 무료 Postgres(30일 만료)를 사용하지 않습니다. Neon Free는 기한·카드 등록 없이 프로젝트당 1GB·월 100 CU시간·전송량 5GB를 제공합니다. Render Free는 작업공간당 월 750시간이며 15분 무트래픽 후 쉬고 첫 접속에는 약 1분이 걸릴 수 있습니다. 한도를 넘기면 서비스가 제한될 수 있으므로 업그레이드·결제 수단·유료 추가 기능은 자동으로 등록하지 않습니다. 정적 영상 재생도 Render 대역폭에 포함됩니다. [Render 무료 조건](https://render.com/docs/free), [Neon 무료 조건](https://neon.com/pricing)
+현재 두 Render 서비스와 Neon 프로젝트는 Free이며 유료 서버·디스크를 사용하지 않습니다 2026-11-16에는 카드 미등록·청구액 $0.00도 확인했습니다 무료 서버가 쉬고 있으면 첫 접속에 준비 시간이 걸리고 두 서비스는 작업공간의 무료 자원을 함께 사용합니다 정적 영상 재생도 Render 대역폭에 포함됩니다 사용량·정책별 최신 한도는 대시보드와 [Render 무료 조건](https://render.com/docs/free), [Neon 무료 조건](https://neon.com/pricing)을 확인하며 이 운영 구성에서 유료 플랜·추가 기능을 자동으로 켜지 않습니다
 
 공개 저장소 URL로 수동 연결하면 GitHub 전체 저장소 권한을 새로 부여할 필요가 없습니다. 교사 비밀코드와 Neon의 TLS 연결 문자열은 Render Environment에 보관하며 Git·웹 화면·참가 링크에 넣지 않습니다. `TEAM_DATABASE_URL`과 `TEAM_TRUST_PROXY=1`을 적용합니다. `TEAM_PUBLIC_URL`을 비워 두면 `RENDER_EXTERNAL_URL`을 사용합니다.
 
@@ -98,9 +113,9 @@ PostgreSQL은 `team_basic`, `team_education`, `team_control` 스키마로 두 �
 
 팀원은 `/?classroom=join&room=V5JHT522`에서 이름만 입력해 같은 장부에 참여합니다. 비어 있는 A/B/C 역할을 직접 맡고 반납하며 모든 팀원이 채굴·전파를 제어할 수 있습니다. 처음 입장한 사람이 없어도 계속 실습합니다. 일반 팀원에게 다른 사람 퇴출·방 종료·전체 저장 기록 삭제 권한은 주지 않습니다. 기존 교사 모드는 관리자 비밀코드를 가진 사용자를 위해 유지합니다. 루트 `/`와 `/basic`은 같은 기초 실습을 열며 브라우저마다 분리됩니다. 이전 개인 실습·보관함은 `/advanced`에서 호환하고 공개 모드 메뉴에는 표시하지 않습니다. 기존 DB·소유자 쿠키·공동 링크는 그대로 유지합니다.
 
-통합 실습은 기본적으로 저장 기록 1브라우저 200개·서버 2,000개, 활성 실습 32개 한도입니다. 지갑·블록·대기 거래·메시지에도 상한을 적용하며, 한도에 도달해도 조회·저장·중지·전달·삭제 등의 복구 조작을 유지합니다. 공동 수업은 한 활성 방·최대 30명 구조입니다. 기초 실습도 저장 수·블록·대기 거래를 제한합니다.
+통합 실습은 기본적으로 저장 기록 1브라우저 200개·서버 2,000개, 개인 활성 실습 32개 한도입니다 지갑·블록·대기 거래·메시지에도 상한을 적용하며, 한도에 도달해도 조회·저장·중지·전달·삭제 등의 복구 조작을 유지합니다 팀 공동 실습은 기본 방과 추가 방 3개까지 동시에 활성화하며 방마다 최대 30명이 참여합니다 기존 교사 모드는 한 활성 방을 사용합니다 기초 실습도 저장 수·블록·대기 거래를 제한합니다
 
-이 한도는 무제한 공개 트래픽에 대한 부하 시험 결과가 아닙니다. 최초 공개 전에는 실제 호스팅에서 동시 참가·CPU 사용·디스크 증가·프록시 재연결과 운영 복구를 확인하고 공개 범위를 정합니다.
+이는 현재 코드의 사용량 제한이며 대규모 동시 접속이나 장기 부하 시험을 통과했다는 뜻은 아닙니다 현재 수행한 공개 배포·재시작·저장 복구 검증 범위는 아래와 [검증 기록](VERIFICATION.md)에 남깁니다
 
 ## 재배포와 복구
 
@@ -112,9 +127,11 @@ PostgreSQL은 `team_basic`, `team_education`, `team_control` 스키마로 두 �
 
 SQLite 로컬 배포는 `python -m education_engine.service.backup`으로 통합 DB의 일관된 온라인 백업을 만들 수 있습니다. 복원 전 서버를 모두 종료하고 `--confirm-server-stopped`를 지정합니다. 기초 DB도 별도로 백업하며, 실행 중인 SQLite 파일을 WAL 파일과 분리해 일반 파일 복사하지 않습니다. **Neon PostgreSQL 배포에는 이 SQLite 백업 명령을 사용하지 않습니다**. PostgreSQL 백업은 Neon의 무료 복구 범위 또는 `pg_dump`로 수행하며 개인정보·교육용 키가 포함된 백업을 공개하지 않습니다.
 
-## 확인 근거와 남은 배포 검사
+## 확인 근거와 남은 운영 검사
 
 - 현재 수행: Windows 두 엔진 회귀 검사, Chrome·Edge 실습, 실제 Neon PostgreSQL 18 저장 검사, Linux 볼륨 없는 앱 교체·DB 복원, 공개 HTTPS/WSS·보안 쿠키·Render 실제 재시작 후 같은 팀 링크 복원
+- 최신 운영 기준: `9fca791` 두 서비스 Live, CI `43961448887`의 두 재시작 작업 통과, 이름·경로 변경 전후 전체 저장 행 동일
+- 최신 시연 영상: 기초 시작하기의 기본 접힌 영상, 4분 33초·클릭 안내 자막, 공개 MP4 바이트 해시·206 Range·실제 재생 확인
 - 남은 범위: 대규모 부하·장기 운영·PostgreSQL 운영자 백업의 별도 복구 훈련
 - Render 서비스 Free, Neon 프로젝트 Free, Render Hobby 청구액 $0.00·결제 카드 없음 확인
 
@@ -137,4 +154,4 @@ Flask 개발 서버를 운영에 사용하지 않는 원칙은 [Flask 공식 배
 
 공개 저장소의 `.github/workflows/blockchain-practice-production.yml`은 표준 Ubuntu 러너에서 Docker 이미지를 빌드하고, root 소유의 빈 볼륨 → 권한 준비 → Gunicorn·실제 WebSocket → 컨테이너 삭제 → 같은 볼륨을 쓰는 새 컨테이너로 기록 복원을 확인합니다. 공개 서비스는 만들지 않으며 검사 쿠키·DB·이미지를 artifact나 캐시에 올리지 않습니다. 실행 결과가 성공하기 전에는 컨테이너 검증 완료로 간주하지 않습니다.
 
-2026-11-16의 [운영 컨테이너 검사](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43741142718)가 성공했습니다. 검사 소스는 `e228206359f8a8d20ddfee2ff4698c91d1dd5549`이며, 실제 호스팅의 TLS·디스크 설정 검사를 대신하지 않습니다.
+초기 운영 컨테이너 검증은 2026-11-16의 [실행 43741142718](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43741142718), 소스 `e228206359f8a8d20ddfee2ff4698c91d1dd5549`입니다 현재 배포 `9fca791`의 확인 결과는 맨 위 요약과 CI `43961448887`을 기준으로 읽습니다 컨테이너 검사는 실제 호스팅의 TLS·저장·접속 복원 확인과 구분합니다

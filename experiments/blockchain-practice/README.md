@@ -6,11 +6,15 @@
 
 **[무료 온라인 실습실 열기](https://blockchain-practice.onrender.com)** · **[팀 공동 실습 참여](https://blockchain-practice.onrender.com/?classroom=join&room=V5JHT522)**
 
+2026-11-17에 확인한 운영 기준은 `blockchain-practice` 브랜치의 `9fca79179e4f93cfbde089dfb24d043aa9a8b952`입니다 현재 메뉴는 **기초 실습 · 공동 실습 · 넌스 찾기**이며, 기초 시작하기에는 항상 보이는 6단계 안내와 기본 접힘의 **시연 영상 보기**가 있습니다 영상은 최신 화면을 실제 조작한 4분 33초 자막 영상입니다
+
+이 기준에서 Python 총 235개 중 218개 통과·환경 의존 17개 건너뜀, 프런트 단위 147개·타입·린트·빌드와 [운영 컨테이너/PostgreSQL 재시작 CI](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43961448887)가 통과했습니다 같은 무료 서비스·주소·Neon 저장소를 유지했고, 배포 전후 기초 10개·교육 실습 36개·이벤트 1,803개·소유권 30개·팀 링크 6개·참여자 12명의 전체 저장 행이 동일했습니다 이 수치는 해당 배포의 보존 검증 기준이며 이후 실습으로 늘어날 수 있습니다 공개 상태값은 [릴리스 요약](../../docs/release-status.json)에도 기록합니다
+
 이전 `kakao-team-flask.onrender.com` 주소는 접속 정보를 연결한 뒤 새 주소로 이동합니다 같은 브라우저의 기초 실습·공동 실습 소유 쿠키와 허용된 테마·넌스 기록·참여 정보를 한 번 이전하며, 새 주소에 이미 사용 중인 접속 정보는 덮어쓰지 않습니다 두 주소는 같은 Neon 저장 기록을 사용하고 이전 주소의 서버는 장부를 읽거나 수정하지 않습니다
 
 Render Free와 Neon Free를 사용하며 결제 카드를 등록하지 않았습니다. 온라인 기록은 PostgreSQL에 저장해 서버 재시작 뒤에도 유지합니다. 한동안 쓰지 않았을 때 첫 접속은 약 1분이 걸릴 수 있습니다. 팀 실습은 교사 접속 없이 이름으로 참여하고 A/B/C 역할을 직접 맡습니다. 처음 시작한 사람이 나가거나 서버가 재시작돼도 같은 참여 링크에서 저장한 장부를 이어갑니다.
 
-서버가 준비 중이면 화면에서 안내하고 준비가 끝나면 자동으로 연결합니다. 별도 프로그램을 실행할 필요가 없습니다. 연결이 끊겨도 현재 화면·입력을 유지하며, 거래·채굴·저장 요청을 자동으로 다시 실행하지 않습니다. 처리 여부가 불확실하다는 안내가 남으면 현재 기록을 확인한 뒤 직접 다시 조작합니다.
+서버가 준비 중이면 화면에서 안내하고 준비가 끝나면 자동으로 연결합니다. PC·휴대폰 모두 링크로 접속하며 별도 프로그램을 실행할 필요가 없습니다. 연결이 끊겨도 현재 화면·입력을 유지하며, 거래·채굴·저장 요청을 자동으로 다시 실행하지 않습니다. 처리 여부가 불확실하다는 안내가 남으면 현재 기록을 확인한 뒤 직접 다시 조작합니다.
 
 ## 실행
 
@@ -131,7 +135,9 @@ A/B/C는 한 명씩 맡고 공통 버튼은 정한 진행자가 조작합니다.
 
 ## 저장과 복구
 
-| 데이터 | 기본 파일 | 변경 환경 변수 |
+온라인 운영은 Neon PostgreSQL의 `team_basic`·`team_education`·`team_control` 스키마를 사용합니다 다음 파일 경로는 `TEAM_DATABASE_URL`을 지정하지 않은 로컬 실행의 기본값입니다
+
+| 데이터 | 로컬 기본 파일 | 변경 환경 변수 |
 | --- | --- | --- |
 | 기존 기초 실습 | `instance/practices.sqlite3` | `KAKAO_PRACTICE_DB` |
 | 통합·공동 실습, 소유자 정보 | `instance/education.sqlite3` | `TEAM_EDUCATION_DB` |
@@ -173,6 +179,8 @@ npm.cmd run test:e2e:single
 
 - `app.py`: Flask 진입점·기초 API·통합 화면 제공
 - `education_api.py`: 통합·공동·보관함 HTTP와 WebSocket
+- `site_transfer.py`: 이전 주소의 DB 없는 연결 서버·브라우저 접속 정보 이전
+- `postgres_backend.py`, `postgres_basic_store.py`, `postgres_education_store.py`: 온라인 PostgreSQL 저장·배포 간 쓰기 권한 보호
 - `education_engine/`: 독립 복사한 Python 핵심 규칙·서비스·출처 해시
 - `frontend/`: 팀 통합 React 화면·테스트·빌드
 - `static/`: 기존 기초 화면·용어 사전·영상

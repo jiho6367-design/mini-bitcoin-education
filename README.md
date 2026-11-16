@@ -1,87 +1,65 @@
-# 블록체인 실습실 · blockchain-practice
+# 블록체인 실습실
 
-> 팀 프로젝트: [무료 실습실 바로 열기](https://blockchain-practice.onrender.com) · [실행 안내](experiments/blockchain-practice/README.md) · [클릭 안내 자막 시연 영상 (4분 33초)](experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4)
->
-> 팀 앱은 `blockchain-practice` 브랜치의 `experiments/blockchain-practice/`에서 관리합니다 기초 실습·공동 실습·넌스 찾기를 제공하며 Render Free와 Neon Free로 배포해 서버 재시작 뒤에도 저장한 기록을 이어갑니다 로컬 실행은 `experiments/blockchain-practice/Start-Team.cmd`를 사용합니다
->
-> 아래는 개인 프로젝트의 초기 React 모델 기록입니다 개인 본체와 팀 앱은 독립적으로 관리합니다
+지갑 만들기부터 송금·서명·채굴·노드 검증까지 직접 조작하며 배우는 팀 프로젝트
 
-## 포트폴리오 개요 및 현재 상태
+**[실습실 열기](https://blockchain-practice.onrender.com)** · **[팀 공동 실습 참여](https://blockchain-practice.onrender.com/?classroom=join&room=V5JHT522)** · **[사용 안내](docs/user-guide.md)** · **[문서 목차](docs/README.md)**
 
-- **형태**: 비트코인의 거래·검증·채굴 흐름을 배우기 위한 개인 교육용 웹 프로젝트입니다.
-- **주요 기능**: 지갑·전자서명, 거래 검증, Mempool, Nonce·SHA-256 기반 PoW, 노드 메시지 전달과 블록 변조 실험.
-- **본인 역할**: AI와 학습 흐름과 화면·설명·동작의 개선 방향을 논의하고, 실행 확인과 오류·수정 요청을 진행했습니다.
-- **현재 상태**: 개발 중입니다. 웹 화면은 구현했으나 본인은 서버 구축·운영 측면이 미흡하다고 판단하며, 현재 그 부분의 추가 개선은 진행하지 않고 있습니다.
-- **구현 범위**: 아래 실행 안내는 로컬 개발·정적 파일 서버 기준입니다. 별도 애플리케이션 백엔드와 실제 네트워크 P2P는 구현하지 않았습니다. 화면 안의 노드 전파 실습을 실제 분산 서버 운영으로 표현하지 않습니다.
-- **기술 구성**: React, TypeScript, Web Worker와 암호화·블록 검증 로직.
-- **접근 상태**: GitHub 저장소는 공개입니다. 채용 담당자는 저장소 URL로 코드와 문서를 열람할 수 있습니다. 저장소 공개는 웹 앱의 서버 배포·운영 완료를 의미하지 않습니다.
+## 현재 상태
 
----
+2026-11-17 기준 팀 앱은 `blockchain-practice` 브랜치의 `experiments/blockchain-practice/`에서 관리합니다 Render Free와 Neon Free PostgreSQL로 배포되어 PC를 꺼도 링크로 접속할 수 있습니다 휴대폰에서도 기본 웹 실습을 사용할 수 있으며, 서버가 준비 중이면 안내 후 자동으로 연결합니다
 
-비트코인 핵심 원리를 직접 조작하며 배우는 **웹 기반 교육용 축소 모델**입니다. 실제 자산이나 Bitcoin 네트워크에 연결하지 않습니다. 개인 졸업작품으로 이해하고 설명할 수 있도록 UI와 순수 TypeScript 핵심 로직을 분리했습니다.
+기초·공동 실습의 기록은 서버에 저장되며 서버 재시작 뒤에도 같은 접속 정보와 참여 링크로 이어갑니다 넌스 찾기 결과는 해당 브라우저에 최근 50개까지 저장합니다 브라우저 데이터를 지우거나 다른 기기를 사용하면 개인 실습의 접근 정보와 넌스 기록은 자동으로 따라오지 않습니다
 
-**지갑 → 거래 작성·전자서명 → 검증 → Mempool → PoW 채굴 → 블록 전파·검증 → Blockchain** 전체 흐름과 과거 블록 변조를 실험합니다.
+| 화면 | 할 수 있는 일 |
+| --- | --- |
+| 기초 실습 | 지갑 → 거래·서명 → 대기열 → 채굴 → 변조·검증 → 노드 동기화, 한 노드 채굴과 세 노드 채굴 비교 |
+| 공동 실습 | 이름으로 같은 방에 참여, A/B/C 역할 선택, 혼자 또는 팀원과 송금·채굴, 실제 진행에 따른 가이드 완료 표시 |
+| 넌스 찾기 | 메시지와 난이도 입력, CPU·GPU·CPU+GPU 탐색, 해시 재검증과 결과 기록 |
 
-## 빠른 실행 — Windows PowerShell
+공동 실습은 교사 없이 시작할 수 있습니다 새 실습에서는 팀마다 같은 초기 금액을 1~10000코인 중 선택하며 기존 기본 실습은 팀마다 100코인으로 시작합니다 기초 실습의 지갑당 지급 대기 50코인과 공동 실습의 UTXO 장부는 서로 다른 모델입니다
 
-Node.js **24.x**와 npm이 필요합니다. 저장소 폴더에서 실행합니다.
+GPU 지원 여부는 접속한 기기와 브라우저에 따라 달라집니다 사용할 수 없으면 CPU로 전환하며 실제 사용한 장치를 표시합니다 Python·C 고급 모드는 준비된 로컬 PC에서 선택적으로 사용합니다
 
-```powershell
-node --version
-npm.cmd ci
-npm.cmd run dev
-```
+## 처음 시작하기
 
-터미널에 표시된 `http://127.0.0.1:5173`을 Chrome 또는 Edge로 엽니다. 종료는 `Ctrl+C`입니다. PowerShell에서 `npm.ps1` 실행 정책 오류가 나면 위처럼 `npm.cmd`를 사용합니다. 실행 정책을 변경할 필요가 없습니다.
+온라인 실습에는 설치가 필요하지 않습니다 [실습실](https://blockchain-practice.onrender.com)에서 기초 실습의 **전체 실습 안내** 6단계를 따라가세요 공동 실습은 참여 링크에서 별명을 입력하고, 혼자라면 **팀 A로 시작**한 뒤 **쉬운 실습** 안내를 따라갑니다
 
-배포용 빌드 확인:
+시작하기의 **시연 영상 보기**를 펼치면 최신 화면을 실제 조작한 **4분 33초** 자막 영상을 볼 수 있습니다
 
-```powershell
-npm.cmd run build
-npm.cmd run preview
-```
+**[시연 영상 파일](experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4)** · **[5분 이내 시연 대본](docs/demo-script.md)**
 
-기본 미리보기 주소는 `http://127.0.0.1:4173`입니다. `dist/index.html`을 더블클릭하는 `file://` 방식 대신 로컬 서버로 실행하세요. 최초 설치 후 실습은 외부 API·폰트·계정·인터넷 연결을 사용하지 않습니다. Node.js는 개발·정적 파일 서버 역할이며 별도 애플리케이션 백엔드는 없습니다.
+![현재 블록체인 실습실 시작 화면](docs/screenshots/current-live-home.jpg)
 
-## 3분 사용법
+2026-11-17 운영 화면 캡처 · 앱 코드 `9fca791`
 
-1. **예제 실습 시작**: 새 Alice·Bob 지갑과 Alice의 100 코인을 준비합니다. 빠른 시연은 난이도 1, 기본 실습은 2를 사용합니다.
-2. 지갑·거래에서 금액 30으로 **거래 작성 → 전자서명 → 검증·전파**를 누릅니다.
-3. 검증 결과를 읽고 **검증 결과 확인 · Mempool로 이동**을 누릅니다. Alice의 확정 잔액은 아직 100이고, 입력 100 전체가 예약되어 송금 가능 금액은 0입니다.
-4. 채굴에서 **천천히 학습 실행**으로 약 250ms마다 실제 Nonce·Hash 하나를 관찰합니다. **한 번 계산하기**, **연속 채굴 시작**, 일시정지·중지도 사용할 수 있습니다. 최근 실제 결과 12개와 계산 시간·관찰 대기 시간을 구분해 표시합니다.
-5. **노드 전파 확인**에서 **메시지 1개 전달**을 반복합니다. 기본은 수동 전달이며 선택 경로와 다음 실제 전달 경로를 비교할 수 있습니다. 빠른 시연에는 **메시지 자동 전달**을 켭니다. 블록 전달·검증을 마치면 세 노드 모두 Alice 70 / Bob 30입니다.
-6. 거래와 채굴을 한 번 더 진행하고 변조 실험에서 블록 #1을 수정합니다. 정상 체인은 그대로이고 복사본의 검증이 실패합니다.
+## 로컬 실행
 
-상단 **화면 테마**에서 시스템·라이트·다크를 선택합니다. 처음에는 운영체제 설정을 따르며, 선택한 테마 설정만 이 브라우저에 저장되어 새로고침 후에도 유지됩니다. 테마 전환은 거래·검증 결과·채굴 작업을 유지합니다.
-
-새로고침·탭 닫기·초기화 시 모든 지갑과 실습 상태가 사라집니다. 실습의 자동 저장·복원 기능은 없습니다. 개인키는 교육용이며 실제 자산을 보관하지 마세요.
-
-## 검증 명령
+Windows에서 Python 3.13과 Node.js 24를 준비한 뒤 저장소 루트에서 실행합니다
 
 ```powershell
-npm.cmd run check
-npm.cmd run test:e2e
+cd experiments/blockchain-practice
+.\Start-Team.cmd
 ```
 
-`check`는 타입 검사·린트·Vitest·배포용 빌드를 순서대로 실행합니다. E2E는 **설치된 Chrome과 Edge**를 사용합니다. 둘 중 하나만 설치되어 있다면 `npm.cmd run test:e2e -- --project=chrome` 또는 `--project=edge`로 선택합니다. 두 브라우저의 실행 결과는 [테스트 기록](docs/test-results.md)을 참고하세요.
+기본 접속 주소는 `http://127.0.0.1:5003`이며 종료는 `Ctrl+C`입니다 실행기가 가상환경·화면 빌드·로컬 교사용 코드를 준비합니다 설치와 PC 전용 엔진의 자세한 조건은 [앱 실행 안내](experiments/blockchain-practice/README.md)를 확인하세요
 
-## 코드 읽는 순서
+## 코드와 문서
 
-1. `src/core/types.ts`: 데이터 구조
-2. `src/core/crypto.ts`, `transaction.ts`: 지갑·서명·UTXO와 검증
-3. `src/core/block.ts`: 헤더·PoW·블록·체인 검증
-4. `src/core/lab.ts`: 독립 노드·메시지·상태 반영
-5. `src/mining/`: Worker 계산과 메시지 규약
-6. `src/ui/`: 학습 화면과 실습 제어
+| 위치 | 내용 |
+| --- | --- |
+| `experiments/blockchain-practice/app.py`, `static/` | 기초 실습 API와 화면 |
+| `experiments/blockchain-practice/education_engine/`, `education_api.py`, `team_rooms.py` | UTXO 엔진, 공동 실습과 소유권·참여 권한 |
+| `experiments/blockchain-practice/frontend/` | 공동 실습·넌스 찾기·이전 통합 화면의 독립 사본 |
+| `experiments/blockchain-practice/postgres_*.py`, `deployment_entrypoint.py` | PostgreSQL 저장과 운영 시작·종료 |
+| `docs/` | 현재 팀 앱의 안내·설계·요구사항·보고서·검증 기록 |
+| `docs/archive/personal-react/` | 문서 정리 전 개인 React 모델 문서와 과거 캡처 |
 
-React는 화면 표시, 핵심 TypeScript는 규칙 검사, Worker는 반복 해시 계산을 담당합니다.
+팀 앱 버전은 `experiments/blockchain-practice/frontend/package.json`과 `app.py`의 **3.0.0**, 가져온 교육 엔진 버전은 **3.2.0**입니다 루트 `package.json`의 **1.1.0**은 남아 있는 초기 개인 React 모델의 버전이며 팀 앱 버전과 구분합니다 개인 본체와 다른 브랜치의 원본은 독립적으로 관리합니다
 
-상단 흐름은 보고 있는 화면이나 체인 높이가 아니라 **현재 선택 거래**의 작성·서명·검증·블록 포함 상태를 추적합니다. 화면·관찰 노드를 바꿔도 작성 데이터와 검증 결과가 유지되며, 송금 조건을 바꾸거나 새 거래를 작성하면 새 추적을 시작합니다. 검증과 Mempool 등록은 즉시 계산되지만 검증 결과를 관찰하는 화면 단계를 따로 표시합니다.
+[변경 이력](CHANGELOG.md) · [검증 결과](docs/test-results.md) · [배포·운영 안내](experiments/blockchain-practice/DEPLOYMENT.md) · [현재 배포 상태](docs/release-status.json)
 
-## 문서와 제한
+## 확인한 범위
 
-[문서 목차](docs/README.md)에서 사용 안내·설계·보고서·시연 대본을 확인하세요.
+운영 코드 `9fca791`에서 Python 검사 총 235개 중 218개 통과·17개 조건부 건너뜀, 팀 화면 단위 검사 147개와 타입·린트·빌드를 확인했습니다 Linux 운영 컨테이너의 재시작·PostgreSQL 기록 복원 검사도 [CI에서 통과](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43961448887)했습니다 저장된 실습·공동 링크·참여 정보는 배포 전후 동일함을 대조했습니다
 
-현재 버전은 `package.json`을 기준으로 앱에 자동 표시합니다. 완료된 업데이트 단위의 버전 규칙은 [개발 기록](docs/development-log.md), 실제 변경 내역은 [CHANGELOG](CHANGELOG.md)에서 확인합니다.
-
-실제 secp256k1 ECDSA 서명과 SHA-256, UTXO, 독립 노드 검증을 사용하지만, Bitcoin 호환 주소·바이너리 형식·Merkle Tree·채굴 보상·실제 P2P·동시 채굴·체인 분기 선택은 구현하지 않습니다. 세 노드의 일치가 완전한 분산 합의 구현을 뜻하지 않습니다. 차이는 [단순화 목록](docs/bitcoin-differences.md)과 앱 안에 명시합니다.
+실제 자산이나 Bitcoin 네트워크에 연결하지 않는 교육용 모델입니다 모의 노드 비교를 실제 P2P 네트워크의 완전한 합의로 해석하지 않습니다 세부 차이와 검증 한계는 [모델 비교](docs/bitcoin-differences.md)와 [테스트 기록](docs/test-results.md)에 정리했습니다
