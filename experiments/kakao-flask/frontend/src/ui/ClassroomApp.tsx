@@ -16,6 +16,7 @@ import { uiText } from "../copy";
 import { useConnectionMessage } from "./ServerConnection";
 import { TeamPracticeGuide, useGuideTransaction, type GuidePage } from "./TeamPracticeGuide";
 import { serverConnection } from "../api/serverConnection";
+import { TeamWalletBalances } from "./TeamWalletBalances";
 import {
   ROOM_KEY,
   roomRequest,
@@ -772,18 +773,7 @@ function TeamWallet({
           })}
         </div>
       </Panel>
-      <div className="classroom-grid">
-        {NODE_IDS.map((n, i) => (
-          <Panel key={n} title={`팀 ${n} 지갑`}>
-            <p>
-              {lab.nodes[n].balances[lab.wallets[i].address]?.confirmed} 코인 ·
-              사용 가능{" "}
-              {lab.nodes[n].balances[lab.wallets[i].address]?.spendable}
-            </p>
-            <p>자기 노드 {n} 기준 · 초기 배정은 채굴 보상이 아닙니다</p>
-          </Panel>
-        ))}
-      </div>
+      <TeamWalletBalances lab={lab} />
       {!team ? (
         <Notice>
           {teamMode

@@ -18,6 +18,7 @@
     "test:e2e:single": "npm run build && playwright test --config playwright.single.config.ts",
     "test:e2e:team": "npm run build && playwright test --config playwright.team.config.ts",
     "test:e2e:guide": "npm run build && playwright test --config playwright.guide.config.ts",
+    "test:e2e:balances": "npm run build && playwright test --config playwright.balances.config.ts",
     "check": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "dependencies": {

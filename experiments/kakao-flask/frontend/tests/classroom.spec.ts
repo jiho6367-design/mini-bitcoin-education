@@ -104,8 +104,10 @@ test("교사·세 대표·관찰자가 송금과 채굴 결과를 공유하고 �
     await a.reload();
     await expect(a.getByText("연결됨", { exact: true })).toBeVisible();
     await expect(a.getByRole("heading", { name: /팀 A · UTXO/ })).toBeVisible();
-    await expect(a.getByText("69 코인 · 사용 가능 69")).toBeVisible();
-    await expect(a.getByText("130 코인 · 사용 가능 130")).toBeVisible();
+    await expect(a.getByTestId("wallet-confirmed-A")).toHaveText("69");
+    await expect(a.getByTestId("wallet-spendable-A")).toHaveText("69");
+    await expect(a.getByTestId("wallet-confirmed-B")).toHaveText("130");
+    await expect(a.getByTestId("wallet-spendable-B")).toHaveText("130");
     await teacher.evaluate(() => window.scrollTo(0, 0));
     await teacher.screenshot({
       path: info.outputPath("classroom-race.png"),

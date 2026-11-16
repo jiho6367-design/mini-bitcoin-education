@@ -1,0 +1,68 @@
+.team-wallet-balances {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.team-wallet-allocation .notice {
+  align-items: flex-start;
+}
+.team-wallet-allocation p {
+  margin: 6px 0 0;
+}
+.team-wallet-zero-help {
+  margin-top: 12px;
+}
+.team-wallet-zero-help summary {
+  cursor: pointer;
+  padding: 8px 0;
+  font-weight: 600;
+}
+.team-wallet-zero-help p {
+  max-width: 76ch;
+}
+.team-wallet-amounts {
+  display: grid;
+  gap: 9px;
+  margin: 16px 0;
+}
+.team-wallet-amounts > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.team-wallet-amounts dt {
+  color: var(--muted);
+}
+.team-wallet-amounts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.team-wallet-amounts strong {
+  font-size: 18px;
+}
+.team-wallet-reservation {
+  padding: 10px 12px;
+  background: var(--pending-bg);
+  color: var(--pending-text);
+  border-left: 3px solid var(--pending-border);
+  font-size: 12px;
+}
+.team-wallet-availability,
+.team-wallet-next,
+.team-wallet-balance-card > small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.team-wallet-next {
+  margin-top: 8px;
+}
+@media (max-width: 480px) {
+  .team-wallet-amounts strong {
+    font-size: 17px;
+  }
+  .team-wallet-zero-help summary {
+    line-height: 1.6;
+  }
+}
