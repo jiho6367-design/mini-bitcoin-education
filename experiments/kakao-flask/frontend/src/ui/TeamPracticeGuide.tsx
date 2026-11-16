@@ -21,18 +21,19 @@ const steps: GuideStep[] = [
   {
     title: "역할 선택",
     instructions: [
-      <>각자 <strong>팀 A·B·C 맡기</strong>에서 비어 있는 팀을 하나 선택하세요 나머지 팀원은 관찰할 수 있습니다</>,
-      <>공통 채굴·전파 버튼을 누를 진행자 한 명을 정하세요 교사 계정은 필요 없습니다</>,
+      <>혼자 새 실습을 시작했다면 <strong>팀 A 맡기</strong> 하나만 누르세요 세 사람이 모일 필요는 없습니다</>,
+      "B·C 노드는 서버에서 함께 실행됩니다 B·C 담당자가 없어도 거래와 블록을 받아 검증합니다",
+      "팀원과 함께라면 각자 비어 있는 팀을 하나 맡으세요 나머지는 관찰할 수 있습니다",
     ],
-    check: "서로 다른 팀을 맡았는지 확인하세요 관찰자는 역할을 선택하지 않고 따라갈 수 있습니다",
+    check: "내 역할에 팀 A가 보이면 혼자서도 다음 단계로 진행할 수 있습니다 함께할 때는 서로 다른 팀을 맡으세요",
     destination: null,
     action: "팀 선택으로 이동",
   },
   {
     title: "자동 전달",
     instructions: [
-      <>진행자가 <strong>노드·블록체인 → 메시지 자동 전달</strong>을 켜세요</>,
-      "다른 팀원은 같은 설정을 함께 사용합니다 전파 설정은 진행자 한 명이 조작하세요",
+      <><strong>노드·블록체인 → 메시지 자동 전달</strong>을 켜세요 혼자여도 같은 설정을 사용합니다</>,
+      "이제 A에서 보낸 거래와 발견한 블록이 B·C에 자동으로 전달됩니다 함께할 때는 한 명이 설정하세요",
     ],
     check: "메시지 자동 전달이 체크돼 있는지 확인하세요",
     destination: "노드·블록체인",
@@ -42,11 +43,12 @@ const steps: GuideStep[] = [
     title: "거래 만들기",
     instructions: [
       <>이미 대기 중인 거래가 있으면 새로 작성하지 말고 <strong>4단계</strong>에서 이어가세요</>,
-      <>송금할 팀 담당자가 <strong>자기 팀 초기 지갑</strong>과 받는 팀을 선택하세요 예를 들어 <strong>A → B</strong>로 보냅니다</>,
-      <>잔액 범위 안에서 예를 들어 <strong>송금액 10 · 수수료 1</strong>을 입력하세요</>,
+      <>팀 A를 맡았다면 <strong>팀 A 초기 지갑</strong>에서 받는 팀을 <strong>팀 B</strong>로 선택하세요 B 담당자는 없어도 됩니다</>,
+      <>사용 가능액 범위 안에서 송금액과 수수료를 입력하세요 시작 코인이 100이라면 <strong>송금액 10 · 수수료 1</strong>로 해보세요</>,
       <><strong>1. 거래 작성 → 2. 전자서명 → 3. 검증·전파</strong> 순서로 누르세요</>,
+      "서명 버튼은 거래 작성 후, 검증·전파 버튼은 서명 후에 켜집니다 제출한 거래가 코인을 예약하면 먼저 그 거래의 채굴을 마무리하세요",
     ],
-    check: "거래 검증이 승인됐는지 확인하세요 B·C 담당자는 같은 거래가 전달되는 과정을 관찰하세요",
+    check: "거래 검증이 승인되면 다음 단계로 갑니다 작성·서명만으로는 잔액이 바뀌거나 코인이 예약되지 않습니다",
     destination: "거래",
     action: "거래 화면으로 이동",
   },
@@ -54,7 +56,7 @@ const steps: GuideStep[] = [
     title: "거래 전달 확인",
     instructions: [
       <>거래 화면의 <strong>관찰 거래</strong>에서 방금 만들었거나 이전에 대기 중이던 거래를 선택하세요</>,
-      <>A·B·C 모두 <strong>Mempool 대기</strong>인지 확인하세요 이미 채굴했다면 블록 포함 표시를 확인하세요</>,
+      <>A·B·C 모두 <strong>Mempool 대기</strong>인지 확인하세요 사람이 접속한 팀 수와는 관계없습니다 이미 채굴했다면 블록 포함 표시를 확인하세요</>,
     ],
     check: "아직 미수신·미등록인 노드가 있으면 자동 전달 설정을 확인하고 잠시 기다리세요",
     destination: "거래",
@@ -63,9 +65,10 @@ const steps: GuideStep[] = [
   {
     title: "채굴",
     instructions: [
-      <>한 노드로 하려면 <strong>한 노드 채굴 → 채굴할 노드 → 선택 노드 후보 준비 → 채굴 시작 / 계속</strong> 순서로 누르세요</>,
-      <>함께 경쟁하려면 <strong>채굴 경쟁 → 세 후보 준비</strong> 후 각 담당자가 <strong>내 채굴 참여</strong>를 켜고 <strong>전체 시작 / 계속</strong>을 누르세요</>,
-      "빠르게를 선택하면 묶음 계산합니다 경쟁 후보를 새로 준비하면 각 담당자는 채굴 참여를 다시 켜야 합니다",
+      <>처음에는 <strong>한 노드 채굴</strong>에서 <strong>노드 A · 빠르게</strong>를 선택하세요</>,
+      <><strong>선택 노드 후보 준비 → 채굴 시작 / 계속</strong>을 누르세요 후보를 준비해야 시작 버튼이 켜집니다 대표가 없는 B·C도 블록을 받으면 검증합니다</>,
+      "첫 블록을 찾으면 계산이 멈춥니다 자동 전달이 켜져 있으면 결과를 기다리세요",
+      <>함께 경쟁해 보고 싶을 때는 <strong>채굴 경쟁 → 세 후보 준비</strong> 후 각 담당자가 <strong>내 채굴 참여</strong>를 켜고 <strong>전체 시작 / 계속</strong>을 누르세요</>,
     ],
     check: "첫 블록을 찾으면 안내 실습은 자동으로 일시정지됩니다 발견한 블록과 전파 과정을 확인하세요",
     destination: "채굴",
@@ -160,7 +163,7 @@ export function TeamPracticeGuide({
   onSelectTransaction: (id: string | null) => void;
 }) {
   const [reviewed, setReviewed] = useState<number | null>(null);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   const transactions = collectGuideTransactions(room);
   const reliable = connected && !room.storage?.error;
@@ -195,6 +198,7 @@ export function TeamPracticeGuide({
       className="team-practice-guide panel"
       aria-labelledby="team-practice-guide-title"
       tabIndex={-1}
+      onFocus={(event) => { if (event.target === event.currentTarget) setExpanded(true); }}
       data-testid="team-practice-guide"
       data-current-step={current + 1}
       data-completed-count={progress.completeCount}
@@ -227,16 +231,16 @@ export function TeamPracticeGuide({
       >
         <span style={{ width: `${progress.completeCount / steps.length * 100}%` }} />
       </div>
-      <div className="team-guide-next" data-testid="guide-next-action" aria-live="polite" aria-atomic="true">
+      {expanded && <div className="team-guide-next" data-testid="guide-next-action" aria-live="polite" aria-atomic="true">
         <div>
           <strong>{reliable && progress.nextStep === null ? "선택한 거래 실습 완료" : "다음 할 일"}</strong>
           <p>{nextAction}</p>
         </div>
         {reliable && destination && <button type="button" className="secondary" onClick={moveToNext}>다음 할 일 보기</button>}
         {reviewed !== null && (!reliable || !destination) && <button type="button" className="secondary" onClick={() => setReviewed(null)}>진행 상황 보기</button>}
-      </div>
+      </div>}
       <div id="team-practice-guide-body" hidden={!expanded}>
-        <p className="team-guide-intro">완료 표시는 선택한 거래의 실제 노드 상태로 갱신됩니다 안내를 넘겨도 실습은 실행되지 않습니다</p>
+        <p className="team-guide-intro">처음에는 위의 쉬운 실습에서 켜진 버튼을 순서대로 누르세요 혼자 시험할 때는 새 실습을 만들면 기존 팀 기록과 분리됩니다 팀 A 하나만 맡아 송금부터 채굴까지 해볼 수 있습니다 완료 표시는 실제 노드 상태로 갱신되며 안내를 넘기는 것만으로 실습이 실행되지는 않습니다</p>
         <label className="team-guide-target">
           가이드 확인 거래
           <select

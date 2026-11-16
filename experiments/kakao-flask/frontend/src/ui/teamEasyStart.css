@@ -1,0 +1,31 @@
+.team-entry-intro { max-width: 65ch; color: var(--muted); line-height: 1.8; }
+.team-entry-code { padding: 8px 0; }
+.team-entry-code summary { cursor: pointer; color: var(--muted); }
+.team-entry-code label { margin-top: 12px; }
+.team-entry-alternative { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 18px; border-top: 1px solid var(--border); }
+.team-entry-alternative small, .team-entry-footnote { color: var(--muted); }
+.team-identity { width: 100%; }
+.team-online { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.team-online > span:first-child { color: var(--muted); font-size: 12px; }
+.team-person { padding: 5px 10px; border-radius: 8px; background: var(--surface-subtle); overflow-wrap: anywhere; }
+.classroom-shell .team-easy-start { border: 1px solid var(--accent); }
+.team-easy-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.team-easy-heading h2 { margin: 0; }
+.team-easy-heading span, .team-easy-footnote { color: var(--muted); font-size: 12px; }
+.team-easy-start h3 { margin: 20px 0 8px; font-size: 20px; }
+.team-easy-start p { line-height: 1.8; }
+.team-easy-form fieldset { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.classroom-shell .team-easy-form label { display: grid; gap: 6px; }
+.team-easy-form input { width: 125px; }
+.team-easy-footnote { margin: 16px 0 0; }
+.team-easy-wait { color: var(--accent); }
+.team-easy-blocked { padding: 10px 12px; background: var(--pending-bg); color: var(--pending-text); }
+.team-detailed-practice { padding: 18px; border: 1px solid var(--border); border-radius: 12px; }
+.team-detailed-practice > summary { cursor: pointer; font-weight: 600; }
+.team-detailed-practice[open] > summary { margin-bottom: 20px; }
+.team-detailed-content { display: grid; gap: 20px; }
+@media (max-width: 600px) {
+  .team-easy-form fieldset { display: grid; grid-template-columns: 1fr 1fr; }
+  .team-easy-form label:first-child, .team-easy-form button { grid-column: 1 / -1; }
+  .team-easy-form input { width: 100%; box-sizing: border-box; }
+}

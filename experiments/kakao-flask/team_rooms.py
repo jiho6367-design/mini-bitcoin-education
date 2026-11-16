@@ -235,28 +235,53 @@ class TeamRooms:
                             (code, owner_hash)).fetchone()
         return dict(row) if row is not None else None
 
+    @staticmethod
+    def _name(name):
+        if not isinstance(name, str) or not 1 <= len(name.strip()) <= 30:
+            raise LabError("INVALID_NAME", "별명을 1~30자로 입력하세요", 400)
+        return name.strip()
+
+    def _save_name(self, connection, room, person, owner_hash, name):
+        self._execute(connection, f"""UPDATE {self.members} SET name=?
+            WHERE code=? AND owner_hash=? AND participant_id=?""",
+            (name, room.code, owner_hash, person.id))
+        person.name = name
+
     def _join(self, room, name, owner_hash, *, reconnect=False):
         with room.lock:
+            if room.closed or room.store is None:
+                raise LabError("STALE_ROOM", "실습 연결이 갱신됐습니다 같은 링크로 다시 입장하세요", 409)
+            if not reconnect:
+                name = self._name(name)
             # Keep the room lock outside the store lock: the simulation runner
             # writes checkpoints while holding the same room lock.
             before = {key: copy.deepcopy(getattr(room, key)) for key in
                       ("seq", "activity", "pending_events", "saved_at", "storage_error")}
             previous_people = dict(room.people)
+            previous_names = {person.id: person.name for person in room.people.values()}
             previous_teacher = room.teacher
             try:
                 with self._transaction(write=True) as connection:
                     member = self._member(room.code, owner_hash, connection)
                     if member is not None and member["participant_id"] in room.people:
-                        return room, room.people[member["participant_id"]]
+                        person = room.people[member["participant_id"]]
+                        if not reconnect and (person.name != name or member["name"] != name):
+                            self._save_name(connection, room, person, owner_hash, name)
+                            room.note(name, "별명 변경")
+                            persist_room(room, room.pending_events)
+                            room.pending_events = []
+                        return room, person
                     if member is None and reconnect:
                         raise LabError("MEMBERSHIP_REQUIRED", "이 브라우저의 참가 기록이 없습니다. 이름을 입력해 참여하세요.", 404)
                     # The ordinary add implementation runs inside this service's
                     # transaction, so member identity and checkpoint commit once.
-                    person = Classroom.add.__wrapped__(room, member["name"] if member else name)
+                    person = Classroom.add.__wrapped__(room, member["name"] if reconnect else name)
                     if member is not None:
                         del room.people[person.id]
                         person.id = member["participant_id"]
                         room.people[person.id] = person
+                        if not reconnect and member["name"] != name:
+                            self._save_name(connection, room, person, owner_hash, name)
                     else:
                         self._execute(connection, f"""INSERT INTO {self.members}
                             (code,owner_hash,participant_id,name) VALUES (?,?,?,?)""",
@@ -269,7 +294,36 @@ class TeamRooms:
             except Exception:
                 room.__dict__.update(before)
                 room.people = previous_people
+                for person in room.people.values():
+                    person.name = previous_names[person.id]
                 room.teacher = previous_teacher
+                raise
+
+    def rename(self, room, person, owner_hash, name):
+        """Change only this browser's member name, together with its checkpoint."""
+        name = self._name(name)
+        with room.lock:
+            if room.closed or room.store is None:
+                raise LabError("STALE_ROOM", "실습 연결이 갱신됐습니다 같은 링크로 다시 입장하세요", 409)
+            before = {key: copy.deepcopy(getattr(room, key)) for key in
+                      ("seq", "activity", "pending_events", "saved_at", "storage_error")}
+            previous_name = person.name
+            try:
+                with self._transaction(write=True) as connection:
+                    member = self._member(room.code, owner_hash, connection)
+                    if (not room.team_mode or room.people.get(person.id) is not person
+                            or member is None or member["participant_id"] != person.id):
+                        raise LabError("FORBIDDEN", "내 별명만 변경할 수 있습니다", 403)
+                    if person.name == name and member["name"] == name:
+                        return person.name
+                    self._save_name(connection, room, person, owner_hash, name)
+                    room.note(name, "별명 변경")
+                    persist_room(room, room.pending_events)
+                    room.pending_events = []
+                return person.name
+            except Exception:
+                person.name = previous_name
+                room.__dict__.update(before)
                 raise
 
     def join(self, code, name, owner_hash):

@@ -5,8 +5,9 @@ import type { RoomState } from "../src/ui/useClassroom";
 async function enter(page: Page, name: string, code?: string) {
   await page.goto(code ? `/?classroom=join&room=${code}` : "/?classroom=team");
   await page.getByLabel("별명", { exact: true }).fill(name);
-  await page.locator("form").getByRole("button", { name: code ? "입장" : "팀 실습 시작", exact: true }).click();
+  await page.locator("form").getByRole("button", { name: /^(기존 실습에 입장|실습 시작)$/ }).click();
   await expect(page.getByText("연결됨", { exact: true })).toBeVisible();
+  await page.getByText("직접 조작 · 팀 선택과 거래·채굴 상세", { exact: true }).click();
   return (await page.getByRole("heading", { name: /^방 / }).innerText()).split(" ")[1];
 }
 

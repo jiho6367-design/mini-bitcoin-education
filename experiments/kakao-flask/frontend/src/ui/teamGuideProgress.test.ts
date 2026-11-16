@@ -81,13 +81,50 @@ describe("가이드 완료는 선택한 거래의 실제 원장 증거로 판단
 
   it("준비·참여·실행·계산 중 안내를 현재 후보와 실행 상태에 맞춰 바꾼다", () => {
     const state = propagated();
-    expect(deriveGuideProgress(state, tx.id).nextAction).toContain("세 후보 준비");
+    expect(deriveGuideProgress(state, tx.id).nextAction).toContain("한 노드 채굴");
     const race = prepared(state);
     expect(deriveGuideProgress(state, tx.id).nextAction).toContain("내 채굴 참여");
     race.enabled.B = true;
     expect(deriveGuideProgress(state, tx.id).nextAction).toContain("전체 시작 / 계속");
     race.status = "running";
     expect(deriveGuideProgress(state, tx.id).nextAction).toContain("해시를 계산 중");
+  });
+
+  it("혼자 팀 하나만 맡으면 역할을 완료하고 다른 담당자를 기다리지 않는다", () => {
+    const state = room(data.initial);
+    state.participants = [];
+    expect(deriveGuideProgress(state, null).nextAction).toContain("혼자라면 팀 A 맡기");
+    state.participants.push({ id: "solo", name: "혼자 연습", team: "A", role: "representative", connected: true });
+    const progress = deriveGuideProgress(state, null);
+    expect(progress.steps[0].complete).toBe(true);
+    expect(progress.nextStep).toBe(2);
+    expect(progress.steps[0].detail).toContain("한 명이면 혼자 진행");
+    expect(progress.nextAction).not.toContain("다른 담당자");
+  });
+
+  it("예약된 대기 거래가 있는데 새 거래를 기다리면 기존 거래 선택을 안내하며 완료로 넘기지 않는다", () => {
+    const state = room(); // Real submitted transaction reserves the sender's input.
+    const progress = deriveGuideProgress(state, null);
+    expect(progress.target).toBeNull();
+    expect(progress.nextStep).toBe(2);
+    expect(progress.steps.slice(2).every((step) => !step.complete)).toBe(true);
+    expect(progress.nextAction).toContain("대기 거래를 선택해 이어가세요");
+    expect(progress.nextAction).toContain("예약된 코인");
+    expect(progress.nextDestination).toBe("거래");
+  });
+
+  it("멈춘 채굴과 거래가 없는 후보는 서로 다른 이유로 다시 준비하도록 안내한다", () => {
+    const state = propagated();
+    const race = prepared(state);
+    race.singleNode = "A";
+    race.status = "stopped";
+    expect(deriveGuideProgress(state, tx.id).nextAction).toContain("채굴이 중지됐습니다");
+    race.status = "paused";
+    race.jobs.A.block.transactions = [];
+    expect(deriveGuideProgress(state, tx.id).nextAction).toContain("현재 후보에 이 거래가 없습니다");
+    race.jobs.A.status = "found";
+    expect(deriveGuideProgress(state, tx.id).nextAction).toContain("이전 후보의 계산이 끝났습니다");
+    expect(deriveGuideProgress(state, tx.id).steps[4].complete).toBe(false);
   });
 
   it("실제로 채굴한 노드와 아직 수신하지 않은 노드를 구분한다", () => {

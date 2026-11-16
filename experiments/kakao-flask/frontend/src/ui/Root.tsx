@@ -29,21 +29,13 @@ export function Root() {
               mode={mode || "team"}
               publicUrl={config.publicUrl || ""}
               defaultTeamCode={config.defaultTeamCode || undefined}
-              personal={!config.classroomOnly}
-              back={() => {
-                setMode("");
-                history.replaceState(null, "", location.pathname);
-              }}
             />
           ) : (
             <App
               entry={
                 <div className="classroom-entry" aria-label="실습 선택">
                   <strong>실습 모드</strong>
-                  <button onClick={() => setMode("join")}>공동 실습 참여</button>
-                  <button className="secondary" onClick={() => setMode("team")}>
-                    팀 실습 시작
-                  </button>
+                  <button onClick={() => setMode("join")}>공동 실습 열기</button>
                 </div>
               }
             />

@@ -3,13 +3,16 @@ import { expect, test, type Page } from "./team-test";
 async function enter(page: Page, name: string, code?: string) {
   await page.goto("/?classroom=" + (code ? "join" : "teacher"));
   await page.getByLabel("별명", { exact: true }).fill(name);
-  if (code) await page.getByLabel("방 코드", { exact: true }).fill(code);
+  if (code) {
+    await page.locator(".team-entry-code summary").click();
+    await page.getByLabel("방 코드", { exact: true }).fill(code);
+  }
   else
     await page
       .getByLabel("교사용 비밀코드")
       .fill(process.env.TEAM_TEACHER_SECRET || "classroom-test-only");
   await page
-    .getByRole("button", { name: code ? "입장" : "방 생성", exact: true })
+    .getByRole("button", { name: code ? "기존 실습에 입장" : "방 생성", exact: true })
     .click();
   await expect(page.getByText("연결됨", { exact: true })).toBeVisible();
 }
@@ -148,13 +151,14 @@ test("참가 화면은 긴 교사용 비밀코드를 잘라 숨기지 않고 방
 }) => {
   await page.goto("/?classroom=join");
   await page.getByLabel("별명", { exact: true }).fill("학생");
+  await page.locator(".team-entry-code summary").click();
   await page
     .getByLabel("방 코드", { exact: true })
     .fill("teacher_secret_with_symbol");
   await expect(page.getByLabel("방 코드", { exact: true })).toHaveValue(
     "TEACHER_SECRET_WITH_SYMBOL",
   );
-  await page.getByRole("button", { name: "입장", exact: true }).click();
+  await page.getByRole("button", { name: "기존 실습에 입장", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText(
     "방 코드 8자리",
   );

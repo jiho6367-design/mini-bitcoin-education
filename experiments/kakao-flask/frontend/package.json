@@ -20,6 +20,7 @@
     "test:e2e:guide": "npm run build && playwright test --config playwright.guide.config.ts",
     "test:e2e:balances": "npm run build && playwright test --config playwright.balances.config.ts",
     "test:e2e:setup": "npm run build && playwright test --config playwright.setup.config.ts",
+    "test:e2e:easy": "npm run build && playwright test --config playwright.easy.config.ts",
     "check": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "dependencies": {

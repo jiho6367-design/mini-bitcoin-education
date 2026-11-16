@@ -4,8 +4,10 @@ import type { RoomState } from "../src/ui/useClassroom";
 async function enter(page: Page, name: string, code?: string) {
   await page.goto(code ? `/?classroom=join&room=${code}` : "/?classroom=team");
   await page.getByLabel("별명", { exact: true }).fill(name);
-  await page.locator("form").getByRole("button", { name: code ? "입장" : "팀 실습 시작", exact: true }).click();
+  await page.locator("form").getByRole("button", { name: /^(기존 실습에 입장|실습 시작)$/ }).click();
   await expect(page.getByText("연결됨", { exact: true })).toBeVisible();
+  await expandGuide(page);
+  await openDetailed(page);
   return (await page.getByRole("heading", { name: /^방 / }).innerText()).split(" ")[1];
 }
 
@@ -23,6 +25,17 @@ const step = (page: Page, number: number) => guide(page).locator(`button[aria-la
 const progress = (page: Page) => guide(page).getByRole("progressbar", { name: "공통 실습 완료 단계" });
 const target = (page: Page) => guide(page).getByRole("combobox", { name: "가이드 확인 거래", exact: true });
 const nextAction = (page: Page) => guide(page).getByTestId("guide-next-action");
+async function expandGuide(page: Page) {
+  const toggle = guide(page).getByRole("button", { name: "가이드 펼치기", exact: true });
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+}
+async function openDetailed(page: Page) {
+  const details = page.locator("details.team-detailed-practice");
+  if (await details.getAttribute("open") === null)
+    await details.getByText("직접 조작 · 팀 선택과 거래·채굴 상세", { exact: true }).click();
+  await expect(details).toHaveJSProperty("open", true);
+}
 const navigate = (page: Page, name: string) => page.getByRole("navigation", { name: "공동 실습 화면", exact: true })
   .getByRole("button", { name, exact: true }).click();
 
@@ -136,6 +149,8 @@ test("실제 선택 거래의 접수·전달·채굴·합의만 자동 완료로
     await expectComplete(a, 3, false);
     await a.reload();
     await expect(a.getByText("연결됨", { exact: true })).toBeVisible();
+    await expandGuide(a);
+    await openDetailed(a);
     await expect(target(a)).toHaveValue("");
     await expectComplete(a, 3, false);
     await target(a).selectOption(signed.id);
@@ -147,6 +162,8 @@ test("실제 선택 거래의 접수·전달·채굴·합의만 자동 완료로
     await expectComplete(b, 4, true);
     await a.reload();
     await expect(a.getByText("연결됨", { exact: true })).toBeVisible();
+    await expandGuide(a);
+    await openDetailed(a);
     await expect(target(a)).toHaveValue(signed.id);
     await expectComplete(a, 4, true);
     await expect(guide(a)).toHaveAttribute("data-current-step", "5");
@@ -211,6 +228,8 @@ test("이전 완료 기록은 직접 선택할 때만 확인하고 새 거래 �
   await expect(page.getByRole("combobox", { name: "관찰 거래", exact: true })).toHaveValue(oldTransaction!.id);
   await page.reload();
   await expect(page.getByText("연결됨", { exact: true })).toBeVisible();
+  await expandGuide(page);
+  await openDetailed(page);
   await expect(target(page)).toHaveValue(oldTransaction!.id);
   await expectComplete(page, 6, true);
   await target(page).selectOption("");
@@ -218,6 +237,8 @@ test("이전 완료 기록은 직접 선택할 때만 확인하고 새 거래 �
   await expect(page.getByRole("combobox", { name: "관찰 거래", exact: true })).toHaveValue("");
   await page.reload();
   await expect(page.getByText("연결됨", { exact: true })).toBeVisible();
+  await expandGuide(page);
+  await openDetailed(page);
   await expect(target(page)).toHaveValue("");
   await expectComplete(page, 6, false);
   await page.getByRole("combobox", { name: "관찰 거래", exact: true }).selectOption(oldTransaction!.id);

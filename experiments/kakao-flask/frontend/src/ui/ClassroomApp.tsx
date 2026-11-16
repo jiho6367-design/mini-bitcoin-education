@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { PracticeArchive } from "./PracticeArchive";
 import qrcode from "qrcode-generator";
 import {
@@ -18,6 +18,9 @@ import { TeamPracticeGuide, useGuideTransaction, type GuidePage } from "./TeamPr
 import { serverConnection } from "../api/serverConnection";
 import { TeamWalletBalances } from "./TeamWalletBalances";
 import { SingleNodeMining } from "./SingleNodeMining";
+import { TeamEasyStart } from "./TeamEasyStart";
+import { TeamIdentity } from "./TeamIdentity";
+import "./teamEasyStart.css";
 import {
   ROOM_KEY,
   roomRequest,
@@ -32,14 +35,10 @@ export function ClassroomApp({
   mode,
   publicUrl,
   defaultTeamCode,
-  personal,
-  back,
 }: {
   mode: string;
   publicUrl: string;
   defaultTeamCode?: string;
-  personal: boolean;
-  back: () => void;
 }) {
   const [credential, setCredential] = useState<Credential | null>(
     savedCredential,
@@ -48,7 +47,6 @@ export function ClassroomApp({
   credentialRef.current = credential;
   const [stableTeamCode, setStableTeamCode] = useState(defaultTeamCode || "");
   const [teacherForm, setTeacherForm] = useState(mode === "teacher" && !defaultTeamCode);
-  const [teamForm, setTeamForm] = useState(mode === "team" || (mode === "teacher" && !!defaultTeamCode));
   const [name, setName] = useState("");
   const [code, setCode] = useState(
     new URLSearchParams(location.search).get("room") || defaultTeamCode || "",
@@ -60,6 +58,7 @@ export function ClassroomApp({
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState("");
   const [page, setPage] = useState("거래");
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -78,7 +77,7 @@ export function ClassroomApp({
     setRemoving(null);
     if (!next) {
       setTeacherForm(false);
-      setTeamForm(false);
+      setNewPractice(false);
     }
   }, []);
   const room = useClassroom(credential, updateCredential);
@@ -112,12 +111,17 @@ export function ClassroomApp({
   }
   function navigateFromGuide(next: GuidePage) {
     setPage(next);
+    setDetailsOpen(true);
     focusGuideTarget("team-practice-content");
+  }
+  function showRoles() {
+    setDetailsOpen(true);
+    focusGuideTarget("team-role-selection");
   }
   async function enter() {
     if (joining) return;
     if (
-      !teacherForm && !teamForm &&
+      !teacherForm && !newPractice && !!code.trim() &&
       !/^[A-HJ-NP-Z2-9]{8}$/.test(code.trim().toUpperCase())
     ) {
       setJoinError(
@@ -128,7 +132,7 @@ export function ClassroomApp({
     setJoining(true);
     setJoinError("");
     try {
-      const c = teamForm
+      const c = !teacherForm && (newPractice || !code.trim())
         ? await teamRequest<Credential>("/rooms", { name, difficulty: 1,
           ...(newPractice ? { newPractice: true, initialBalance: Number(initialBalance) } : {}) })
         : await roomRequest<Credential>(
@@ -162,8 +166,9 @@ export function ClassroomApp({
     }
     setCredential(null);
     setTeacherForm(nextTeacher);
-    setTeamForm(false);
+    setNewPractice(false);
     setPage("거래");
+    setDetailsOpen(false);
     setRemoving(null);
     setCode(previousCode);
     setSecret("");
@@ -199,38 +204,11 @@ export function ClassroomApp({
       </header>
       <main id="classroom-main" tabIndex={-1}>
         {!credential ? (
-          <Panel title={teacherForm ? "교사 방 만들기" : teamForm ? newPractice ? "새 실습 만들기" : "팀 실습 시작" : "공동 실습 참여"}>
-            <div className="button-row">
-              <button
-                className="secondary"
-                onClick={() => { setTeacherForm(false); setTeamForm(false); setNewPractice(false); }}
-              >
-                공동 실습 참여
-              </button>
-              <button
-                className="secondary"
-                onClick={() => { setTeacherForm(false); setTeamForm(true); setNewPractice(false); }}
-              >
-                팀 실습 시작
-              </button>
-              <button
-                className="secondary"
-                onClick={() => { setTeacherForm(false); setTeamForm(true); setNewPractice(true); }}
-              >
-                새 실습 만들기
-              </button>
-              {!stableTeamCode && <button
-                className="text-button"
-                onClick={() => { setTeacherForm(true); setTeamForm(false); }}
-              >
-                교사 방 만들기
-              </button>}
-              {personal && (
-                <button className="secondary" onClick={back}>
-                  통합 실습
-                </button>
-              )}
-            </div>
+          <Panel title={teacherForm ? "교사 방 만들기" : newPractice ? "새 실습 만들기" : "공동 실습"}>
+            {!teacherForm && <p className="team-entry-intro">{newPractice
+              ? "혼자 연습하거나 팀과 새로 시작할 방을 만듭니다 기존 방의 기록은 유지됩니다"
+              : code ? "팀원이 준 링크로 왔다면 별명만 적고 입장하세요 혼자 처음 해본다면 아래 새 실습 만들기를 선택하세요"
+                : "별명을 적고 시작하세요 혼자서도 A·B·C 노드의 송금과 채굴을 실습할 수 있습니다"}</p>}
             <form
               className="classroom-form"
               onSubmit={(e) => {
@@ -275,11 +253,12 @@ export function ClassroomApp({
                     교사용 비밀코드를 입력하세요 난이도는 방을 만들 때 정합니다
                   </p>
                 </>
-              ) : !teamForm ? (
+              ) : !newPractice ? (
+                <details className="team-entry-code">
+                <summary>{code ? `참여할 방 ${code} · 다른 방 코드 입력` : "방 코드로 참여하기"}</summary>
                 <label>
                   방 코드
                   <input
-                    required
                     aria-label="방 코드"
                     aria-describedby="room-code-help"
                     maxLength={64}
@@ -293,6 +272,7 @@ export function ClassroomApp({
                     공유 링크나 QR로 접속하면 자동 입력됩니다
                   </small>
                 </label>
+                </details>
               ) : newPractice ? (
                 <>
                   <label>
@@ -302,15 +282,17 @@ export function ClassroomApp({
                   </label>
                   <p>A·B·C에 같은 금액을 한 번 배정합니다 새 실습에는 별도 링크가 생기고 기존 링크와 기록은 유지됩니다</p>
                 </>
-              ) : <p>교사 없이 팀원끼리 실습합니다 기존 팀 기록을 이어서 엽니다 초기 배정액을 정하려면 새 실습 만들기를 선택하세요</p>}
+              ) : null}
               <button disabled={joining}>
-                {joining ? "접속 중…" : teacherForm ? "방 생성" : teamForm ? newPractice ? "새 실습 시작" : "팀 실습 시작" : "입장"}
+                {joining ? "접속 중…" : teacherForm ? "방 생성" : newPractice ? "새 실습 시작" : code ? "기존 실습에 입장" : "실습 시작"}
               </button>
             </form>
-            <p>
-              {teacherForm ? "교사 1명 · 팀 대표 3명 · 관찰자 최대 26명" : "팀 A·B·C를 직접 맡고 함께 조작할 수 있습니다"}
-              {" "}기록은 자동 저장되며 같은 링크로 이어갑니다
-            </p>
+            <div className="team-entry-alternative">
+              {newPractice || teacherForm ? <button className="secondary" onClick={() => { setTeacherForm(false); setNewPractice(false); }}>기존 실습으로 돌아가기</button>
+                : <><button className="secondary" onClick={() => setNewPractice(true)}>새 실습 만들기</button><small>혼자 연습 · 새 팀 시작 · 초기 코인 설정</small></>}
+              {!stableTeamCode && !teacherForm && <button className="text-button" onClick={() => setTeacherForm(true)}>교사 방 만들기</button>}
+            </div>
+            <p className="team-entry-footnote">{teacherForm ? "교사 1명 · 팀 대표 3명 · 관찰자 최대 26명" : "입장 후 쉬운 실습에서 다음 버튼을 따라가세요 다른 팀원이 없어도 진행할 수 있습니다"} 기록은 자동 저장됩니다</p>
             {teacherForm && (
               <PracticeArchive
                 classroom
@@ -344,21 +326,20 @@ export function ClassroomApp({
             <Panel title={`방 ${credential.code}`}>
               <div className="button-row">
                 <strong role="status">{room.connection}</strong>
-                <span>
+                {teamMode ? <TeamIdentity state={room.state} credential={credential} disabled={disabled} /> : <span>
                   {me?.name} ·{" "}
                   {teacher
                     ? "교사"
                     : me?.team
                       ? `팀 ${me.team} 대표`
                       : teamMode ? "팀원" : "관찰자"}
-                </span>
+                </span>}
                 {teamMode && (
                   <button className="secondary" disabled={disabled}
                     onClick={async () => {
                       if (await room.command("leave")) {
                         forget();
                         setTeacherForm(false);
-                        setTeamForm(true);
                         setNewPractice(true);
                       }
                     }}>
@@ -454,6 +435,20 @@ export function ClassroomApp({
             {room.state && (
               <>
                 {teamMode ? (
+                  <>
+                  <TeamEasyStart
+                    key={`${credential.runId}:${credential.participantId}:${me?.assignmentId ?? me?.team}`}
+                    room={room.state} participantId={credential.participantId}
+                    selected={guideTransactionId} observe={selectGuideTransaction}
+                    command={room.command} navigate={navigateFromGuide}
+                    roles={showRoles}
+                    disabled={learningDisabled || !guideConnected}
+                    blocked={room.pending ? "앞선 요청 결과를 확인 중입니다 위의 같은 요청 결과 확인을 눌러주세요"
+                      : room.busy ? "서버에서 요청을 처리 중입니다 잠시 기다리세요"
+                        : room.state.storage?.error ? "저장소 연결을 복구 중입니다 기록이 확인되면 이어갈 수 있습니다"
+                          : room.state.limited ? "이 실습의 실행 한도입니다 결과를 보관하고 새 실습을 시작하세요"
+                            : "서버 연결을 준비 중입니다 연결되면 이어갈 수 있습니다"}
+                  />
                   <TeamPracticeGuide
                     key={`${room.state.code}:${room.state.lab.sessionId}`}
                     page={page}
@@ -463,8 +458,9 @@ export function ClassroomApp({
                     selectedTransactionId={guideTransactionId}
                     onSelectTransaction={selectGuideTransaction}
                     onNavigate={navigateFromGuide}
-                    onRoles={() => focusGuideTarget("team-role-selection")}
+                    onRoles={showRoles}
                   />
+                  </>
                 ) : (
                 <Notice>
                   {teacher
@@ -474,6 +470,7 @@ export function ClassroomApp({
                       : "관찰자입니다 거래와 채굴 결과를 볼 수 있습니다 직접 실습하려면 교사에게 팀 대표 지정을 요청하세요"}
                 </Notice>
                 )}
+                <TeamPracticeDetails enabled={teamMode} open={detailsOpen} setOpen={setDetailsOpen}>
                 {teamMode && (
                   <section id="team-role-selection" tabIndex={-1} aria-label="팀 역할 선택">
                   <Panel title="내 팀 선택">
@@ -483,7 +480,8 @@ export function ClassroomApp({
                         return (
                           <button
                             key={team}
-                            disabled={disabled || !!owner}
+                            disabled={disabled || (!!owner && owner.id !== me?.id)}
+                            aria-pressed={me?.team === team}
                             className={me?.team === team ? "" : "secondary"}
                             onClick={() => void room.command("claim", { team })}
                           >
@@ -493,7 +491,7 @@ export function ClassroomApp({
                       })}
                       {me?.team && <button className="text-button" disabled={disabled} onClick={() => void room.command("release")}>대표 내려놓기</button>}
                     </div>
-                    <p>공통 채굴·전파는 누구나 조작할 수 있습니다 팀 대표는 한 명씩 맡습니다</p>
+                    <p>혼자라면 A 하나만 맡으세요 B·C 노드는 자동으로 검증합니다 다른 사람이 맡은 팀은 해당 별명으로 표시됩니다</p>
                   </Panel>
                   </section>
                 )}
@@ -504,7 +502,7 @@ export function ClassroomApp({
                 </Notice>
                 <details className="classroom-participants">
                   <summary>
-                    참가자 {room.state.participants.length}/30{teamMode ? "" : " · 역할 배정"}
+                    {teamMode ? "참여 기록" : "참가자"} {room.state.participants.length}/30{teamMode ? "" : " · 역할 배정"}
                     {teacher ? " (교사)" : ""}
                   </summary>
                   <div className="classroom-people">
@@ -696,6 +694,7 @@ export function ClassroomApp({
                   </Panel>
                 )}
                 </section>
+                </TeamPracticeDetails>
               </>
             )}
           </>
@@ -709,6 +708,14 @@ export function ClassroomApp({
 }
 
 type Command = ReturnType<typeof useClassroom>["command"];
+function TeamPracticeDetails({ enabled, open, setOpen, children }: {
+  enabled: boolean; open: boolean; setOpen: (value: boolean) => void; children: ReactNode;
+}) {
+  return enabled ? <details className="team-detailed-practice" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <summary>직접 조작 · 팀 선택과 거래·채굴 상세</summary>
+    <div className="team-detailed-content">{children}</div>
+  </details> : <>{children}</>;
+}
 function TeamWallet({
   lab,
   teamMode,

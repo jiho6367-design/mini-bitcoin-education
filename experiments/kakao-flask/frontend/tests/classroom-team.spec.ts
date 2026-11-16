@@ -3,8 +3,9 @@ import { expect, test, type Page } from "./team-test";
 async function start(page: Page, name: string, code?: string) {
   await page.goto(code ? `/?classroom=join&room=${code}` : "/?classroom=team");
   await page.getByLabel("별명", { exact: true }).fill(name);
-  await page.locator("form").getByRole("button", { name: code ? "입장" : "팀 실습 시작", exact: true }).click();
+  await page.locator("form").getByRole("button", { name: /^(기존 실습에 입장|실습 시작)$/ }).click();
   await expect(page.getByText("연결됨", { exact: true })).toBeVisible();
+  await page.getByText("직접 조작 · 팀 선택과 거래·채굴 상세", { exact: true }).click();
   return (await page.getByRole("heading", { name: /^방 / }).innerText()).split(" ")[1];
 }
 
@@ -96,6 +97,7 @@ test("교사 없이 대표를 맡고 공동 조작하며 같은 링크와 쿠키
     });
     await a.reload();
     await expect(a.getByText("연결됨", { exact: true })).toBeVisible();
+    await a.getByText("직접 조작 · 팀 선택과 거래·채굴 상세", { exact: true }).click();
     await expect(a.getByRole("heading", { name: new RegExp(`^방 ${code}$`) })).toBeVisible();
     await expect(a.getByRole("combobox", { name: "관찰 거래", exact: true })).toHaveValue(transactionId);
     await a.getByRole("button", { name: "지금 저장", exact: true }).click();

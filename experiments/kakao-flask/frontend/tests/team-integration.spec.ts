@@ -41,7 +41,7 @@ test("팀 모드 이동은 원본 영상과 서로 다른 실습 장부를 보�
   await page.getByRole("navigation", { name: "실습 모드" }).getByRole("link", { name: "통합 실습", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("실습 안내");
   await page.getByRole("navigation", { name: "실습 모드" }).getByRole("link", { name: "공동 실습", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "공동 실습 참여", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "공동 실습", exact: true })).toBeVisible();
   await page.getByRole("navigation", { name: "실습 모드" }).getByRole("link", { name: "통합 실습", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("실습 안내");
   expect(errors).toEqual([]);

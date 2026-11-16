@@ -687,6 +687,16 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
             runtime.publish(room)
             return {"savedAt": room.saved_at}
 
+    @bp.post("/team/rooms/<code>/profile")
+    def update_team_profile(code):
+        data = body(JoinRoom)
+        if not runtime.team_rooms.is_team(code):
+            raise LabError("TEAM_ROOM_NOT_FOUND", "팀 실습을 찾을 수 없습니다", 404)
+        room, person = authorized(code)
+        name = runtime.team_rooms.rename(room, person, g.education_owner, data.name)
+        runtime.publish(room)
+        return {"name": name}
+
     @bp.post("/classroom/rooms")
     def create_room():
         data = body(CreateRoom)
