@@ -141,6 +141,7 @@ def create_app(config=None, *, database_path=None):
                 "min_difficulty": MIN_DIFFICULTY, "max_difficulty": MAX_DIFFICULTY,
                 "block_reward": BLOCK_REWARD, "faucet_amount": FAUCET_AMOUNT,
                 "nodes": [n.snapshot() for n in p.network.nodes.values()],
+                "mining_comparison": p.network.comparison_info(),
                 "tamper_job": p.tamper_job.progress() if p.tamper_job else None}
 
     def response(data, status=200):
@@ -215,14 +216,19 @@ def create_app(config=None, *, database_path=None):
 
     @app.get("/")
     def index():
+        if request.args.get("classroom"):
+            return education_page()
+        return basic()
+
+    @app.get("/advanced")
+    def education_page():
+        # Preserve access to earlier private exercises without a public mode tab.
         frontend = Path(app.config["EDUCATION_FRONTEND"])
         if (frontend / "index.html").is_file():
             result = send_from_directory(frontend, "index.html")
             result.headers["Cache-Control"] = "no-cache"
             return result
-        if app.testing:
-            return send_from_directory(app.static_folder, "index.html")
-        return "통합 화면 빌드가 필요합니다: frontend에서 npm ci && npm run build", 503
+        return "공동 실습 화면을 준비하지 못했습니다 잠시 후 다시 접속하세요", 503
 
     @app.get("/basic")
     def basic():
@@ -387,6 +393,51 @@ def create_app(config=None, *, database_path=None):
             n, job_id = mining_job(p, nid, body)
             result = mining_result(getattr(n, command + "_mining")(job_id=job_id))
             return {**result, "candidate": n.candidate_info()}
+        return change(body, action)
+
+    def comparison_response(p, comparison):
+        return {"ok": True, "comparison": comparison,
+                "nodes": [n.snapshot() for n in p.network.nodes.values()]}
+
+    @app.post("/api/mining/comparison/start")
+    def comparison_start():
+        body = json_body(empty=True)
+        def action(p):
+            if any(len(n.blockchain.chain) - 1 >= app.config.get("BASIC_MAX_HEIGHT", 500)
+                   for n in p.network.nodes.values()):
+                raise OperationError("CHAIN_LIMIT", "기초 실습의 블록 한도에 도달했습니다. 새 실습을 시작하세요.", 409)
+            try:
+                comparison = p.network.start_mining_comparison()
+            except ValueError as error:
+                raise OperationError("COMPARISON_CONFLICT", str(error), 409) from error
+            return comparison_response(p, comparison)
+        return change(body, action)
+
+    @app.post("/api/mining/comparison/step")
+    def comparison_step():
+        body = json_body()
+        comparison_id = text(body.get("comparison_id"), "채굴 비교 ID", 128)
+        batch = integer(body.get("batch", 1), "노드별 계산 횟수", 1, MAX_BATCH)
+        def action(p):
+            try:
+                comparison = p.network.step_mining_comparison(comparison_id, batch)
+            except ValueError as error:
+                raise OperationError("COMPARISON_CONFLICT", str(error), 409) from error
+            return comparison_response(p, comparison)
+        return change(body, action)
+
+    @app.post("/api/mining/comparison/<command>")
+    def comparison_control(command):
+        if command not in ("pause", "resume", "stop"):
+            raise OperationError("NOT_FOUND", "없는 채굴 비교 명령입니다.", 404)
+        body = json_body()
+        comparison_id = text(body.get("comparison_id"), "채굴 비교 ID", 128)
+        def action(p):
+            try:
+                comparison = p.network.control_mining_comparison(comparison_id, command)
+            except ValueError as error:
+                raise OperationError("COMPARISON_CONFLICT", str(error), 409) from error
+            return comparison_response(p, comparison)
         return change(body, action)
 
     @app.get("/api/nodes/<nid>/chain")

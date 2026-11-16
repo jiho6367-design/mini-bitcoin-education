@@ -122,7 +122,15 @@ class Node:
         self.candidate, self.last_mining = None, info
         return {"ok": True, **plain_copy(info)}
 
-    def mine_step(self, batch=3000, job_id=None):
+    def mining_candidate_current(self):
+        if self.candidate is None:
+            return False
+        block = self.candidate["block"]
+        return (self.blockchain.is_valid() and block.previous_hash == self.blockchain.tip.hash
+                and block.index == self.blockchain.tip.index + 1
+                and block.difficulty >= self.blockchain.difficulty_for_height(block.index))
+
+    def mine_step(self, batch=3000, job_id=None, *, _candidate_checked=False):
         if type(batch) is not int or not 1 <= batch <= 50000:
             raise ValueError("계산 묶음은 1~50000의 정수여야 합니다")
         error = self._job_error(job_id)
@@ -132,9 +140,7 @@ class Node:
         if job["status"] == "paused" and batch != 1:
             return {"ok": False, "code": "MINING_PAUSED", "error": "일시정지 중에는 한 번 계산만 가능합니다",
                     **self.candidate_info()}
-        if (not self.blockchain.is_valid() or block.previous_hash != self.blockchain.tip.hash
-                or block.index != self.blockchain.tip.index + 1
-                or block.difficulty < self.blockchain.difficulty_for_height(block.index)):
+        if not _candidate_checked and not self.mining_candidate_current():
             info = self.stop_mining(reason="chain_changed")
             return {**info, "ok": False, "code": "STALE_JOB", "error": "체인이나 난이도가 바뀌어 후보를 폐기했습니다"}
         prefix, target = block.header_prefix(), "0" * block.difficulty
@@ -274,6 +280,7 @@ class Network:
         self.difficulty, self.difficulty_rules = difficulty, [(1, difficulty)]
         self.wallets = {}
         self.nodes = {name: Node(name, f"Node {name}", self, difficulty) for name in names}
+        self.mining_comparison = None
         self.restored_mining_cancelled = False
         for name, node in self.nodes.items():
             node.peers = [peer for peer in names if peer != name]
@@ -294,9 +301,102 @@ class Network:
         self.log("-", "sys", f"지갑 생성: {wallet.name} ({wallet.address[:8]}…)")
         return wallet
 
+    def comparison_info(self):
+        return plain_copy(self.mining_comparison)
+
+    def start_mining_comparison(self):
+        nodes = list(self.nodes.values())
+        if len(nodes) < 2:
+            raise ValueError("두 개 이상의 노드가 필요합니다")
+        if any(n.candidate is not None for n in nodes):
+            raise ValueError("진행 중인 채굴을 먼저 중지하세요")
+        if any(not n.online for n in nodes):
+            raise ValueError("모든 노드를 온라인으로 바꾼 뒤 비교하세요")
+        if any(not n.blockchain.is_valid() for n in nodes):
+            raise ValueError("유효하지 않은 체인을 동기화로 복구한 뒤 비교하세요")
+        if len({(n.blockchain.tip.index, n.blockchain.tip.hash,
+                 n.blockchain.difficulty_for_height(n.blockchain.tip.index + 1)) for n in nodes}) != 1:
+            raise ValueError("세 노드를 같은 최신 블록으로 동기화한 뒤 비교하세요")
+        jobs = {n.id: n.start_mining()["job_id"] for n in nodes}
+        self.mining_comparison = {"comparison_id": uuid.uuid4().hex, "status": "running",
+                                  "node_ids": list(self.nodes), "job_ids": jobs,
+                                  "rounds": 0, "winner": None}
+        self.log("-", "mine", "세 노드 채굴 비교 시작: 같은 난이도에서 한 번씩 번갈아 실제 해시 계산")
+        return self.comparison_info()
+
+    def _comparison(self, comparison_id):
+        comparison = self.mining_comparison
+        if comparison is None or comparison["comparison_id"] != comparison_id:
+            raise ValueError("이미 끝났거나 교체된 채굴 비교입니다")
+        if comparison["status"] not in ("running", "paused"):
+            raise ValueError("이미 종료된 채굴 비교입니다")
+        return comparison
+
+    def stop_mining_comparison(self, comparison_id=None, *, reason="user_stopped"):
+        if self.mining_comparison is None:
+            raise ValueError("채굴 비교를 먼저 시작하세요")
+        comparison = self._comparison(comparison_id or self.mining_comparison["comparison_id"])
+        for nid, job_id in comparison["job_ids"].items():
+            n = self.nodes[nid]
+            if n.candidate is not None and n.candidate["job_id"] == job_id:
+                n.stop_mining(job_id=job_id, reason=reason)
+        comparison.update(status="stopped", reason=reason,
+                          candidates={nid: self.nodes[nid].candidate_info() for nid in comparison["node_ids"]})
+        return self.comparison_info()
+
+    def control_mining_comparison(self, comparison_id, command):
+        comparison = self._comparison(comparison_id)
+        if command == "stop":
+            return self.stop_mining_comparison(comparison_id)
+        if command not in ("pause", "resume"):
+            raise ValueError("없는 채굴 비교 명령입니다")
+        for nid, job_id in comparison["job_ids"].items():
+            n = self.nodes[nid]
+            if n._job_error(job_id) or not n.online or not n.mining_candidate_current():
+                return self.stop_mining_comparison(comparison_id, reason="state_changed")
+        for nid, job_id in comparison["job_ids"].items():
+            getattr(self.nodes[nid], command + "_mining")(job_id=job_id)
+        comparison["status"] = "paused" if command == "pause" else "running"
+        return self.comparison_info()
+
+    def step_mining_comparison(self, comparison_id, batch=1):
+        if type(batch) is not int or not 1 <= batch <= 5000:
+            raise ValueError("계산 묶음은 1~5000의 정수여야 합니다")
+        comparison = self._comparison(comparison_id)
+        if comparison["status"] == "paused" and batch != 1:
+            raise ValueError("일시정지 중에는 한 번씩 계산만 가능합니다")
+        for nid, job_id in comparison["job_ids"].items():
+            n = self.nodes[nid]
+            if n._job_error(job_id) or not n.online or not n.mining_candidate_current():
+                return self.stop_mining_comparison(comparison_id, reason="state_changed")
+            if n.candidate["status"] != comparison["status"]:
+                return self.stop_mining_comparison(comparison_id, reason="state_changed")
+        ids = comparison["node_ids"]
+        for _ in range(batch):
+            # Rotate the first node each round so an API request never grants A
+            # an entire batch before B/C have a chance to compute one hash.
+            offset = comparison["rounds"] % len(ids)
+            comparison["rounds"] += 1
+            for nid in ids[offset:] + ids[:offset]:
+                result = self.nodes[nid].mine_step(1, comparison["job_ids"][nid], _candidate_checked=True)
+                if result.get("found"):
+                    comparison.update(status="found", winner=nid, block_hash=result["hash"], index=result["index"],
+                                      propagation=plain_copy(result.get("propagation", [])))
+                    # Connected peers normally stop during broadcast. Also stop
+                    # a remaining candidate if the simulated topology differs.
+                    for peer_id, job_id in comparison["job_ids"].items():
+                        peer = self.nodes[peer_id]
+                        if peer.candidate is not None and peer.candidate["job_id"] == job_id:
+                            peer.stop_mining(job_id=job_id, reason="comparison_finished")
+                    comparison["candidates"] = {peer_id: self.nodes[peer_id].candidate_info() for peer_id in ids}
+                    return self.comparison_info()
+        return self.comparison_info()
+
     def set_difficulty(self, difficulty):
         if not valid_difficulty(difficulty):
             raise ValueError("난이도는 1~5의 정수여야 합니다")
+        if self.mining_comparison and self.mining_comparison["status"] in ("running", "paused"):
+            self.stop_mining_comparison(reason="difficulty_changed")
         activation = max(node.blockchain.tip.index for node in self.nodes.values()) + 1
         self.difficulty_rules = normalize_rules([r for r in self.difficulty_rules if r[0] < activation]
                                                 + [(activation, difficulty)])
@@ -325,7 +425,8 @@ class Network:
         return {"version": 1, "difficulty": self.difficulty,
                 "difficulty_rules": [list(r) for r in self.difficulty_rules],
                 "wallets": [w.to_dict() for w in self.wallets.values()], "nodes": nodes,
-                "events": plain_copy(self.events), "seq": self._seq}
+                "events": plain_copy(self.events), "seq": self._seq,
+                "mining_comparison": self.comparison_info()}
 
     @classmethod
     def from_dict(cls, data, restore_jobs=False):
@@ -418,6 +519,28 @@ class Network:
                 if node.blockchain.is_valid():
                     node.seen_blocks = {block.hash for block in chain}
                     node._seen_payloads = {fingerprint(block) for block in chain}
+            comparison = plain_copy(data.get("mining_comparison"))
+            if comparison is not None:
+                if (not isinstance(comparison, dict)
+                        or not isinstance(comparison.get("comparison_id"), str)
+                        or not comparison["comparison_id"]
+                        or comparison.get("status") not in ("running", "paused", "found", "stopped")
+                        or comparison.get("node_ids") != list(network.nodes)
+                        or not isinstance(comparison.get("job_ids"), dict)
+                        or set(comparison["job_ids"]) != set(network.nodes)
+                        or any(not isinstance(job_id, str) or not job_id for job_id in comparison["job_ids"].values())
+                        or type(comparison.get("rounds")) is not int or comparison["rounds"] < 0
+                        or comparison.get("winner") not in (None, *network.nodes)):
+                    raise ValueError("저장된 채굴 비교 형식 오류")
+                network.mining_comparison = comparison
+                if comparison["status"] in ("running", "paused"):
+                    if not restore_jobs:
+                        comparison.update(status="stopped", reason="restore_cancelled")
+                    elif any(n.candidate is None or n.candidate["job_id"] != comparison["job_ids"][nid]
+                             for nid, n in network.nodes.items()):
+                        # A stale tab can stop one candidate independently.
+                        # Preserve the ledger and cancel the remaining group.
+                        network.stop_mining_comparison(reason="state_changed")
             if network.restored_mining_cancelled:
                 network.log("-", "sys", "실습 복원: 미완료 채굴은 취소했습니다. 새 채굴을 시작하세요")
             return network

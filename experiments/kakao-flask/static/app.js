@@ -41,6 +41,11 @@ const model = {
   formTouched: false,
   walletSignature: "",
   mining: null,
+  miningView: "single",
+  comparison: null,
+  comparisonToken: 0,
+  comparisonTimer: null,
+  comparisonLooping: false,
   mineMode: "slow",
   selectedSample: null,
   loopToken: 0,
@@ -67,6 +72,7 @@ function beginConnectionRecovery(uncertain = false) {
   model.serverReady = false;
   recoveryUncertain ||= uncertain;
   stopMineLoop();
+  stopComparisonLoop();
   stopTamperLoop();
   notice(navigator.onLine === false
     ? "인터넷 연결을 기다리는 중 연결되면 자동으로 다시 연결됩니다"
@@ -149,7 +155,8 @@ const currentNode = () => model.state?.nodes?.find((n) => n.id === model.node);
 const busy = () => model.pending > 0;
 const activeTamper = () =>
   Boolean(model.tamper && model.tamper.status === "running");
-const activeWork = () => jobIsActive(model.mining) || activeTamper();
+const activeComparison = () => ["running", "paused"].includes(model.comparison?.status);
+const activeWork = () => jobIsActive(model.mining) || activeComparison() || activeTamper();
 const sleepTimer = (callback, ms) => window.setTimeout(callback, ms);
 const txInput = () => ({
   node: model.node,
@@ -179,6 +186,12 @@ function stopMineLoop() {
   model.loopTimer = null;
   model.looping = false;
 }
+function stopComparisonLoop() {
+  model.comparisonToken++;
+  clearTimeout(model.comparisonTimer);
+  model.comparisonTimer = null;
+  model.comparisonLooping = false;
+}
 function stopTamperLoop() {
   model.tamperToken++;
   clearTimeout(model.tamperTimer);
@@ -198,8 +211,11 @@ function invalidateDraft(message = "") {
 function clearTransient() {
   model.epoch++;
   stopMineLoop();
+  stopComparisonLoop();
   stopTamperLoop();
   model.mining = null;
+  model.comparison = null;
+  model.miningView = "single";
   model.tamper = null;
   model.selectedSample = null;
   model.tx = null;
@@ -302,6 +318,7 @@ function execute(label, action, { queued = false, control = false } = {}) {
     } catch (error) {
       if (!(error instanceof Superseded)) {
         stopMineLoop();
+        stopComparisonLoop();
         stopTamperLoop();
         if (error.status >= 500 || error instanceof TypeError)
           model.saveProblem = "저장·연결 상태를 확인해 주세요";
@@ -362,6 +379,11 @@ async function refreshAll(retry = 0) {
   model.mempool = mempool;
   model.chain = chain;
   model.events = events;
+  const comparison = state.mining_comparison ?? null;
+  if (comparison?.comparison_id !== model.comparison?.comparison_id ||
+      !["running", "paused"].includes(comparison?.status)) stopComparisonLoop();
+  model.comparison = comparison;
+  if (activeComparison()) model.miningView = "compare";
   if (
     model.tx?.signed &&
     ["submitted", "confirmed", "unconfirmed"].includes(model.txStage)
@@ -405,7 +427,7 @@ async function refreshAll(retry = 0) {
   const activeElsewhere = state.nodes.find(
     (n) => n.id !== node && jobIsActive(n.candidate),
   );
-  if (activeElsewhere && !jobIsActive(model.mining)) {
+  if (activeElsewhere && !jobIsActive(model.mining) && !activeComparison()) {
     notice(`Node ${activeElsewhere.id}에 진행 중인 채굴이 있습니다`);
   }
   const recovery =
@@ -470,8 +492,7 @@ function setPage(page, updateHash = true) {
   document.title = `${title} · 블록체인 실습실`;
   const guide = $("#learning-guide");
   const container = $(`#page-${page}`);
-  if (page === "home") container.querySelector(".demo-panel").after(guide);
-  else container.prepend(guide);
+  container.prepend(guide);
   if (updateHash) history.replaceState(null, "", `#${page}`);
   renderGuide();
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -580,6 +601,16 @@ function renderGuide() {
       "기록 보기 →",
     ],
   };
+  if (model.miningView === "compare") guides.mining = [
+    "세 노드 채굴 비교",
+    model.comparison?.status === "found"
+      ? "승자와 세 노드의 블록 반영 결과를 확인하세요"
+      : activeComparison()
+        ? model.comparisonLooping ? "Nonce·해시·시도 횟수가 함께 바뀌는지 보세요" : "한 번씩 계산하거나 계속 비교를 누르세요"
+        : "세 노드 비교 시작을 누르세요",
+    "같은 난이도라도 먼저 찾는 노드는 달라질 수 있습니다",
+    "mining", "비교 화면 보기 →",
+  ];
   const guide = guides[model.page];
   $("#learning-guide").hidden = model.page === "events";
   $("#guide-title").textContent = guide[0];
@@ -692,6 +723,7 @@ function hashHtml(hash, difficulty) {
   return `<mark>${esc(value.slice(0, zeros))}</mark>${esc(value.slice(zeros))}`;
 }
 function renderMining() {
+  renderComparison();
   const job = model.mining;
   const sample = latestActualSample(job);
   const labels = {
@@ -753,6 +785,51 @@ function renderMining() {
   if (model.selectedSample)
     $("#selected-sample").innerHTML =
       `<strong>선택한 표본 · Nonce ${esc(model.selectedSample.nonce)}</strong><code>${esc(model.selectedSample.hash)}</code><p>선택한 표본은 다음 계산 중에도 유지됩니다</p>`;
+}
+function comparisonReadiness() {
+  const nodes = model.state?.nodes ?? [];
+  if (nodes.length !== 3) return "서버 연결 후 시작할 수 있습니다";
+  if (nodes.some((node) => !node.online)) return "노드·동기화에서 세 노드를 모두 온라인으로 바꾸세요";
+  if (nodes.some((node) => !node.valid)) return "노드·동기화에서 검증에 실패한 장부를 먼저 복구하세요";
+  if (new Set(nodes.map((node) => node.tip_hash)).size !== 1) return "노드·동기화에서 세 노드의 장부를 먼저 동기화하세요";
+  return "";
+}
+function renderComparison() {
+  const comparison = model.comparison;
+  const comparing = model.miningView === "compare";
+  $("#single-mining-panel").hidden = comparing;
+  $("#comparison-mining-panel").hidden = !comparing;
+  $("#mining-view-single").setAttribute("aria-pressed", String(!comparing));
+  $("#mining-view-compare").setAttribute("aria-pressed", String(comparing));
+  const found = comparison?.status === "found";
+  $("#comparison-status").textContent = found ? `Node ${comparison.winner} 발견`
+    : activeComparison() ? model.comparisonLooping ? "세 노드 계산 중" : "계산 대기"
+      : comparison?.status === "stopped" ? "중지됨" : "준비";
+  const recovery = comparison?.reason === "restore_cancelled";
+  $("#comparison-guide").textContent = found
+    ? `Node ${comparison.winner}가 먼저 찾았습니다 아래에서 각 노드의 계산과 전달 결과를 비교하세요`
+    : activeComparison() ? model.comparisonLooping
+      ? "세 노드의 Nonce·해시·시도 횟수를 비교하세요 일시정지하면 천천히 볼 수 있습니다"
+      : "한 번씩 계산하거나 계속 비교를 누르세요"
+      : comparisonReadiness() || (recovery ? "서버 재시작으로 계산은 중지됐습니다 저장된 장부에서 새 비교를 시작하세요" : "세 노드 비교 시작을 누르세요 먼저 찾은 노드가 나오면 자동으로 멈춥니다");
+  const difficulty = model.state?.difficulty ?? 2;
+  $("#comparison-target").textContent = `난이도 ${difficulty} · 목표 ${"0".repeat(difficulty)}… · 같은 난이도와 계산 속도로 비교`;
+  $("#comparison-nodes").innerHTML = ["A", "B", "C"].map((id) => {
+    const node = model.state?.nodes.find((item) => item.id === id);
+    const candidate = ["found", "stopped"].includes(comparison?.status)
+      ? comparison.candidates?.[id] : node?.candidate;
+    const job = candidate?.job_id === comparison?.job_ids?.[id] ? candidate : null;
+    const sample = latestActualSample(job);
+    const winner = found && comparison.winner === id;
+    const label = winner ? "먼저 발견" : found ? "계산 종료" : comparison?.status === "stopped" ? "중지됨" : job
+      ? model.comparisonLooping ? "계산 중" : "계산 대기" : "준비";
+    return `<article class="comparison-card${winner ? " winner" : ""}" data-comparison-node="${id}"><h3>Node ${id}<span class="tiny-tag">${label}</span></h3><dl><dt>실제 시도 횟수</dt><dd data-comparison-attempts>${number(job?.attempts ?? 0)}회</dd><dt>최근 계산 Nonce</dt><dd>${sample ? number(sample.nonce) : "—"}</dd><dt>해시 계산 시간</dt><dd>${(job?.elapsed_ms ?? 0).toFixed(3)}ms</dd></dl><p class="hash-label">최근 실제 계산한 해시</p><code>${sample ? hashHtml(sample.hash, job.difficulty) : "계산 전"}</code><p class="comparison-chain">${node ? `현재 장부 #${number(node.height)} · ${node.valid ? "검증 통과" : "검증 필요"}` : "장부 불러오는 중"}</p></article>`;
+  }).join("");
+  $("#comparison-result-panel").hidden = !found;
+  if (found) {
+    const deliveries = comparison.propagation ?? [];
+    $("#comparison-result").textContent = `Node ${comparison.winner}에서 블록 #${comparison.index} 발견${deliveries.length ? ` · ${deliveries.map((result) => `Node ${result.node} ${result.accepted ? "검증·저장 완료" : "전달 확인 필요"}`).join(" · ")}` : " · 각 노드의 현재 장부를 확인하세요"}`;
+  }
 }
 function renderChain() {
   const chain = model.chain;
@@ -907,7 +984,7 @@ function renderControls() {
   set("#tx-sign", locked || !same || model.txStage !== "prepared");
   set("#tx-submit", locked || !same || model.txStage !== "signed");
   const mining = jobIsActive(model.mining);
-  const controlsLocked = !ready || model.controlPending || activeTamper();
+  const controlsLocked = !ready || model.controlPending || activeTamper() || activeComparison();
   set(
     "#mining-step",
     controlsLocked ||
@@ -927,6 +1004,23 @@ function renderControls() {
   );
   set("#mining-resume", controlsLocked || busy() || !mining || model.looping);
   set("#mining-stop", controlsLocked || !mining);
+  const comparison = activeComparison();
+  const comparisonLocked = !ready || busy() || model.controlPending || activeTamper();
+  const singleWork = mining && !comparison;
+  set("#mining-view-single", busy() || comparison || model.comparisonLooping);
+  set("#mining-view-compare", busy() || singleWork || activeTamper());
+  set("#comparison-start", comparisonLocked || mining || comparison || Boolean(comparisonReadiness()));
+  set("#comparison-step", comparisonLocked || singleWork || model.comparisonLooping || (!comparison && Boolean(comparisonReadiness())));
+  set("#comparison-pause", !ready || model.controlPending || !comparison || !model.comparisonLooping);
+  set("#comparison-resume", comparisonLocked || !comparison || model.comparisonLooping);
+  set("#comparison-stop", !ready || model.controlPending || !comparison);
+  set("#comparison-batch", comparisonLocked || model.comparisonLooping);
+  $("#comparison-start").hidden = comparison;
+  $("#comparison-start").textContent = model.comparison ? "다시 비교하기" : "세 노드 비교 시작";
+  $("#comparison-step").hidden = model.comparisonLooping || model.comparison?.status === "found";
+  $("#comparison-pause").hidden = !model.comparisonLooping;
+  $("#comparison-resume").hidden = !comparison || model.comparisonLooping;
+  $("#comparison-stop").hidden = !comparison;
   [
     "#tamper-block",
     "#tamper-tx",
@@ -938,7 +1032,7 @@ function renderControls() {
     "#tamper-start",
     !ready ||
       busy() ||
-      mining ||
+      mining || comparison ||
       (activeTamper() && model.tamperLooping) ||
       !$("#tamper-block").value,
   );
@@ -962,7 +1056,9 @@ function renderControls() {
   $("#node-select").value = model.node;
   $("#task-message").hidden = !work;
   if (work)
-    $("#task-message").textContent = activeTamper()
+    $("#task-message").textContent = comparison
+      ? `A·B·C 채굴 비교 · ${model.comparisonLooping ? "계산 중" : "계산 대기"} · 설정 변경은 비교 중지 후 가능`
+      : activeTamper()
       ? `Node ${model.tamper.node ?? model.node} 재채굴 중 · 취소하면 원본 유지`
       : `Node ${model.mining.node} · ${model.mining.status === "paused" ? "일시정지" : model.looping ? "계산 중" : "후보 준비"} · 설정 변경은 중지 후 가능`;
 }
@@ -1087,6 +1183,89 @@ async function submitTransaction() {
   );
 }
 
+function acceptComparison(result) {
+  model.comparison = result.comparison;
+  if (model.state && result.nodes) {
+    model.state = { ...model.state, nodes: result.nodes, mining_comparison: result.comparison };
+    const candidate = result.nodes.find((node) => node.id === model.node)?.candidate;
+    model.mining = candidate ? { ...candidate, node: model.node } : null;
+  }
+  if (!activeComparison()) stopComparisonLoop();
+  renderComparison();
+  renderControls();
+  renderGuide();
+}
+async function ensureComparison() {
+  if (activeComparison()) return;
+  acceptComparison(await api("/api/mining/comparison/start", "POST", {}));
+}
+function comparisonContext() {
+  return { token: model.comparisonToken, epoch: model.epoch, practice: model.practice?.id };
+}
+function currentComparisonContext(context) {
+  return pageActive && context.token === model.comparisonToken &&
+    context.epoch === model.epoch && context.practice === model.practice?.id;
+}
+async function comparisonStep() {
+  const context = comparisonContext();
+  await ensureComparison();
+  if (!currentComparisonContext(context)) return;
+  if (model.comparison.status === "running")
+    acceptComparison(await api("/api/mining/comparison/pause", "POST", {
+      comparison_id: model.comparison.comparison_id,
+    }));
+  if (!currentComparisonContext(context)) return;
+  acceptComparison(await api("/api/mining/comparison/step", "POST", {
+    comparison_id: model.comparison.comparison_id, batch: 1,
+  }));
+  if (pageActive && context.epoch === model.epoch && !activeComparison()) await refreshAll();
+}
+async function startComparisonLoop() {
+  const context = comparisonContext();
+  await ensureComparison();
+  if (!currentComparisonContext(context)) return;
+  if (model.comparison.status === "paused")
+    acceptComparison(await api("/api/mining/comparison/resume", "POST", {
+      comparison_id: model.comparison.comparison_id,
+    }));
+  if (!currentComparisonContext(context)) return;
+  stopComparisonLoop();
+  model.comparisonLooping = true;
+  scheduleComparison(model.comparisonToken, 0);
+  renderComparison();
+  renderControls();
+}
+function scheduleComparison(token, delay) {
+  model.comparisonTimer = sleepTimer(() => {
+    if (!pageActive || token !== model.comparisonToken || !model.comparisonLooping || !activeComparison()) return;
+    execute("세 노드 해시 계산", async () => {
+      if (!pageActive || token !== model.comparisonToken || !model.comparisonLooping) return;
+      const result = await api("/api/mining/comparison/step", "POST", {
+        comparison_id: model.comparison.comparison_id,
+        batch: Number($("#comparison-batch").value),
+      });
+      acceptComparison(result);
+      if (!pageActive) return;
+      if (!activeComparison()) {
+        await refreshAll();
+        if (model.comparison?.status === "found") notice(`Node ${model.comparison.winner}가 먼저 블록을 찾았습니다 세 노드의 결과를 비교하세요`, "success");
+      } else if (token === model.comparisonToken && model.comparisonLooping)
+        scheduleComparison(token, 200);
+    }, { queued: true });
+  }, delay);
+}
+function comparisonControl(action) {
+  stopComparisonLoop();
+  const context = comparisonContext();
+  return execute(action === "stop" ? "채굴 비교 중지" : "채굴 비교 일시정지", async () => {
+    if (!currentComparisonContext(context)) return;
+    if (!activeComparison()) { await refreshAll(); return; }
+    acceptComparison(await api(`/api/mining/comparison/${action}`, "POST", {
+      comparison_id: model.comparison.comparison_id,
+    }));
+    if (pageActive && context.epoch === model.epoch) await refreshAll();
+  }, { queued: true, control: true });
+}
 function acceptMining(result) {
   const info = result.candidate ?? result;
   if (
@@ -1473,6 +1652,23 @@ $("#mining-stop").addEventListener("click", () => miningControl("stop"));
 $("#mining-resume").addEventListener("click", () =>
   execute("채굴 재개", () => startMiningLoop(model.mineMode)),
 );
+$("#mining-view-single").addEventListener("click", () => {
+  if (activeComparison()) return;
+  model.miningView = "single";
+  renderMining();
+  renderGuide();
+});
+$("#mining-view-compare").addEventListener("click", () => {
+  if (jobIsActive(model.mining) && !activeComparison()) return;
+  model.miningView = "compare";
+  renderMining();
+  renderGuide();
+});
+$("#comparison-start").addEventListener("click", () => execute("세 노드 비교 시작", startComparisonLoop));
+$("#comparison-step").addEventListener("click", () => execute("세 노드 한 번씩 계산", comparisonStep));
+$("#comparison-pause").addEventListener("click", () => comparisonControl("pause"));
+$("#comparison-stop").addEventListener("click", () => comparisonControl("stop"));
+$("#comparison-resume").addEventListener("click", () => execute("채굴 비교 계속", startComparisonLoop));
 $("#chain-sync").addEventListener("click", () =>
   execute("체인 동기화", () => synchronize(model.node)),
 );
@@ -1517,6 +1713,7 @@ $("#practice-reset").addEventListener("click", () =>
     "현재 실습의 지갑·거래·블록과 작성 중인 내용을 초기화합니다",
     (context) => {
       stopMineLoop();
+      stopComparisonLoop();
       stopTamperLoop();
       execute(
         "현재 실습 초기화",
@@ -1540,6 +1737,7 @@ $("#practice-new").addEventListener("click", () =>
     "작성 중인 내용과 계산을 지우고 새 실습으로 전환합니다",
     (context) => {
       stopMineLoop();
+      stopComparisonLoop();
       stopTamperLoop();
       execute(
         "새 실습 시작",
@@ -1615,7 +1813,9 @@ $("#guide-next").addEventListener("click", () => {
           : model.txStage === "signed"
             ? "#tx-submit"
             : "#tx-from",
-      mining: jobIsActive(model.mining) ? "#mining-pause" : "#mining-step",
+      mining: model.miningView === "compare"
+        ? activeComparison() ? model.comparisonLooping ? "#comparison-pause" : "#comparison-resume" : "#comparison-start"
+        : jobIsActive(model.mining) ? "#mining-pause" : "#mining-step",
       chain: "#tamper-block",
       network: "#network-list",
       events: "#events-filter",
@@ -1634,6 +1834,7 @@ window.addEventListener("pagehide", () => {
   clearTimeout(recoveryTimer);
   recoveryTimer = null;
   stopMineLoop();
+  stopComparisonLoop();
   stopTamperLoop();
 });
 window.addEventListener("offline", () => beginConnectionRecovery());

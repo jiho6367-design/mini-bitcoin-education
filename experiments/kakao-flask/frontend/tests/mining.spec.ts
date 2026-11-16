@@ -30,7 +30,7 @@ async function startAndSubmit(page: Page, difficulty: string) {
 test("한 번 계산하기는 백엔드에서 Nonce 하나씩 실제로 계산한다", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/advanced");
   await startAndSubmit(page, "4");
   const step = page.getByRole("button", {
     name: "한 번 계산하기",
@@ -107,7 +107,7 @@ test("초기화 이후 도착하는 이전 채굴 작업의 결과를 무시한�
       },
     });
   });
-  await page.goto("/");
+  await page.goto("/advanced");
   await startAndSubmit(page, "4");
   await page
     .getByRole("button", { name: "천천히 학습 실행", exact: true })

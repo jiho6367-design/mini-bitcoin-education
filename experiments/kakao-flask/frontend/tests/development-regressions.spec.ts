@@ -14,7 +14,7 @@ async function saveAndOpen(page: Page, request: APIRequestContext, lab: LabSnaps
   const title = `개발 회귀 ${lab.storage!.id}`;
   await request.post(`/api/education/practices/${lab.storage!.id}/rename`, { data: { title } });
   await request.delete(`/api/education/labs/${lab.labId}`);
-  await page.goto("/");
+  await page.goto("/advanced");
   await page.getByRole("button", { name: "저장된 실습", exact: true }).click();
   await page.getByLabel("저장 기록 검색", { exact: true }).fill(title);
   await page.getByRole("button", { name: "검색", exact: true }).click();
@@ -24,7 +24,7 @@ async function saveAndOpen(page: Page, request: APIRequestContext, lab: LabSnaps
 }
 
 test("지갑 추가 뒤에도 선택한 채굴자 주소와 작성 거래의 수신자가 유지된다", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/advanced");
   await page.getByRole("button", { name: /예제 실습 시작/ }).click();
   const receiver = page.getByRole("combobox", { name: "받는 지갑", exact: true });
   await receiver.selectOption({ label: "채굴자 A" });
@@ -83,7 +83,7 @@ test("보관함의 현지 날짜 변경은 첫 페이지와 결과 수를 함께
     await request.post(`/api/education/practices/${lab.storage!.id}/rename`, { data: { title: `${prefix}-${i}` } });
     await request.delete(`/api/education/labs/${lab.labId}`);
   }
-  await page.goto("/");
+  await page.goto("/advanced");
   await page.getByRole("button", { name: "저장된 실습", exact: true }).click();
   await page.getByLabel("저장 기록 검색").fill(prefix);
   await page.getByRole("button", { name: "검색", exact: true }).click();

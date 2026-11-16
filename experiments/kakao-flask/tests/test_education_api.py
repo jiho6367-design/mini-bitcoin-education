@@ -144,6 +144,28 @@ class EducationApiTests(unittest.TestCase):
         self.call("GET", "/practices")
         self.assertNotEqual(self.client.get_cookie(OWNER_COOKIE).value, first)
 
+    def test_advanced_entry_keeps_the_same_owner_and_archives_across_mode_navigation(self):
+        self.app.add_url_rule("/", "test_main", lambda: "<!doctype html><title>Basic lab</title>")
+        self.app.add_url_rule("/advanced", "test_advanced", lambda: "<!doctype html><title>Earlier lab</title>")
+        response = self.client.get("/advanced")
+        self.assertEqual(response.headers["Cache-Control"], "no-store")
+        self.assertIn("HttpOnly", response.headers["Set-Cookie"])
+        self.assertIn("SameSite=Lax", response.headers["Set-Cookie"])
+        owner = self.client.get_cookie(OWNER_COOKIE).value
+        lab = self.lab()
+        for path in ("/", "/?classroom=join&room=ABCD2345", "/advanced"):
+            self.client.get(path)
+            self.assertEqual(self.client.get_cookie(OWNER_COOKIE).value, owner)
+        archive = self.call("GET", "/practices")
+        self.assertEqual(archive["total"], 1)
+        self.assertEqual(archive["practices"][0]["id"], lab["storage"]["id"])
+
+        other = self.app.test_client()
+        other.get("/advanced")
+        self.assertNotEqual(other.get_cookie(OWNER_COOKIE).value, owner)
+        self.call("GET", f"/labs/{lab['labId']}", status=404, client=other)
+        self.assertEqual(self.call("GET", "/practices", client=other)["total"], 0)
+
     def test_creation_does_not_hold_store_lock_while_evicting_a_busy_lab(self):
         app = Flask("isolated-lock-regression")
         app.config.update(TESTING=True, EDUCATION_MAX_ACTIVE_LABS=1)

@@ -11,7 +11,7 @@ const nav = async (page: Page, name: string) => {
       .click();
 };
 async function start(page: Page, difficulty = "1") {
-  await page.goto("/");
+  await page.goto("/advanced");
   await page
     .getByLabel("실습 난이도", { exact: true })
     .selectOption(difficulty);

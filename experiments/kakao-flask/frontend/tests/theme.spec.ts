@@ -31,7 +31,7 @@ async function selectTheme(
 }
 
 async function start(page: Page, difficulty = "1") {
-  await page.goto("/");
+  await page.goto("/advanced");
   await page
     .getByLabel("실습 난이도", { exact: true })
     .selectOption(difficulty);
@@ -148,7 +148,7 @@ test("처음은 시스템 테마이고 OS 변경은 시스템 선택에만 반�
   page,
 }) => {
   await page.emulateMedia({ colorScheme: "dark" });
-  await page.goto("/");
+  await page.goto("/advanced");
   await expect(page.getByLabel("화면 테마", { exact: true })).toHaveValue(
     "system",
   );
@@ -214,11 +214,11 @@ test("선택만 저장하고 새로고침 시 테마는 유지하되 키·지갑
 
 test("잘못된 저장값과 저장소 접근 오류에서도 시스템 테마와 수동 선택이 동작한다", async ({
   browser,
-}) => {
+}, testInfo) => {
   for (const storage of ["invalid", "unavailable"]) {
     const context = await browser.newContext({
       colorScheme: "dark",
-      baseURL: "http://127.0.0.1:4173",
+      baseURL: testInfo.project.use.baseURL,
     });
     try {
       const page = await context.newPage();
@@ -238,7 +238,7 @@ test("잘못된 저장값과 저장소 접근 오류에서도 시스템 테마�
       );
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
-      await page.goto("/");
+      await page.goto("/advanced");
       await expect(page.getByLabel("화면 테마", { exact: true })).toHaveValue(
         "system",
       );
@@ -433,7 +433,7 @@ test("버전은 package.json·잠금 파일·화면이 일치하고 하단 문�
     engineVersion: "3.2.0",
     engine: "team-utxo",
   });
-  await page.goto("/");
+  await page.goto("/advanced");
   await expect(page.getByTestId("app-version")).toHaveText(
     `팀 블록체인 v${manifest.version}`,
   );
@@ -600,7 +600,7 @@ for (const theme of ["light", "dark"] as const) {
     page,
   }, testInfo) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await page.goto("/advanced");
     await selectTheme(page, theme);
     const capture = async (screen: string) => {
       await checkReadability(page);

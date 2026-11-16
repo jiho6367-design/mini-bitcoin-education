@@ -608,6 +608,78 @@ input::placeholder {
 .mining-actions button {
   font-size: 12px;
 }
+.mining-view-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.mining-view-switch button[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.comparison-guide {
+  padding: 12px 14px;
+  background: var(--accent-soft);
+  border-radius: 8px;
+  font-weight: 600;
+}
+.comparison-speed {
+  max-width: 340px;
+}
+.comparison-nodes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+.comparison-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.comparison-card.winner {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.comparison-card h3 {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.comparison-card dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.comparison-card dt,
+.comparison-card .hash-label {
+  color: var(--muted);
+  font-size: 12px;
+}
+.comparison-card dd {
+  margin: 0;
+  font-weight: 600;
+}
+.comparison-card code {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.comparison-card .comparison-chain {
+  margin: 18px 0 0;
+  font-size: 12px;
+}
+@media (max-width: 900px) {
+  .comparison-nodes { grid-template-columns: 1fr; }
+}
 .checkbox-label {
   display: flex;
   flex-direction: row;
@@ -1603,7 +1675,7 @@ h3 {
   overflow-wrap: break-word;
 }
 
-.mode-switch { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 24px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.mode-switch { display: flex; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 0; padding: 8px 24px; border-bottom: 1px solid var(--line); background: var(--surface); }
 .mode-switch a { padding: 5px 12px; border-radius: 7px; text-decoration: none; font-size: 12px; }
 .mode-switch a[aria-current="page"] { background: var(--accent-soft); font-weight: 700; }
 @media (max-width: 640px) { .mode-switch { padding: 8px 12px; } }

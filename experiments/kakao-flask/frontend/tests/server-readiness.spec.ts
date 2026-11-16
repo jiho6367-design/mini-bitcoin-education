@@ -4,7 +4,7 @@ const configuration = "**/api/education/classroom/config";
 const draftRoute = "**/api/education/labs/*/nodes/A/drafts";
 
 async function startExample(page: Page) {
-  await page.goto("/");
+  await page.goto("/advanced");
   await page.getByLabel("실습 난이도", { exact: true }).selectOption("1");
   await page.getByRole("button", { name: "예제 실습 시작" }).click();
   await expect(page.getByTestId("balance-0")).toHaveText("100코인");

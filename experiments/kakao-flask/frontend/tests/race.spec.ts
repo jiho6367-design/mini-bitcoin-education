@@ -27,7 +27,7 @@ test("UTXO 직접 선택 → 서명 → 세 채굴자 경쟁 → 보상 성숙 �
       if (body?.lab?.phase === "running") latest = body.lab;
     }
   });
-  await page.goto("/");
+  await page.goto("/advanced");
   await page.getByLabel("실습 난이도", { exact: true }).selectOption("1");
   await page.getByRole("button", { name: /예제 실습 시작/ }).click();
   await page
@@ -107,7 +107,7 @@ test("경쟁 화면은 작은 화면·다크·동작 줄이기에서도 상태�
 }, info) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/advanced");
   await page.getByRole("button", { name: /예제 실습 시작/ }).click();
   await page.getByLabel("화면 테마", { exact: true }).selectOption("dark");
   await page

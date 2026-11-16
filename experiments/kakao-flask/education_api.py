@@ -301,7 +301,7 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
     @app.after_request
     def bootstrap_owner(response):
         # Seed the cookie with the page itself, before parallel React API calls.
-        if request.path in ("/", "/index.html") and response.status_code < 400 and response.mimetype == "text/html":
+        if request.path in ("/", "/index.html", "/advanced") and response.status_code < 400 and response.mimetype == "text/html":
             choose_owner()
             owner_cookie(response)
             response.headers["Cache-Control"] = "no-store"

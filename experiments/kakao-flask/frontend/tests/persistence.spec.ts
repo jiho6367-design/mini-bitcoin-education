@@ -34,7 +34,7 @@ test("저장된 개인 실습을 열람·HTML 저장하고 새로고침 뒤 이�
   });
   await request.post(`/api/education/practices/${pid}/rename`, { data: { title } });
   await request.delete(`/api/education/labs/${lab.labId}`);
-  await page.goto("/");
+  await page.goto("/advanced");
   await page.getByRole("button", { name: "저장된 실습", exact: true }).click();
   const row = page.locator(".archive-item").filter({ hasText: title });
   await row.getByRole("button", { name: "결과 보기", exact: true }).click();

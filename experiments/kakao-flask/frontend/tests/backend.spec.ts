@@ -17,7 +17,7 @@ test("서버가 준비되면 자동으로 연결하고 실습은 직접 시작�
       body: "Bad Gateway",
     }),
   );
-  await page.goto("/");
+  await page.goto("/advanced");
   await expect(page.getByTestId("server-connection")).toContainText("서버 준비 중");
   await expect(startButton(page)).toHaveCount(0);
   await expect(page.getByTestId("balance-0")).toHaveCount(0);
@@ -32,7 +32,7 @@ test("서버가 준비되면 자동으로 연결하고 실습은 직접 시작�
 test("백엔드에 실습이 남아 있지 않으면 안내하고 초기화 후 새 실습을 시작한다", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/advanced");
   const created = page.waitForResponse(
     (response) =>
       response.url().endsWith("/api/education/labs") &&
@@ -69,7 +69,7 @@ test("개인키는 펼쳐 볼 때만 백엔드에서 가져오며 실습 상태 
     if (isApi(url) && !url.pathname.endsWith("/private-key"))
       bodies.push(response.text().catch(() => ""));
   });
-  await page.goto("/");
+  await page.goto("/advanced");
   await startButton(page).click();
   for (const name of ["1. 거래 작성", "2. 전자서명", "3. 검증·전파"])
     await page.getByRole("button", { name, exact: true }).click();

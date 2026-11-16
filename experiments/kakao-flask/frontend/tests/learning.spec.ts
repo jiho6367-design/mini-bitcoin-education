@@ -17,7 +17,7 @@ const navigate = async (page: Page, title: string) => {
       .click();
 };
 async function start(page: Page, difficulty = "1") {
-  await page.goto("/");
+  await page.goto("/advanced");
   await page
     .getByLabel("실습 난이도", { exact: true })
     .selectOption(difficulty);
@@ -50,7 +50,7 @@ test("지갑 → 서명 → 검증 → PoW → 3개 노드 → 변조의 전체 
 }, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/advanced");
   await capture(page, testInfo.outputPath("01-home.png"));
   await start(page);
   await expect(page.getByTestId("balance-0")).toHaveText("100코인");
@@ -155,7 +155,7 @@ test("수동 전달은 한 노드씩 반영되고 미수신 노드도 독립 채
 });
 
 test("직접 지갑 생성·새로고침·새 실습 난이도 선택", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/advanced");
   await page
     .getByRole("button", { name: "직접 시작: Alice 지갑 생성", exact: true })
     .click();
@@ -187,9 +187,10 @@ test("설치 후 실습은 외부 네트워크 없이 실행되며 화면이 가
   page,
 }, testInfo) => {
   const external: string[] = [];
+  const origin = new URL(testInfo.project.use.baseURL!).origin;
   await page.route("**/*", (route) => {
     const url = route.request().url();
-    if (url.startsWith("http") && !url.startsWith("http://127.0.0.1:4173/")) {
+    if (url.startsWith("http") && new URL(url).origin !== origin) {
       external.push(url);
       return route.abort();
     }
@@ -214,7 +215,7 @@ test("설치 후 실습은 외부 네트워크 없이 실행되며 화면이 가
 });
 
 test("키보드로 본문과 나가기 확인을 조작한다", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/advanced");
   await expect(
     page.getByRole("link", { name: "본문으로 바로가기" }),
   ).toBeAttached();

@@ -54,14 +54,13 @@
           >
         </nav>
         <div class="sidebar-bottom">
-          <span class="local-badge"><i></i> 로컬 교육용 환경</span>
+          <span class="local-badge"><i></i> 블록체인 기초 실습</span>
           <small>모의 노드 3개 · 실제 자산 연결 없음</small>
         </div>
       </aside>
       <div class="workspace">
         <nav class="mode-switch" aria-label="실습 모드">
-          <a href="/">통합 실습</a>
-          <a href="/basic" aria-current="page">기초 실습</a>
+          <a href="/" aria-current="page">기초 실습</a>
           <a href="/?classroom=join">공동 실습</a>
         </nav>
         <header class="topbar">
@@ -396,6 +395,11 @@
             </article>
           </section>
           <section class="page" id="page-mining" aria-label="채굴" hidden>
+            <div class="mining-view-switch" role="group" aria-label="채굴 방식">
+              <button id="mining-view-single" class="secondary" aria-pressed="true">한 노드 채굴</button>
+              <button id="mining-view-compare" class="secondary" aria-pressed="false">세 노드 비교</button>
+            </div>
+            <div id="single-mining-panel">
             <article class="panel">
               <div class="panel-heading">
                 <div>
@@ -517,6 +521,37 @@
                 계산 표본 없음
               </div>
             </article>
+            </div>
+            <div id="comparison-mining-panel" hidden>
+              <article class="panel">
+                <div class="panel-heading">
+                  <h2>A·B·C 채굴 비교</h2>
+                  <span class="pill" id="comparison-status">준비</span>
+                </div>
+                <p class="desc">세 노드가 각자 후보 블록을 계산합니다 먼저 목표 해시를 찾으면 다른 노드가 검증하고 같은 블록을 저장합니다</p>
+                <p id="comparison-guide" class="comparison-guide" role="status">세 노드 비교 시작을 누르세요</p>
+                <label class="comparison-speed">계산 속도<select id="comparison-batch">
+                  <option value="1">천천히 · 노드마다 1회</option>
+                  <option value="50">보통 · 노드마다 최대 50회</option>
+                  <option value="1000">빠르게 · 노드마다 최대 1000회</option>
+                </select></label>
+                <div class="mining-actions">
+                  <button id="comparison-start" data-testid="comparison-start">세 노드 비교 시작</button>
+                  <button id="comparison-step" class="secondary">한 번씩 계산</button>
+                  <button id="comparison-pause" class="secondary" disabled>일시정지</button>
+                  <button id="comparison-resume" class="secondary" disabled>계속 비교</button>
+                  <button id="comparison-stop" class="danger-button" disabled>비교 중지</button>
+                </div>
+                <p class="field-hint" id="comparison-target"></p>
+              </article>
+              <div id="comparison-nodes" class="comparison-nodes" aria-label="세 노드 계산 결과"></div>
+              <article class="panel" id="comparison-result-panel" hidden>
+                <h2>블록 전달 결과</h2>
+                <p id="comparison-result" role="status"></p>
+                <button class="secondary" data-page="network">노드 장부 자세히 보기 →</button>
+              </article>
+              <p class="field-hint">한 서버 안에서 A·B·C가 한 번씩 번갈아 실제 해시를 계산하는 교육 모델입니다 같은 조건에서도 먼저 찾는 노드는 매번 달라질 수 있습니다</p>
+            </div>
           </section>
           <section class="page" id="page-chain" aria-label="블록·변조" hidden>
             <article class="panel">

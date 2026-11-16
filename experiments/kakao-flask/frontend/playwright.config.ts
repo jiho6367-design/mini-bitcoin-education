@@ -15,6 +15,21 @@ const legacyEnvironment = Object.fromEntries(
   Object.keys(process.env).filter(key => key.startsWith("MINI_")).map(key => [key, ""]),
 );
 
+const server = (port: number, browser: string) => ({
+  command: `"${pythonExecutable}" -B app.py`,
+  cwd: flaskDirectory,
+  env: {
+    ...legacyEnvironment,
+    PORT: String(port),
+    KAKAO_PRACTICE_DB: resolve(workspaceDirectory, `work/team-merge/e2e-${databaseRun}-${browser}-basic.sqlite3`),
+    TEAM_EDUCATION_DB: resolve(workspaceDirectory, `work/team-merge/e2e-${databaseRun}-${browser}-education.sqlite3`),
+    TEAM_TEACHER_SECRET: "classroom-test-only",
+  },
+  url: `http://127.0.0.1:${port}/api/education/health`,
+  reuseExistingServer: false,
+  timeout: 30_000,
+});
+
 export default defineConfig({
   testDir: "./tests",
   testIgnore: ["**/classroom-team.spec.ts", "**/classroom-guide.spec.ts", "**/classroom-balances.spec.ts", "**/classroom-setup-mining.spec.ts", "**/classroom-easy-start.spec.ts"],
@@ -33,6 +48,7 @@ export default defineConfig({
       name: "chrome",
       use: {
         ...devices["Desktop Chrome"],
+        baseURL: "http://127.0.0.1:4173",
         channel: "chrome",
         launchOptions: process.env.TEAM_CHROME_PATH
           ? { executablePath: process.env.TEAM_CHROME_PATH }
@@ -44,23 +60,12 @@ export default defineConfig({
       name: "edge",
       use: {
         ...devices["Desktop Edge"],
+        baseURL: "http://127.0.0.1:4176",
         channel: "msedge",
         viewport: { width: 1440, height: 1000 },
       },
     },
   ],
-  webServer: {
-    command: `"${pythonExecutable}" -B app.py`,
-    cwd: flaskDirectory,
-    env: {
-      ...legacyEnvironment,
-      PORT: "4173",
-      KAKAO_PRACTICE_DB: resolve(workspaceDirectory, `work/team-merge/e2e-${databaseRun}-basic.sqlite3`),
-      TEAM_EDUCATION_DB: resolve(workspaceDirectory, `work/team-merge/e2e-${databaseRun}-education.sqlite3`),
-      TEAM_TEACHER_SECRET: "classroom-test-only",
-    },
-    url: "http://127.0.0.1:4173/api/education/health",
-    reuseExistingServer: false,
-    timeout: 30_000,
-  },
+  // A persisted default team room must not change the other browser's teacher entry.
+  webServer: [server(4173, "chrome"), server(4176, "edge")],
 });

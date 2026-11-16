@@ -25,17 +25,75 @@ class AppIntegrationTests(unittest.TestCase):
         self.app.extensions["education"].close()
         self.app.extensions["practice_store"].close()
 
-    def test_primary_ui_and_basic_ui_use_one_flask_server(self):
-        with self.client.get("/") as response:
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"/education-assets/", response.data)
-            self.assertEqual(response.headers["Cache-Control"], "no-store")
-        with self.client.get("/basic") as response:
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b'id="demo-video"', response.data)
-            self.assertIn(b'href="/"', response.data)
+    def test_primary_ui_is_basic_and_previous_basic_bookmark_remains_an_alias(self):
+        with self.client.get("/") as main, self.client.get("/basic") as basic:
+            self.assertEqual(main.status_code, 200)
+            self.assertEqual(basic.status_code, 200)
+            self.assertEqual(main.data, basic.data)
+            self.assertIn(b'id="demo-video"', main.data)
+            self.assertNotIn(b"/education-assets/", main.data)
+            self.assertIn('href="/" aria-current="page">기초 실습'.encode(), main.data)
+            self.assertIn('href="/?classroom=join">공동 실습'.encode(), main.data)
+            self.assertNotIn('>통합 실습</a>'.encode(), main.data)
+            self.assertEqual(main.headers["Cache-Control"], "no-store")
         self.assertEqual(self.client.get("/api/education/health").json["version"], "3.0.0")
         self.assertFalse((self.root / "basic.sqlite3").exists())
+
+    def test_hidden_advanced_and_existing_classroom_queries_keep_the_built_ui(self):
+        owner = None
+        for path in ("/advanced", "/?classroom=join&room=V5JHT522",
+                     "/?classroom=teacher", "/?classroom=team"):
+            with self.subTest(path=path), self.client.get(path) as response:
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(b"/education-assets/", response.data)
+                self.assertNotIn(b'id="demo-video"', response.data)
+                self.assertEqual(response.headers["Cache-Control"], "no-store")
+                token = self.client.get_cookie("team_education_owner").value
+                owner = owner or token
+                self.assertEqual(token, owner)
+        self.assertFalse((self.root / "basic.sqlite3").exists())
+
+    def test_basic_main_still_loads_when_the_react_build_is_missing(self):
+        self.app.config["EDUCATION_FRONTEND"] = str(self.root / "missing-build")
+        for path in ("/", "/basic"):
+            with self.client.get(path) as response:
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(b'id="demo-video"', response.data)
+        for path in ("/advanced", "/?classroom=join&room=V5JHT522"):
+            with self.client.get(path) as response:
+                self.assertEqual(response.status_code, 503)
+        self.assertFalse((self.root / "basic.sqlite3").exists())
+
+    def test_mode_routes_preserve_both_existing_ledgers_and_shared_room_code(self):
+        with self.client.get("/") as response:
+            self.assertEqual(response.status_code, 200)
+        basic = self.client.get("/api/state").json
+        wallet = self.client.post("/api/wallets", json={"name": "보존할 기초 지갑"}).json
+        lab = self.client.post("/api/education/labs", json={"mode": "example", "difficulty": 1}).json["lab"]
+        renamed = self.client.post(f"/api/education/practices/{lab['storage']['id']}/rename",
+                                   json={"title": "보존할 이전 실습"})
+        self.assertEqual(renamed.status_code, 200)
+        room = self.client.post("/api/education/team/rooms", json={"name": "보존할 팀원"}).json
+        headers = {"Authorization": "Bearer " + room["token"]}
+        room_path = f"/api/education/classroom/rooms/{room['code']}"
+        before_room = self.client.get(room_path, headers=headers).json
+        owner = self.client.get_cookie("team_education_owner").value
+        for path in ("/basic", "/advanced", f"/?classroom=join&room={room['code']}", "/"):
+            with self.client.get(path) as response:
+                self.assertEqual(response.status_code, 200)
+        after = self.client.get("/api/state").json
+        self.assertEqual(after["practice"]["id"], basic["practice"]["id"])
+        self.assertEqual(after["revision"], wallet["revision"])
+        wallets = self.client.get("/api/wallets").json
+        self.assertEqual(next(item["address"] for item in wallets if item["name"] == "보존할 기초 지갑"),
+                         wallet["address"])
+        preserved = self.client.get(f"/api/education/labs/{lab['labId']}").json["lab"]
+        self.assertEqual(preserved["nodes"], lab["nodes"])
+        archive = self.client.get("/api/education/practices").json["practices"]
+        self.assertTrue(any(item["id"] == lab["storage"]["id"] and item["title"] == "보존할 이전 실습"
+                            for item in archive))
+        self.assertEqual(self.client.get(room_path, headers=headers).json["lab"], before_room["lab"])
+        self.assertEqual(self.client.get_cookie("team_education_owner").value, owner)
 
     def test_unknown_api_and_assets_do_not_allocate_a_basic_practice(self):
         self.assertEqual(self.client.get("/api/not-a-real-route").status_code, 404)

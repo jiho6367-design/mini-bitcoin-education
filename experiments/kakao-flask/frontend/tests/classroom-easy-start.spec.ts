@@ -36,7 +36,7 @@ test("입장은 한 가지 기본 행동으로 안내하고 중복 통합 실습
   await page.goto("/?classroom=join");
   await expect(page.getByRole("heading", { name: "공동 실습", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "통합 실습", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("navigation", { name: "실습 모드", exact: true }).getByRole("link", { name: "통합 실습", exact: true })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "실습 모드", exact: true }).getByRole("link", { name: "통합 실습", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "팀 실습 시작", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "공동 실습 참여", exact: true })).toHaveCount(0);
   await expect(page.locator("form").getByRole("button", { name: /^(기존 실습에 입장|실습 시작)$/ })).toBeVisible();
