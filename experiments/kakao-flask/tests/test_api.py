@@ -96,6 +96,21 @@ class ApiTests(unittest.TestCase):
             r.close()
         self.assertFalse(Path(self.database).exists())
 
+    def test_hashcash_page_uses_team_bundle_without_creating_a_practice(self):
+        frontend = Path(self.folder.name) / "frontend"
+        frontend.mkdir()
+        (frontend / "index.html").write_text("<title>team hashcash bundle</title>", encoding="utf-8")
+        self.app.config["EDUCATION_FRONTEND"] = str(frontend)
+        for path in ("/hashcash", "/hashcash/"):
+            with self.subTest(path=path):
+                r = self.client.get(path)
+                self.assertEqual(r.status_code, 200)
+                self.assertIn(b"team hashcash bundle", r.data)
+                self.assertEqual(r.headers["Cache-Control"], "no-cache")
+                self.assertNotIn("Set-Cookie", r.headers)
+                r.close()
+        self.assertFalse(Path(self.database).exists())
+
     def test_clients_are_isolated_and_reset_only_current_practice(self):
         a, b = self.state(), self.state(self.other)
         self.assertNotEqual(a["practice"]["id"], b["practice"]["id"])

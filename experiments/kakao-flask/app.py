@@ -236,6 +236,10 @@ def create_app(config=None, *, database_path=None):
         result.headers["Cache-Control"] = "no-cache"
         return result
 
+    @app.get("/hashcash", strict_slashes=False)
+    def hashcash():
+        return education_page()
+
     @app.get("/education-assets/<path:filename>")
     def education_asset(filename):
         return send_from_directory(app.config["EDUCATION_FRONTEND"], filename)

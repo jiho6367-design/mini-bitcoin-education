@@ -1,0 +1,54 @@
+.nonce-shell .classroom-header p { margin: 4px 0 0; color: var(--muted); }
+.nonce-shell .nonce-intro h1 { margin: 0 0 8px; font-size: clamp(26px, 4vw, 36px); }
+.nonce-shell .nonce-intro p { margin: 0; max-width: 760px; color: var(--muted); }
+.nonce-formula { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; padding: 16px 20px; border: 1px solid var(--success-border); border-radius: 12px; background: var(--selected-bg); color: var(--accent); }
+.nonce-formula code { font-size: 18px; letter-spacing: 2px; }
+.nonce-workspace { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 20px; }
+.nonce-workspace > *, .nonce-shell .panel { min-width: 0; }
+.nonce-shell .nonce-settings form { display: grid; gap: 9px; }
+.nonce-shell .nonce-settings label { display: flex; flex-direction: column; align-items: stretch; gap: 7px; margin-top: 8px; font-weight: 600; }
+.nonce-shell input, .nonce-shell textarea, .nonce-shell select { border: 1px solid var(--control-border); border-radius: 8px; background: var(--input-bg); color: var(--text); padding: 10px 12px; font: inherit; }
+.nonce-shell textarea { width: 100%; min-height: 104px; resize: vertical; }
+.nonce-shell textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.nonce-shell input:disabled, .nonce-shell textarea:disabled { background: var(--disabled-bg); color: var(--disabled-text); }
+.nonce-settings small, .nonce-hint { color: var(--muted); font-size: 12px; }
+.nonce-settings .nonce-target { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px; margin: 4px 0; background: var(--surface-subtle); border-radius: 8px; }
+.nonce-target code { color: var(--accent); font-size: 18px; font-weight: 700; }
+.nonce-options { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 0; }
+.nonce-options summary { cursor: pointer; color: var(--muted); }
+.nonce-shell .nonce-actions { margin-top: 10px; }
+.nonce-shell .nonce-hint { margin: 16px 0 0; }
+.nonce-shell .nonce-status { margin: 0 0 18px; padding: 12px 14px; border-radius: 8px; background: var(--surface-subtle); font-weight: 600; }
+.nonce-shell .nonce-success { background: var(--success-bg); color: var(--success); }
+.nonce-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 20px; }
+.nonce-metrics > div { min-width: 0; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.nonce-metrics dt { color: var(--muted); font-size: 12px; }
+.nonce-metrics dd { margin: 7px 0 0; font-size: clamp(18px, 2vw, 25px); line-height: 1.4; font-weight: 700; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.nonce-metrics dd small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+.nonce-proof { display: grid; gap: 10px; padding: 18px; background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 10px; }
+.nonce-proof > span { font-size: 12px; color: var(--muted); }
+.nonce-proof > strong { color: var(--accent); font-size: 30px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.nonce-proof > code { display: block; overflow-wrap: anywhere; font: 15px/1.9 Consolas, monospace; letter-spacing: 0.25px; }
+.nonce-proof mark { color: var(--accent-contrast); background: var(--accent); border-radius: 3px; padding: 2px 0; font-weight: 700; }
+.nonce-proof-found { border-color: var(--success-border); background: var(--success-bg); }
+.nonce-input-proof code { white-space: pre-wrap; overflow-wrap: anywhere; }
+.nonce-shell .nonce-result p { margin: 14px 0; }
+.nonce-error { color: var(--danger); padding: 10px 12px; background: var(--danger-bg); border-radius: 8px; }
+.nonce-storage-message { color: var(--muted); font-size: 12px; }
+.nonce-history ol { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 18px 0 0; padding: 0; }
+.nonce-history li { min-width: 0; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.nonce-record-heading { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; }
+.nonce-record-heading time { font-size: 11px; color: var(--muted); }
+.nonce-record-message { white-space: pre-wrap; max-height: 7em; overflow: auto; overflow-wrap: anywhere; }
+.nonce-history li > code { display: block; overflow-wrap: anywhere; font-size: 12px; color: var(--muted); margin: 12px 0; }
+.nonce-empty { color: var(--muted); padding: 18px 0; }
+@media (max-width: 850px) {
+  .nonce-workspace { grid-template-columns: 1fr; }
+  .nonce-history ol { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .nonce-shell .panel { padding: 18px; }
+  .nonce-formula { gap: 8px; padding: 12px; }
+  .nonce-metrics { gap: 8px; }
+  .nonce-proof { padding: 14px; }
+}

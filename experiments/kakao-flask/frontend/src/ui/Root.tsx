@@ -3,8 +3,16 @@ import { App } from "./App";
 import { ClassroomApp } from "./ClassroomApp";
 import { serverConnection } from "../api/serverConnection";
 import { ServerConnection } from "./ServerConnection";
+import { HashcashApp } from "../hashcash/HashcashApp";
 
 export function Root() {
+  if (location.pathname.replace(/\/$/, "") === "/hashcash") {
+    return <HashcashApp />;
+  }
+  return <EducationRoot />;
+}
+
+function EducationRoot() {
   const connection = useSyncExternalStore(
     serverConnection.subscribe,
     serverConnection.getSnapshot,

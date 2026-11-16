@@ -10,7 +10,7 @@ async function ready(page: Page, mode: Mode) {
     await expect(page.getByRole("heading", { name: "공동 실습", exact: true })).toBeVisible();
   }
   const modes = page.getByRole("navigation", { name: "실습 모드", exact: true });
-  await expect(modes.getByRole("link")).toHaveText(["기초 실습", "공동 실습"]);
+  await expect(modes.getByRole("link")).toHaveText(["기초 실습", "공동 실습", "넌스 찾기"]);
   await expect(page.getByLabel("화면 테마", { exact: true })).toBeEnabled();
 }
 

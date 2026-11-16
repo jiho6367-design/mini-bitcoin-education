@@ -12,7 +12,7 @@ for (const viewport of [
     await page.goto("/");
     await expect(page.getByTestId("node-select")).toBeEnabled();
     const modes = page.getByRole("navigation", { name: "실습 모드", exact: true });
-    await expect(modes.getByRole("link")).toHaveText(["기초 실습", "공동 실습"]);
+    await expect(modes.getByRole("link")).toHaveText(["기초 실습", "공동 실습", "넌스 찾기"]);
     await expect(modes.getByRole("link", { name: "기초 실습", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.locator("#demo-video")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -52,7 +52,7 @@ for (const viewport of [
     await page.locator("form").getByRole("button", { name: "기존 실습에 입장", exact: true }).click();
     await expect(page.getByText("연결됨", { exact: true })).toBeVisible();
     await expect(page.getByTestId("team-identity")).toContainText(`${viewport.name} 참가자`);
-    await expect(modes.getByRole("link")).toHaveText(["기초 실습", "공동 실습"]);
+    await expect(modes.getByRole("link")).toHaveText(["기초 실습", "공동 실습", "넌스 찾기"]);
     await expect(modes.getByRole("link", { name: "공동 실습", exact: true })).toHaveAttribute("aria-current", "page");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath(`classroom-main-${viewport.width}.png`) });
