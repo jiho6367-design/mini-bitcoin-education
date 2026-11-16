@@ -30,7 +30,8 @@ class AppIntegrationTests(unittest.TestCase):
             self.assertEqual(main.status_code, 200)
             self.assertEqual(basic.status_code, 200)
             self.assertEqual(main.data, basic.data)
-            self.assertIn(b'id="demo-video"', main.data)
+            self.assertIn(b'id="practice-overview-title"', main.data)
+            self.assertNotIn(b'id="demo-video"', main.data)
             self.assertNotIn(b"/education-assets/", main.data)
             self.assertIn('href="/" aria-current="page">기초 실습'.encode(), main.data)
             self.assertIn('href="/?classroom=join">공동 실습'.encode(), main.data)
@@ -58,7 +59,8 @@ class AppIntegrationTests(unittest.TestCase):
         for path in ("/", "/basic"):
             with self.client.get(path) as response:
                 self.assertEqual(response.status_code, 200)
-                self.assertIn(b'id="demo-video"', response.data)
+                self.assertIn(b'id="practice-overview-title"', response.data)
+                self.assertNotIn(b'id="demo-video"', response.data)
         for path in ("/advanced", "/?classroom=join&room=V5JHT522"):
             with self.client.get(path) as response:
                 self.assertEqual(response.status_code, 503)

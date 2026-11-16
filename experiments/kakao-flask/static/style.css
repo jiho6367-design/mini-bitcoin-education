@@ -419,6 +419,56 @@ main {
   font-size: 13px;
   color: var(--muted);
 }
+.practice-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.practice-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  min-width: 0;
+}
+.practice-step-number {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+.practice-steps a {
+  display: inline-block;
+  color: var(--ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+.practice-steps a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.practice-steps p {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+}
+.practice-overview .overview-help {
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
 .learning-guide {
   background: var(--accent-soft);
   border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
@@ -447,31 +497,6 @@ main {
 .learning-guide .secondary {
   border-color: color-mix(in srgb, var(--accent) 25%, transparent);
   font-size: 12px;
-}
-.demo-panel video {
-  display: block;
-  width: 100%;
-  aspect-ratio: 8/5;
-  max-height: 56vh;
-  object-fit: contain;
-  background: var(--video-bg);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-}
-.demo-panel h2 {
-  font-size: 18px;
-}
-.video-caption {
-  margin-top: 12px;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  font-size: 11px;
-  color: var(--muted);
-}
-.video-caption a {
-  white-space: nowrap;
 }
 .model-note summary {
   cursor: pointer;
@@ -793,6 +818,37 @@ details summary {
   font-size: 12px;
   color: var(--muted);
   cursor: pointer;
+}
+.explanation:not(.panel) {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.explanation summary {
+  width: fit-content;
+  padding: 6px 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 650;
+}
+.explanation[open] > summary {
+  margin-bottom: 10px;
+}
+.explanation p,
+.explanation li {
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.explanation ol,
+.explanation ul {
+  margin: 0 0 14px;
+  padding-left: 22px;
+}
+.explanation li + li {
+  margin-top: 6px;
+}
+.explanation > :last-child {
+  margin-bottom: 0;
 }
 .table-scroll {
   overflow-x: auto;
@@ -1287,9 +1343,6 @@ dialog::backdrop {
   main {
     padding-top: 42px;
   }
-  .demo-panel video {
-    max-height: 59vh;
-  }
 }
 @media (max-width: 1150px) {
   .app-shell {
@@ -1383,6 +1436,9 @@ dialog::backdrop {
   }
 }
 @media (max-width: 700px) {
+  .practice-steps {
+    grid-template-columns: 1fr;
+  }
   .app-shell {
     display: block;
   }
@@ -1490,18 +1546,8 @@ dialog::backdrop {
     align-items: flex-start;
     flex-wrap: wrap;
   }
-  .panel-heading h2,
-  .demo-panel h2 {
+  .panel-heading h2 {
     font-size: 16px;
-  }
-  .demo-panel video {
-    max-height: none;
-    aspect-ratio: 8/5;
-  }
-  .video-caption {
-    font-size: 11px;
-    flex-wrap: wrap;
-    gap: 7px;
   }
   .learning-guide {
     padding: 14px;

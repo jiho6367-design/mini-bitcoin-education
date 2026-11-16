@@ -77,31 +77,30 @@ test("the architecture page describes current behavior and inherits the chosen t
   expect(errors).toEqual([]);
 });
 
-test("leaving home pauses the live video and the guide follows each learning page", async ({
+test("the six-step overview navigates without a video and the guide follows each learning page", async ({
   page,
 }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
   await openPractice(page);
-  const video = page.locator("#demo-video");
-  await expect
-    .poll(() => video.evaluate((v: HTMLVideoElement) => v.readyState))
-    .toBeGreaterThanOrEqual(2);
-  await video.evaluate((v: HTMLVideoElement) => v.play());
-  await expect
-    .poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime))
-    .toBeGreaterThan(0.2);
+  await expect(page.locator("#demo-video")).toHaveCount(0);
+  const overview = page.getByRole("article", { name: "전체 실습 안내", exact: true });
+  await expect(overview).toBeVisible();
+  const steps = overview.getByRole("link");
+  await expect(steps).toHaveCount(6);
 
-  await page.locator('nav [data-page="wallet"]').click();
-  await expect(page.locator("#page-wallet #learning-guide")).toBeVisible();
-  expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
-  const pausedAt = await video.evaluate((v: HTMLVideoElement) => v.currentTime);
-
-  await page.locator('nav [data-page="mining"]').click();
-  await expect(page.locator("#page-mining #learning-guide")).toBeVisible();
-  await expect(page.locator("#guide-title")).toHaveText("Nonce와 해시");
-  await page.locator('nav [data-page="home"]').click();
-  await expect(page.locator("#page-home #learning-guide")).toBeVisible();
-  expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
-  expect(
-    await video.evaluate((v: HTMLVideoElement) => v.currentTime),
-  ).toBeCloseTo(pausedAt, 2);
+  for (const [index, destination] of [
+    "wallet", "mining", "transaction", "mining", "chain", "network",
+  ].entries()) {
+    await steps.nth(index).click();
+    await expect(page.locator(`#page-${destination}`)).toBeVisible();
+    await expect(page.locator(`#page-${destination} #learning-guide`)).toBeVisible();
+    if (destination === "mining") {
+      await expect(page.locator("#guide-title")).toHaveText("Nonce와 해시");
+    }
+    await page.locator('nav [data-page="home"]').click();
+    await expect(page.locator("#page-home #learning-guide")).toBeVisible();
+    await expect(overview).toBeVisible();
+  }
+  expect(errors).toEqual([]);
 });

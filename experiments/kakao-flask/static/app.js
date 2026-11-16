@@ -476,7 +476,6 @@ function renderSaveStatus(label = "") {
 }
 function setPage(page, updateHash = true) {
   if (!pages[page]) page = "home";
-  if (model.page === "home" && page !== "home") $("#demo-video").pause();
   model.page = page;
   document.querySelectorAll(".page").forEach((el) => {
     el.hidden = el.id !== `page-${page}`;

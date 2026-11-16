@@ -99,7 +99,9 @@
           <div class="page-heading">
             <div>
               <h1 id="page-title">블록체인 실습</h1>
-              <p id="page-description">지갑 → 거래·서명 → 채굴 → 노드 검증</p>
+              <p id="page-description">
+                지갑 → 거래·서명 → 채굴 → 노드 검증 (오른쪽 관찰 노드 기준으로 잔액·대기열·체인이 표시됨)
+              </p>
             </div>
             <label class="node-control"
               >관찰 노드<select
@@ -125,36 +127,61 @@
             <button id="invalid-sync" class="text-button">현재 노드 복구</button
             ><span id="integrity-description"></span>
           </div>
+
+          <!-- ==================== 00. 시작하기 ==================== -->
           <section class="page" id="page-home" aria-label="시작하기">
-            <article class="panel demo-panel">
+            <article class="panel soft-panel practice-overview" aria-labelledby="practice-overview-title">
               <div class="panel-heading">
-                <div>
-                  <h2>시연 영상</h2>
-                </div>
-                <span class="pill">3분 44초 · 한국어 자막</span>
+                <h2 id="practice-overview-title">전체 실습 안내</h2>
               </div>
-              <video
-                id="demo-video"
-                controls
-                playsinline
-                preload="metadata"
-                poster="/static/media/blockchain-demo-poster.jpg"
-                aria-label="블록체인 앱 시연 영상, 한국어 설명 자막 포함"
-              >
-                <source
-                  src="/static/media/blockchain-demo-ko.mp4"
-                  type="video/mp4"
-                />
-                <a href="/static/media/blockchain-demo-ko.mp4" download
-                  >시연 영상을 다운로드</a
-                >
-              </video>
-              <div class="video-caption">
-                <span>이전 화면 시연 · 기본 원리 동일</span
-                ><a href="/static/media/blockchain-demo-ko.mp4" download
-                  >원본 영상 다운로드 ↗</a
-                >
-              </div>
+              <p class="desc">
+                지갑 만들기부터 노드 동기화까지 순서대로 따라 해 보세요
+              </p>
+              <ol class="practice-steps" role="list" aria-label="전체 실습 6단계">
+                <li>
+                  <span class="practice-step-number" aria-hidden="true">1</span>
+                  <div>
+                    <a href="#wallet" data-page="wallet">지갑 만들기 →</a>
+                    <p>Alice와 Bob처럼 송금할 지갑 두 개를 만드세요</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="practice-step-number" aria-hidden="true">2</span>
+                  <div>
+                    <a href="#mining" data-page="mining">초기 코인 확정하기 →</a>
+                    <p>지갑마다 지급 대기 중인 50코인을 채굴로 확정하세요</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="practice-step-number" aria-hidden="true">3</span>
+                  <div>
+                    <a href="#transaction" data-page="transaction">거래 작성·서명·제출 →</a>
+                    <p>보내는 지갑·받는 지갑·금액을 정하고 작성 → 서명 → 제출 순서로 누르세요</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="practice-step-number" aria-hidden="true">4</span>
+                  <div>
+                    <a href="#mining" data-page="mining">송금 확정하기 →</a>
+                    <p>다시 채굴한 뒤 지갑에서 송금 전후 잔액을 확인하세요</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="practice-step-number" aria-hidden="true">5</span>
+                  <div>
+                    <a href="#chain" data-page="chain">변조와 검증 비교하기 →</a>
+                    <p>서명된 송금의 내용을 바꾸고 검증 결과를 확인하세요</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="practice-step-number" aria-hidden="true">6</span>
+                  <div>
+                    <a href="#network" data-page="network">노드 비교·동기화 →</a>
+                    <p>노드별 장부·검증 결과를 비교하고 필요하면 동기화하세요</p>
+                  </div>
+                </li>
+              </ol>
+              <p class="overview-help">점선 밑줄 용어는 마우스를 올리거나 터치하면 뜻을 볼 수 있습니다<br />오른쪽 위 <b>용어 사전</b>에서 용어를 검색하고 <b>구성도 ↗</b>에서 시스템 구조를 확인하세요</p>
             </article>
             <section
               class="learning-guide"
@@ -190,6 +217,8 @@
               </p>
             </details>
           </section>
+
+          <!-- ==================== 01. 지갑 ==================== -->
           <section class="page" id="page-wallet" aria-label="지갑" hidden>
             <div class="two-column">
               <article class="panel">
@@ -199,8 +228,7 @@
                   </div>
                 </div>
                 <p class="desc">
-                  <span class="gl" data-k="faucet" tabindex="0">Faucet</span>
-                  지급 50코인 · 채굴 후 잔액 반영
+                  새 지갑에는 학습용 50코인이 지급 대기 상태로 배정됩니다<br />채굴로 블록에 기록하면 송금할 수 있습니다
                 </p>
                 <form id="wallet-form" class="inline-form">
                   <label class="grow"
@@ -221,17 +249,29 @@
                   </button>
                 </form>
                 <p class="field-hint" id="wallet-feedback" role="status"></p>
+                <details class="explanation">
+                  <summary>자세히 보기<span class="sr-only"> · 지갑 구성과 초기 코인</span></summary>
+                  <ul>
+                    <li><span class="gl" data-k="private" tabindex="0">개인키</span>는 거래에 서명하는 비밀키입니다</li>
+                    <li><span class="gl" data-k="public" tabindex="0">공개키</span>는 서명을 검증할 때 사용하며, 공개키를 해시한 주소가 계좌번호 역할을 합니다</li>
+                    <li><span class="gl" data-k="faucet" tabindex="0">Faucet</span>은 학습용 코인을 지급하는 거래입니다 새 지갑의 50코인은 채굴 전까지 대기 거래에만 표시됩니다</li>
+                  </ul>
+                </details>
               </article>
               <article class="panel soft-panel">
-                <h2>잔액 구분</h2>
-                <p>
-                  <b>확정</b> · 현재 노드의 체인에 반영된 잔액<br />
-                  <b>대기</b> · 아직 블록에 포함되지 않은 입출금
+                <h2>확정 잔액과 대기 거래</h2>
+                <p class="desc">
+                  <b>확정 잔액</b>은 블록에 기록된 코인<br />
+                  <b>대기 거래</b>는 채굴을 기다리는 입출금입니다
                 </p>
-                <p>채굴 보상은 선택한 지갑에 지급</p>
                 <button class="text-button" data-page="mempool">
                   지급 대기열 확인 →
                 </button>
+                <details class="explanation">
+                  <summary>자세히 보기<span class="sr-only"> · 잔액 계산 원리</span></summary>
+                  <p>잔액은 지갑 파일에 적힌 숫자를 읽는 대신, 선택한 노드의 체인 거래 내역을 합산해 계산합니다</p>
+                  <p>대기 중인 입금은 아직 쓸 수 없고, 이미 제출한 대기 출금액은 추가 송금에 사용할 수 없습니다 노드마다 기록이 다르면 표시되는 잔액도 다를 수 있습니다</p>
+                </details>
               </article>
             </div>
             <article class="panel">
@@ -262,6 +302,8 @@
               </div>
             </article>
           </section>
+
+          <!-- ==================== 02. 거래·서명 ==================== -->
           <section
             class="page"
             id="page-transaction"
@@ -271,10 +313,13 @@
             <article class="panel">
               <div class="panel-heading">
                 <div>
-                  <h2>거래 작성</h2>
+                  <h2>거래 작성과 서명</h2>
                 </div>
                 <span class="pill" id="transaction-node"></span>
               </div>
+              <p class="desc">
+                보내는 지갑·받는 지갑·금액을 정하고 <b>작성 → 서명 → 제출</b> 순서로 누르세요
+              </p>
               <div class="form-grid three">
                 <label
                   >보내는 지갑<select
@@ -297,7 +342,7 @@
                     inputmode="numeric"
                 /></label>
               </div>
-              <p class="field-hint" id="tx-balance-hint">지갑 2개 필요</p>
+              <p class="field-hint" id="tx-balance-hint">지갑 두 개를 만들고 초기 코인을 채굴하세요</p>
               <div class="transaction-steps">
                 <button id="tx-prepare" data-testid="tx-prepare">
                   <span>1</span> 거래 작성</button
@@ -310,8 +355,13 @@
                 </button>
               </div>
               <p class="field-hint">
-                지갑·금액·관찰 노드 변경 시 작성·서명 초기화
+                지갑·금액·관찰 노드를 바꾸면 작성·서명이 초기화됩니다
               </p>
+              <details class="explanation">
+                <summary>자세히 보기<span class="sr-only"> · 거래 제출과 검증</span></summary>
+                <p>송금할 내용을 작성하고 보내는 지갑의 개인키로 서명합니다 제출받은 노드는 공개키로 서명을 검증하고 잔액과 거래 순번을 확인합니다</p>
+                <p>검증을 통과한 거래는 대기열로 이동하며, 채굴로 블록에 포함된 뒤 확정 잔액에 반영됩니다</p>
+              </details>
             </article>
             <div class="two-column">
               <article class="panel">
@@ -328,7 +378,7 @@
               <article class="panel">
                 <h2>서명과 검증 결과</h2>
                 <p class="desc">
-                  서버의 학습용 키로 서명 · 서명 후 내용 변경 시 검증 실패
+                  서명 후 제출하면 검증 결과가 표시됩니다
                 </p>
                 <div id="tx-result" class="empty-state" role="status">
                   서명 전
@@ -336,6 +386,10 @@
                 <details id="tx-signature-details" hidden>
                   <summary>전자서명·거래 ID 보기</summary>
                   <pre id="tx-signature"></pre>
+                </details>
+                <details class="explanation">
+                  <summary>자세히 보기<span class="sr-only"> · 전자서명 원리</span></summary>
+                  <p>이 실습은 서버에 보관한 학습용 개인키로 secp256k1 서명을 생성합니다 노드는 공개키로 서명과 거래 내용이 일치하는지 검사하며, 개인키를 거래에 담아 보내지 않습니다</p>
                 </details>
               </article>
             </div>
@@ -345,11 +399,16 @@
                 실험</label
               >
               <p>
-                체크 시 서명 금액에 1000을 더해 제출 → 검증 거부<br />
-                체크 해제 후 원래 거래 제출 가능
+                서명 후 체크하고 제출하면 금액 변경으로 검증에 실패합니다<br />체크를 해제하고 다시 제출하면 원래 거래를 보낼 수 있습니다
               </p>
+              <details class="explanation">
+                <summary>자세히 보기<span class="sr-only"> · 금액 변조 실험</span></summary>
+                <p>이 옵션은 서명된 거래의 금액에 1000을 더해 제출합니다 서명은 원래 금액에 대한 것이므로 변경된 거래는 서명 검증에서 거부됩니다</p>
+              </details>
             </article>
           </section>
+
+          <!-- ==================== 03. 거래 대기열 ==================== -->
           <section
             class="page"
             id="page-mempool"
@@ -361,7 +420,7 @@
               <div class="panel-heading">
                 <div>
                   <h2>
-                    블록을 기다리는 거래
+                    거래 대기열
                     <span class="subtle" id="mempool-node"></span>
                   </h2>
                 </div>
@@ -370,7 +429,7 @@
                 </button>
               </div>
               <p class="desc">
-                검증을 통과한 미확정 거래 · 블록에 포함되면 잔액 반영
+                검증을 통과한 거래가 채굴을 기다리는 곳입니다<br /><b>이 거래로 채굴하기</b>를 눌러 블록에 기록하세요
               </p>
               <div class="table-scroll">
                 <table>
@@ -387,7 +446,24 @@
                 </table>
               </div>
             </article>
+            <details class="panel soft-panel explanation">
+              <summary>자세히 보기<span class="sr-only"> · 대기열 사용 방법과 검증 원리</span></summary>
+              <h3>거래가 확정되는 순서</h3>
+              <ol>
+                <li>지갑 생성 시 지급되는 Faucet 거래나 직접 서명·제출한 송금이 대기열에 모입니다</li>
+                <li>대기 중에는 아직 블록에 기록되지 않아 확정 잔액이 바뀌지 않습니다</li>
+                <li>채굴한 블록에 포함된 거래는 대기열에서 빠지고 확정 잔액에 반영됩니다</li>
+              </ol>
+              <h3>대기열이 확인하는 것</h3>
+              <p>거래 형식·전자서명·잔액·<span class="gl" data-k="txnonce" tabindex="0">거래 순번</span>을 확인합니다 검증을 통과한 거래는 연결된 온라인 노드로 전파됩니다</p>
+              <ul>
+                <li><b>이중 지불 방지</b> · 확정 잔액에서 대기 중인 출금을 제외해, 같은 코인을 다시 쓰는 잔액 초과 거래를 막습니다</li>
+                <li><b>거래 순번</b> · 같은 지갑의 거래가 중복 제출되거나 순서가 바뀌지 않도록 검사합니다</li>
+              </ul>
+            </details>
           </section>
+
+          <!-- ==================== 04. 채굴 ==================== -->
           <section class="page" id="page-mining" aria-label="채굴" hidden>
             <div class="mining-view-switch" role="group" aria-label="채굴 방식">
               <button id="mining-view-single" class="secondary" aria-pressed="true">한 노드 채굴</button>
@@ -401,6 +477,9 @@
                 </div>
                 <span class="pill" id="mining-node"></span>
               </div>
+              <p class="desc">
+                <span class="gl" data-k="nonce" tabindex="0">Nonce</span>를 바꿔 목표 해시를 찾으면 거래가 블록에 기록됩니다<br /><b>연속 실행</b>을 누르면 조건을 만족할 때까지 계산합니다
+              </p>
               <div class="form-grid three">
                 <label
                   >보상을 받을 지갑<select id="mining-wallet"></select></label
@@ -424,8 +503,8 @@
                   </div></label
                 >
                 <div class="field-description">
-                  <strong>해시 앞자리 0 개수</strong>
-                  <p>난이도 +1 → 평균 계산량 16배<br />성공 시간은 매번 다름</p>
+                  <strong>해시 앞자리 0 개수 (1~5)</strong>
+                  <p>높을수록 평균 계산량이 늘어납니다</p>
                 </div>
               </div>
               <div class="mining-actions">
@@ -469,8 +548,14 @@
                 </button>
               </div>
               <p class="field-hint" id="mining-mode-hint">
-                학습 실행 · 약 250ms마다 Nonce 하나 계산
+                목표 난이도 확인 중
               </p>
+              <details class="explanation">
+                <summary>자세히 보기<span class="sr-only"> · 작업 증명과 난이도</span></summary>
+                <p>대기 거래를 모은 블록 헤더의 Nonce를 1씩 바꾸며 SHA-256 해시를 계산합니다 해시가 난이도 개수만큼 0으로 시작하면 작업 증명(PoW) 조건을 만족합니다</p>
+                <p>유효한 블록이 체인에 추가되면 선택한 지갑에 채굴 보상 10코인이 지급됩니다 난이도가 1 높아질 때마다 평균 시도 횟수는 약 16배 늘지만, 실제로 찾는 횟수는 매번 다릅니다</p>
+                <p><b>한 번 계산하기</b>는 1회, <b>느린 실행</b>은 약 250ms마다 1회 계산합니다 계산 중에는 일시정지하거나 작업을 중지할 수 있습니다</p>
+              </details>
             </article>
             <article class="mining-console">
               <div class="console-heading">
@@ -509,11 +594,15 @@
                 <h2>실제 Nonce·Hash 비교</h2>
                 <span class="subtle">최근 12개 표본</span>
               </div>
-              <p class="desc">표본 선택 시 해당 Nonce·해시 고정 표시</p>
+              <p class="desc">표본을 선택해 Nonce와 해시의 변화를 비교하세요</p>
               <div id="selected-sample" class="selected-sample" hidden></div>
               <div id="mining-samples" class="sample-list empty-state">
                 계산 표본 없음
               </div>
+              <details class="explanation">
+                <summary>자세히 보기<span class="sr-only"> · 해시의 눈사태 효과</span></summary>
+                <p>Nonce를 1만 바꿔도 해시의 여러 자리가 크게 달라집니다 작은 입력 변화가 출력 전반에 영향을 주는 눈사태 효과입니다 표본을 선택하면 해당 Nonce와 해시가 고정 표시됩니다</p>
+              </details>
             </article>
             </div>
             <div id="comparison-mining-panel" hidden>
@@ -522,7 +611,7 @@
                   <h2>A·B·C 채굴 비교</h2>
                   <span class="pill" id="comparison-status">준비</span>
                 </div>
-                <p class="desc">세 노드가 각자 후보 블록을 계산합니다 먼저 목표 해시를 찾으면 다른 노드가 검증하고 같은 블록을 저장합니다</p>
+                <p class="desc">세 노드가 각자 계산하고, 먼저 찾은 블록을 다른 노드가 검증합니다</p>
                 <p id="comparison-guide" class="comparison-guide" role="status">세 노드 비교 시작을 누르세요</p>
                 <label class="comparison-speed">계산 속도<select id="comparison-batch">
                   <option value="1">천천히 · 노드마다 1회</option>
@@ -537,6 +626,11 @@
                   <button id="comparison-stop" class="danger-button" disabled>비교 중지</button>
                 </div>
                 <p class="field-hint" id="comparison-target"></p>
+                <details class="explanation">
+                  <summary>자세히 보기<span class="sr-only"> · 세 노드 채굴 비교 방식</span></summary>
+                  <p>한 서버 안에서 A·B·C가 번갈아 실제 해시를 계산하는 교육 모델입니다 각 노드는 자신의 후보 블록을 계산하며 먼저 목표 해시를 찾은 노드가 블록을 전파합니다</p>
+                  <p>연결된 다른 노드는 블록을 검증한 뒤 자신의 체인에 추가합니다 같은 난이도에서도 먼저 찾는 노드와 시도 횟수는 달라질 수 있습니다</p>
+                </details>
               </article>
               <div id="comparison-nodes" class="comparison-nodes" aria-label="세 노드 계산 결과"></div>
               <article class="panel" id="comparison-result-panel" hidden>
@@ -544,14 +638,15 @@
                 <p id="comparison-result" role="status"></p>
                 <button class="secondary" data-page="network">노드 장부 자세히 보기 →</button>
               </article>
-              <p class="field-hint">한 서버 안에서 A·B·C가 한 번씩 번갈아 실제 해시를 계산하는 교육 모델입니다 같은 조건에서도 먼저 찾는 노드는 매번 달라질 수 있습니다</p>
             </div>
           </section>
+
+          <!-- ==================== 05. 블록·변조 ==================== -->
           <section class="page" id="page-chain" aria-label="블록·변조" hidden>
             <article class="panel">
               <div class="panel-heading">
                 <div>
-                  <h2>블록 검증</h2>
+                  <h2>블록과 검증 결과</h2>
                 </div>
                 <button
                   class="secondary"
@@ -563,9 +658,14 @@
               </div>
               <div id="chain-status" role="status"></div>
               <p class="desc">
-                해시 · Merkle Root · PoW · 이전 블록 연결 · 거래 검증
+                블록별 검증 결과와 거래 내용을 확인하세요
               </p>
               <div class="chain-grid" id="chain-list"></div>
+              <details class="explanation">
+                <summary>자세히 보기<span class="sr-only"> · 블록 검증 원리</span></summary>
+                <p>각 블록은 <span class="gl" data-k="prevhash" tabindex="0">이전 블록의 해시</span>를 담아 사슬처럼 연결됩니다 과거 데이터를 바꾸면 뒤따르는 블록과의 연결에도 영향을 줍니다</p>
+                <p>이 실습은 Genesis 블록의 일치 여부와 블록 해시·Merkle Root·작업 증명·이전 블록 연결·거래 규칙을 검사합니다 거래 규칙에는 전자서명과 잔액 검증 등이 포함됩니다</p>
+              </details>
             </article>
             <article class="panel tamper-panel">
               <div class="panel-heading">
@@ -575,7 +675,7 @@
                 <span class="pill warning">선택 노드의 체인 변경</span>
               </div>
               <p class="desc">
-                선택한 노드만 변경 · 정상 이웃과 동기화해 복구 가능
+                선택한 노드의 거래를 바꾸고 검증 결과를 비교하세요<br />체인이 무효가 되면 <b>다른 노드와 동기화</b>로 복구할 수 있습니다
               </p>
               <div class="form-grid three">
                 <label
@@ -630,33 +730,49 @@
                 </button>
               </div>
               <div id="tamper-result" class="field-hint" role="status"></div>
-              <details class="compact-note">
-                <summary>변조·재채굴 안내</summary>
-                <p class="field-hint">
-                  서명된 송금의 내용을 바꾸면 재채굴해도 서명 검증 실패<br />
-                  거래 #0은 서명이 없는 채굴 보상<br />
-                  재채굴은 복사본에서 진행 · 완료 전 취소 시 원래 체인 유지
-                </p>
+              <details class="explanation">
+                <summary>자세히 보기<span class="sr-only"> · 변조·재채굴과 체인 선택</span></summary>
+                <ol>
+                  <li><b>내용만 변경</b> · 저장된 해시와 거래 내용이 맞지 않게 됩니다</li>
+                  <li><b>Merkle·해시 재계산</b> · 해시를 다시 만들어도 작업 증명·블록 연결·거래 검증을 모두 통과해야 합니다</li>
+                  <li><b>이후 블록까지 재채굴</b> · 작업 증명을 다시 수행해도 바뀐 송금의 서명이 유효해지지는 않습니다</li>
+                </ol>
+                <p><b>서명된 송금 거래</b>의 금액이나 수신 주소를 바꾸고 새로 서명하지 않으면, 모든 블록을 다시 채굴해도 전자서명 검증에서 실패합니다</p>
+                <p><b>거래 #0</b>은 서명이 없는 채굴 보상(coinbase)입니다 수신 주소를 바꾼 뒤 다시 채굴한 체인은 다른 거래 규칙도 만족하면 유효할 수 있습니다 <b>끝 해시가 다르다는 이유만으로 배제되지는 않습니다</b></p>
+                <p>동기화할 때는 유효한 체인 중 <b>누적 작업량이 더 큰 체인</b>으로 교체합니다 현재 체인이 유효하고 작업량이 같으면 현재 체인을 유지하므로, 재채굴해 유효해진 체인도 다른 노드에 자동으로 채택되는 것은 아닙니다</p>
+                <p>재채굴은 복사본에서 진행됩니다 완료 전에 취소하면 원래 체인이 유지됩니다</p>
               </details>
             </article>
           </section>
+
+          <!-- ==================== 06. 노드·동기화 ==================== -->
           <section
             class="page"
             id="page-network"
             aria-label="노드·동기화"
             hidden
           >
-            <div class="network-grid" id="network-list"></div>
-            <details class="panel model-note">
-              <summary>분리·동기화 규칙</summary>
-              <p>
-                오프라인에서도 로컬 채굴 가능 · 이웃 전파·동기화 중단<br />
-                온라인 재연결 후 직접 동기화<br />
-                유효한 체인 중 누적 작업량이 큰 체인 선택 · 동률이면 현재 체인
-                유지
+            <article class="panel soft-panel">
+              <h2>노드별 장부 비교</h2>
+              <p class="desc">
+                끝 해시와 검증 결과를 함께 비교하세요<br />노드를 오프라인으로 바꿔 채굴한 뒤, 온라인으로 되돌리고 <b>동기화</b>를 눌러 보세요
               </p>
-            </details>
+              <details class="explanation">
+                <summary>자세히 보기<span class="sr-only"> · 노드와 동기화 규칙</span></summary>
+                <p>이 실습의 세 노드는 한 서버 안에서 같은 Genesis 블록으로 시작하며 각자의 체인과 대기열을 관리합니다 거래나 블록을 받으면 각자 규칙에 따라 검증합니다 끝 해시(tip) 옆의 색상 표시는 장부를 비교하는 보조 표시입니다</p>
+                <ul>
+                  <li><b>오프라인</b> · 로컬 채굴은 가능하지만 다른 노드와 거래·블록을 주고받지 않습니다</li>
+                  <li><b>다시 연결</b> · 온라인으로 바꾸고 동기화하면 연결된 온라인 노드의 체인을 검증합니다</li>
+                  <li><b>체인 선택</b> · 현재 체인이 유효하면 <b>누적 작업량이 더 큰 유효 체인</b>으로만 교체합니다 작업량이 같으면 현재 체인을 유지하며, 블록 수나 끝 해시 차이만으로 결정하지 않습니다</li>
+                  <li><b>무효 체인 복구</b> · 현재 체인이 검증에 실패하면 연결된 온라인 노드의 유효한 체인으로 복구할 수 있습니다 이때 현재 체인의 길이나 작업량은 선택 기준으로 쓰지 않습니다</li>
+                </ul>
+                <p>누적 작업량은 각 블록의 난이도에 따른 기대 작업량을 더한 값이며, 실제 해시를 시도한 횟수와는 다릅니다</p>
+              </details>
+            </article>
+            <div class="network-grid" id="network-list"></div>
           </section>
+
+          <!-- ==================== 07. 활동 기록 ==================== -->
           <section class="page" id="page-events" aria-label="활동 기록" hidden>
             <article class="panel">
               <div class="panel-heading">
@@ -667,6 +783,9 @@
                   JSON 내보내기
                 </button>
               </div>
+              <p class="desc">
+                거래·채굴·동기화 결과를 시간순으로 확인하세요<br />유형을 선택하면 필요한 기록만 볼 수 있습니다
+              </p>
               <div class="filter-row">
                 <label
                   >기록 유형<select id="events-filter">
@@ -681,8 +800,14 @@
                 ><span id="events-count" class="subtle"></span>
               </div>
               <ol class="event-list" id="events-list"></ol>
+              <details class="explanation">
+                <summary>자세히 보기<span class="sr-only"> · 기록 활용 방법</span></summary>
+                <p>지갑 생성, 거래 검증 통과·거부, 블록 채굴과 전파, 동기화, 변조 실험을 기록합니다 검증 실패나 동기화 유형을 선택해 앞선 실험의 결과를 확인하세요</p>
+                <p><b>JSON 내보내기</b>로 현재 실습의 기록을 내려받아 실습 결과를 정리할 수 있습니다</p>
+              </details>
             </article>
           </section>
+
           <footer class="page-footer">
             <span>교육용 블록체인 · 실제 자산 연결 없음</span
             ><span id="version-label">실습실</span>

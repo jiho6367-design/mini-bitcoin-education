@@ -14,11 +14,15 @@ for (const viewport of [
     const modes = page.getByRole("navigation", { name: "실습 모드", exact: true });
     await expect(modes.getByRole("link")).toHaveText(["기초 실습", "공동 실습", "넌스 찾기"]);
     await expect(modes.getByRole("link", { name: "기초 실습", exact: true })).toHaveAttribute("aria-current", "page");
-    await expect(page.locator("#demo-video")).toBeVisible();
+    await expect(page.locator("#demo-video")).toHaveCount(0);
+    const overview = page.getByRole("article", { name: "전체 실습 안내", exact: true });
+    await expect(overview).toBeVisible();
+    await expect(overview.getByRole("listitem")).toHaveCount(6);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath(`basic-main-${viewport.width}.png`) });
 
-    await page.locator("#primary-nav").getByRole("link", { name: /지갑/ }).click();
+    await overview.getByRole("link", { name: "지갑 만들기 →", exact: true }).click();
+    await expect(page.locator("#page-wallet #learning-guide")).toBeVisible();
     const walletName = `${viewport.name} 이동 검사 지갑`;
     await page.getByTestId("wallet-name").fill(walletName);
     await page.getByTestId("wallet-create").click();
