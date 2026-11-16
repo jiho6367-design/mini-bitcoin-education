@@ -2,6 +2,7 @@ export type ThemePreference = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
 
 export const THEME_STORAGE_KEY = "team-blockchain-theme";
+export const LEGACY_BASIC_THEME_STORAGE_KEY = "blockchain-lab-theme";
 
 type ThemeStorage = Pick<Storage, "getItem" | "setItem">;
 
@@ -18,7 +19,15 @@ export function resolveTheme(
 
 export function readThemePreference(storage?: ThemeStorage): ThemePreference {
   try {
-    return parseThemePreference(storage?.getItem(THEME_STORAGE_KEY));
+    const stored = storage?.getItem(THEME_STORAGE_KEY);
+    if (stored != null) return parseThemePreference(stored);
+    const legacy = storage?.getItem(LEGACY_BASIC_THEME_STORAGE_KEY);
+    if (legacy === "light" || legacy === "dark" || legacy === "system") {
+      // Read the old basic choice only once; keep the original key untouched.
+      storeThemePreference(legacy, storage);
+      return legacy;
+    }
+    return "system";
   } catch {
     return "system";
   }

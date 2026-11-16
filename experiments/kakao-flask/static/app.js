@@ -1778,14 +1778,12 @@ $("#keys-dialog").addEventListener("close", () => {
   $("#wallet-public-key").textContent = "";
   $("#wallet-private-key").textContent = "";
 });
-$("#theme-select").value = document.documentElement.dataset.theme;
+$("#theme-select").value = window.teamLabTheme.getPreference();
 $("#theme-select").addEventListener("change", (event) => {
-  document.documentElement.dataset.theme = event.target.value;
-  try {
-    localStorage.setItem("blockchain-lab-theme", event.target.value);
-  } catch {
-    /* Theme remains usable without storage. */
-  }
+  window.teamLabTheme.select(event.target.value);
+});
+window.addEventListener("team-theme-change", () => {
+  $("#theme-select").value = window.teamLabTheme.getPreference();
 });
 $("#glossary-open").addEventListener("click", () => window.openDict?.());
 $("#events-filter").addEventListener("change", renderEvents);

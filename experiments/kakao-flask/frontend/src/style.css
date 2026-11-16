@@ -1,77 +1,13 @@
+@import "../../static/team-theme.css";
+
 :root {
   font-family: "Segoe UI", "Malgun Gothic", sans-serif;
   color: var(--text);
   background: var(--page-bg);
-  color-scheme: light;
   font-synthesis: none;
   font-weight: 400;
   line-height: 1.65;
   font-size: 14px;
-  /* Palette values live here; components and SVGs share semantic tokens. */
-  --page-bg: #f5f6f1;
-  --surface: #fffef9;
-  --surface-subtle: #eef2e8;
-  --input-bg: #ffffff;
-  --text: #243c33;
-  --muted: #53644f;
-  --border: #ced8c8;
-  --control-border: #84977d;
-  --accent: #2c5945;
-  --accent-hover: #234634;
-  --accent-contrast: #ffffff;
-  --selected-bg: #e0ebda;
-  --selected-border: #617f50;
-  --success: #38612e;
-  --success-bg: #edf3e8;
-  --success-border: #7e9b6c;
-  --danger: #a1332c;
-  --danger-bg: #fbede7;
-  --danger-border: #b97260;
-  --danger-contrast: #ffffff;
-  --pending: #a54d1e;
-  --pending-bg: #fff0df;
-  --pending-text: #85441f;
-  --pending-border: #af7146;
-  --info-bg: #e4edef;
-  --info-text: #3b626d;
-  --focus: #a54d1e;
-  --shadow: #203c331a;
-  --disabled-bg: #e3e8df;
-  --disabled-text: #5e6b59;
-  --hero-bg: #1e382e;
-  --hero-text: #fffaf0;
-  --hero-muted: #c2d4bd;
-  --hero-accent: #f0c39b;
-  --hero-border: #779274;
-  --console-bg: #213b2e;
-  --console-text: #eff5e6;
-  --console-muted: #bfd2ae;
-  --console-border: #799665;
-  --console-well: #172d20;
-  --console-raised: #345338;
-  --console-accent: #f0c27c;
-  --console-accent-bg: #583d1e;
-  --console-alert: #ffbea9;
-  --console-button: #dda15e;
-  --console-button-hover: #efb87e;
-  --console-button-text: #1b3022;
-  --diagram-edge: #748773;
-  --diagram-node-bg: #e7eee3;
-  --diagram-node-stroke: #426650;
-  --diagram-node-text: #244638;
-  --diagram-caption: var(--muted);
-  --hero-svg-dot: #506d5e;
-  --hero-svg-edge: #99bda3;
-  --hero-svg-block-top: #b9ccb6;
-  --hero-svg-block-left: #658d73;
-  --hero-svg-block-right: #8aaa8c;
-  --hero-svg-coin-top: #f4c59e;
-  --hero-svg-coin-left: #cc804e;
-  --hero-svg-coin-right: #e8a36e;
-  --hero-svg-coin-text: #3a2415;
-  --hero-svg-caption: var(--hero-muted);
-  --green: var(--accent);
-  --orange: var(--pending);
 }
 
 /* Learning guidance uses the existing semantic palette in both themes. */
@@ -197,69 +133,6 @@
     animation: none;
   }
 }
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --page-bg: #101b15;
-  --surface: #19281f;
-  --surface-subtle: #24372a;
-  --input-bg: #122219;
-  --text: #e0ecdf;
-  --muted: #b6cbb1;
-  --border: #405740;
-  --control-border: #799476;
-  --accent: #9ad0ac;
-  --accent-hover: #b1e5c3;
-  --accent-contrast: #15291d;
-  --selected-bg: #2a4532;
-  --selected-border: #a0c18b;
-  --success: #b2dda1;
-  --success-bg: #273f2c;
-  --success-border: #90b87d;
-  --danger: #ffb4a1;
-  --danger-bg: #472c29;
-  --danger-border: #d38876;
-  --danger-contrast: #3a1712;
-  --pending: #efb680;
-  --pending-bg: #453420;
-  --pending-text: #f3caa0;
-  --pending-border: #c39565;
-  --info-bg: #223b40;
-  --info-text: #a9d0d6;
-  --focus: #efb680;
-  --shadow: #00000033;
-  --disabled-bg: #2e3b2c;
-  --disabled-text: #aebaa6;
-  --hero-bg: #1d3829;
-  --hero-text: #f3f8ec;
-  --hero-muted: #c4d8ba;
-  --hero-accent: #f7cda7;
-  --hero-border: #85a878;
-  --console-bg: #1d3425;
-  --console-text: #eff5e6;
-  --console-muted: #c2d8b0;
-  --console-border: #86a371;
-  --console-well: #102317;
-  --console-raised: #37583b;
-  --console-accent: #ffcc8b;
-  --console-accent-bg: #594021;
-  --console-alert: #ffd0c2;
-  --console-button: #e9af71;
-  --console-button-hover: #f5c28d;
-  --console-button-text: #1b3022;
-  --diagram-edge: #799b7d;
-  --diagram-node-bg: #294b35;
-  --diagram-node-stroke: #acd0b3;
-  --diagram-node-text: #e0eddb;
-  --hero-svg-dot: #50715b;
-  --hero-svg-edge: #a9ceac;
-  --hero-svg-block-top: #c4d6b8;
-  --hero-svg-block-left: #759e77;
-  --hero-svg-block-right: #9ac097;
-  --hero-svg-coin-top: #fad3aa;
-  --hero-svg-coin-left: #db9863;
-  --hero-svg-coin-right: #eeb682;
-  --hero-svg-coin-text: #3a2415;
-}
 * {
   box-sizing: border-box;
 }
@@ -316,7 +189,7 @@ select:focus-visible {
 .secondary {
   background: var(--input-bg);
   border-color: var(--control-border);
-  color: var(--accent);
+  color: var(--text);
 }
 .secondary:hover:not(:disabled) {
   background: var(--surface-subtle);
@@ -2343,7 +2216,7 @@ details p {
   aspect-ratio: 8/5;
   max-height: 56vh;
   object-fit: contain;
-  background: #101626;
+  background: var(--video-bg);
   border-radius: 10px;
 }
 .team-demo-caption {
@@ -2477,7 +2350,7 @@ details p {
 }
 .archive-item {
   padding: 18px 0;
-  border-bottom: 1px solid var(--border, #8885);
+  border-bottom: 1px solid var(--border);
 }
 .archive-item > small {
   display: block;
@@ -2487,7 +2360,7 @@ details p {
   width: 100%;
   height: 70vh;
   margin-top: 16px;
-  border: 1px solid #8885;
+  border: 1px solid var(--border);
   border-radius: 12px;
   background: white;
 }

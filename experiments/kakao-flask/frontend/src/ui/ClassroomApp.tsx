@@ -193,6 +193,7 @@ export function ClassroomApp({
         <label>
           화면 테마
           <select
+            aria-label="화면 테마"
             value={preference}
             onChange={(e) => selectTheme(e.target.value as ThemePreference)}
           >
