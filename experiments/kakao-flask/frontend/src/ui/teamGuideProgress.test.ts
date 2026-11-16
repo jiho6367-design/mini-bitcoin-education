@@ -98,6 +98,18 @@ describe("가이드 완료는 선택한 거래의 실제 원장 증거로 판단
     expect(progress.nextDestination).toBe("노드·블록체인");
   });
 
+  it("한 노드 채굴은 그 노드의 담당자 참여 없이 선택된 후보의 시작을 안내한다", () => {
+    const state = propagated();
+    const race = prepared(state);
+    race.singleNode = "A"; // The only representative in the room belongs to B.
+    expect(deriveGuideProgress(state, tx.id).nextAction).toContain("노드 A의 채굴 시작 / 계속");
+    race.status = "running";
+    expect(deriveGuideProgress(state, tx.id).nextAction).toContain("해시를 계산 중");
+    race.jobs.A.block.transactions = [];
+    expect(deriveGuideProgress(state, tx.id).nextAction).toContain("선택 노드 후보 준비");
+    expect(deriveGuideProgress(state, tx.id).steps[4].complete).toBe(false);
+  });
+
   it("같은 거래가 세 노드의 같은 유효 블록에 반영돼야 결과까지 완료한다", () => {
     const progress = deriveGuideProgress(room(data.delivered), tx.id);
     expect(progress.completeCount).toBe(6);

@@ -52,6 +52,8 @@ class JoinRoom(BaseModel):
 
 class CreateTeamRoom(JoinRoom):
     difficulty: int = Field(default=1, ge=1, le=4)
+    initialBalance: int = Field(default=100, strict=True, ge=1, le=10000)
+    newPractice: bool = Field(default=False, strict=True)
 
 
 class RoomCommand(BaseModel):
@@ -191,8 +193,9 @@ class EducationRuntime:
                 room.published = room.snapshot()
 
     def run_once(self):
-        room = self.hub.room
-        if room and not room.closed:
+        for room in self.team_rooms.active_rooms():
+            if room.closed:
+                continue
             with room.lock:
                 try:
                     room.tick()
@@ -654,9 +657,12 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
         data = body(CreateTeamRoom)
         with runtime.creation_lock, hub.lock:
             hub.throttle()
-            if not runtime.team_rooms.default_code():
+            if data.newPractice or not runtime.team_rooms.default_code():
                 creation_limit()
-            room, person = runtime.team_rooms.create(data.name.strip(), data.difficulty, g.education_owner)
+            room, person = runtime.team_rooms.create(
+                data.name.strip(), data.difficulty, g.education_owner,
+                initial_balance=data.initialBalance, new_practice=data.newPractice,
+            )
             runtime.publish(room)
             return credential(room, person), 201
 
@@ -674,6 +680,8 @@ def register_education(app, database_path, *, start_runner=None, classroom_enabl
             raise LabError("TEAM_ROOM_NOT_FOUND", "팀 실습을 찾을 수 없습니다", 404)
         room, _person = authorized(code)
         with room.lock:
+            if room.closed or room.store is None:
+                raise LabError("STALE_ROOM", "실습 연결이 갱신됐습니다 같은 링크로 다시 입장하세요", 409)
             persist_room(room, [])
             room.seq += 1
             runtime.publish(room)

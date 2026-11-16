@@ -42,7 +42,8 @@ class Participant:
 
 
 class Classroom:
-    def __init__(self, name, difficulty, clock=time.monotonic, *, team_mode=False, code=None):
+    def __init__(self, name, difficulty, clock=time.monotonic, *, team_mode=False, code=None,
+                 initial_balance=100):
         self.store = None
         self.practice_id = str(uuid.uuid4())
         self.saved_at = None
@@ -63,7 +64,8 @@ class Classroom:
         )
         self.session = LabSession(str(uuid.uuid4()))  # Not registered in personal LabRegistry.
         self.session.lab = Lab(
-            [create_wallet(f"팀 {n}") for n in NODE_IDS], difficulty, team_allocations=True
+            [create_wallet(f"팀 {n}") for n in NODE_IDS], difficulty, team_allocations=True,
+            team_initial_balance=initial_balance,
         )
         self.session.wallets = self.session.lab.wallets
         self.people = {}
@@ -75,7 +77,7 @@ class Classroom:
         self.empty_since = clock()
         # Keep the creator alias for existing callers; it grants no authority in team mode.
         self.teacher = self.add(name, teacher=not self.team_mode)
-        self.note("팀" if self.team_mode else "교사", "방 생성 · 각 팀에 학습용 100 코인 배정")
+        self.note("팀" if self.team_mode else "교사", f"방 생성 · 각 팀에 학습용 {initial_balance} 코인 배정")
 
     def note(self, name, message):
         self.seq += 1
@@ -423,6 +425,8 @@ class Classroom:
         elif action == "participate":
             if not self.session.race or data.get("raceId") != self.session.race.id:
                 fail("STALE_RACE", "현재 후보를 확인하세요.")
+            if self.session.race.single_node is not None:
+                fail("SINGLE_MINING", "한 노드만 채굴하는 실습입니다 채굴 경쟁을 새로 준비하면 팀별로 참여할 수 있습니다")
             if self.session.race.target_reward:
                 fail("ADVANCING", "보상 성숙 진행 중에는 참여 구성을 바꿀 수 없습니다.")
             if type(data.get("enabled")) is not bool:
@@ -448,6 +452,15 @@ class Classroom:
             "configure",
             "advance",
         }:
+            single_node = data.get("singleNode")
+            if action == "prepare" and "singleNode" in data:
+                if not self.team_mode or single_node not in NODE_IDS:
+                    fail("INVALID_MINING_NODE", "한 노드 채굴에 사용할 노드를 선택하세요", 400)
+            elif "singleNode" in data:
+                fail("INVALID_MINING_NODE", "새 후보를 준비할 때 채굴 노드를 선택하세요", 400)
+            if action == "advance" and self.session.race and self.session.race.single_node is not None \
+                    and data.get("nodeId") != self.session.race.single_node:
+                fail("SINGLE_MINING", "선택한 노드의 보상만 진행할 수 있습니다")
             race_action = "prepare" if action == "fork" else action
             args = {
                 k: v
@@ -460,7 +473,11 @@ class Classroom:
                 fail("TEAM_OFFLINE", "해당 팀 대표가 접속한 뒤 진행하세요.")
             self.session.race_action(RaceRequest(action=race_action, **args))
             if action in {"prepare", "fork"}:
+                self.session.race.single_node = single_node if action == "prepare" else None
                 self.session.race.enabled = dict.fromkeys(NODE_IDS, False)
+                if self.session.race.single_node is not None:
+                    self.session.race.enabled[self.session.race.single_node] = True
+                    self.session.race.message = f"노드 {single_node} 후보가 준비됐습니다 시작 또는 한 번 계산을 누르세요"
             if action == "fork":
                 self.automatic = False
                 self.session.race.guided = False
@@ -478,7 +495,8 @@ class Classroom:
             "sign": "개인키로 서명 완료 · 아직 미전파",
             "submit": "거래 검증·전파 요청",
             "participate": f"팀 {p.team} 채굴 참여 변경",
-            "prepare": "세 후보 준비 · 팀 대표의 참여 대기",
+            "prepare": (f"노드 {single_node} 채굴 준비" if action == "prepare" and single_node is not None
+                        else "세 후보 준비 · 팀 대표의 참여 대기"),
             "fork": "분기 실험 준비 · 자동 전달 보류",
             "resume": "경쟁 재개",
             "pause": "전체 일시정지",

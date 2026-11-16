@@ -96,6 +96,58 @@ def drain(browser, who):
     return current
 
 
+def prepare_extra(base):
+    """Save a second real ledger while the default room remains connected."""
+    browser = Browser(base)
+    who = browser.call("POST", "/team/rooms", {
+        "name": "Custom allocation peer", "newPractice": True, "initialBalance": 50,
+    }, status=201)
+    connection = ConnectedMember(browser, who)
+    try:
+        lab = state(browser, who)["lab"]
+        assert [output["amount"] for output in lab["genesis"]["allocations"]] == [50] * 3
+        assert all(node["balances"][wallet["address"]]["confirmed"] == 50
+                   for node in lab["nodes"].values() for wallet in lab["wallets"])
+        command(browser, who, "claim", {"team": "A"})
+        draft = command(browser, who, "draft", {
+            "senderAddress": lab["wallets"][0]["address"],
+            "recipientAddress": lab["wallets"][1]["address"], "amount": 7, "fee": 1,
+        })
+        signed = command(browser, who, "sign", {"draftId": draft["signingHash"]})["signed"]
+        assert command(browser, who, "submit", {"transactionId": signed["id"]})["validation"]["valid"]
+        current = drain(browser, who)
+        assert all([tx["id"] for tx in node["mempool"]] == [signed["id"]]
+                   for node in current["lab"]["nodes"].values())
+        browser.call("POST", f"/team/rooms/{who['code']}/save", {}, token=who["token"])
+        assert connection.patch_seen.wait(3), "The independent room did not stream updates"
+        return {"credential": who, "cookies": browser.cookies(), "code": who["code"],
+                "practice_id": current["storage"]["id"], "ledger_sha256": digest(current["lab"])}
+    finally:
+        connection.close()
+
+
+def verify_extra(saved):
+    extra = saved["extra_practice"]
+    browser = Browser(saved["base_url"], extra["cookies"])
+    path = f"/classroom/rooms/{extra['code']}"
+    browser.call("GET", path, token=extra["credential"]["token"], status=401)
+    who = browser.call("POST", f"/team/rooms/{extra['code']}/reconnect", {})
+    assert who["participantId"] == extra["credential"]["participantId"]
+    assert who["token"] != extra["credential"]["token"]
+    assert who["runId"] != extra["credential"]["runId"]
+    current = state(browser, who)
+    assert current["storage"]["id"] == extra["practice_id"]
+    assert digest(current["lab"]) == extra["ledger_sha256"], "The custom allocation ledger changed on restart"
+    assert [output["amount"] for output in current["lab"]["genesis"]["allocations"]] == [50] * 3
+    browser.call("GET", path, token=saved["member"]["token"], status=401)
+    connection = ConnectedMember(browser, who)
+    try:
+        command(browser, who, "claim", {"team": "B"})
+        assert digest(state(browser, who)["lab"]) == extra["ledger_sha256"]
+    finally:
+        connection.close()
+
+
 def prepare(base):
     creator_browser, member_browser = Browser(base), Browser(base)
     creator_browser.call("GET", "/health")
@@ -157,8 +209,13 @@ def prepare(base):
         member_browser.call("POST", f"/team/rooms/{member['code']}/save", {}, token=member["token"])
         assert member_socket.patch_seen.wait(3), "No live WebSocket screen updates were observed"
         old_assignment = next(p["assignmentId"] for p in current["participants"] if p["id"] == member["participantId"])
-        return {"format_version": 1, "base_url": base.rstrip("/"), "code": member["code"],
+        extra = prepare_extra(base)
+        assert extra["code"] != member["code"], "A new practice reused the default link"
+        assert creator_browser.call("GET", "/classroom/config")["defaultTeamCode"] == member["code"]
+        assert digest(state(member_browser, member)["lab"]) == digest(current["lab"])
+        return {"format_version": 2, "base_url": base.rstrip("/"), "code": member["code"],
                 "practice_id": current["storage"]["id"], "ledger_sha256": digest(current["lab"]),
+                "extra_practice": extra,
                 "creator": creator, "member": member,
                 "creator_cookies": creator_browser.cookies(), "member_cookies": member_browser.cookies(),
                 "old_command": request(member, "prepare", assignment=old_assignment)}
@@ -208,7 +265,12 @@ def verify(saved):
         connection.close()
         if newcomer_connection:
             newcomer_connection.close()
+    verify_extra(saved)
+    assert member_browser.call("GET", "/classroom/config")["defaultTeamCode"] == saved["code"]
+    assert digest(state(member_browser, member)["lab"]) == saved["ledger_sha256"]
     return {"stable_team_link_restored": True, "same_practice_and_ledger_restored": True,
+            "independent_custom_allocation_link_and_pending_ledger_restored": True,
+            "original_default_link_preserved_after_new_practice": True,
             "owner_cookies_and_membership_retained": True, "fresh_live_authority": True,
             "old_token_and_command_rejected": True, "unknown_owner_reconnect_denied": True,
             "new_peer_join_and_controls_work": True, "creator_not_required": True,

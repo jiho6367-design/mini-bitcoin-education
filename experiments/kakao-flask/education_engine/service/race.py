@@ -19,6 +19,7 @@ class MiningRace:
         self.seq = 0
         self.rotation = 0
         self.enabled = dict.fromkeys(NODE_IDS, True)
+        self.single_node = None
         self.jobs = {n: self.new_job(n) for n in NODE_IDS}
         self.completed = []
         self.message = "세 후보가 준비됐습니다. 한 단계 또는 경쟁 시작을 누르세요."
@@ -44,6 +45,7 @@ class MiningRace:
             "guided": self.guided,
             "mode": self.mode,
             "enabled": self.enabled,
+            "singleNode": self.single_node,
             "jobs": {n: mining_wire(j) for n, j in self.jobs.items()},
             "completed": self.completed[-12:],
             "message": self.message,
@@ -63,6 +65,8 @@ class MiningRace:
         if command == "toggle":
             if node not in NODE_IDS or self.target_reward:
                 raise LabError("RACE_NODE", "빠른 진행 중에는 채굴자 구성을 바꿀 수 없습니다.")
+            if self.single_node is not None:
+                raise LabError("SINGLE_MINING", "한 노드 채굴 중에는 참여 구성을 바꿀 수 없습니다")
             self.enabled[node] = not self.enabled[node]
         elif command == "pause":
             self.status = "paused"
@@ -73,10 +77,14 @@ class MiningRace:
         elif command == "resume":
             if self.status == "stopped":
                 raise LabError("RACE_STOPPED", "새 경쟁을 준비하세요.", 409)
+            if self.single_node is not None:
+                self.enabled = {n: n == self.single_node for n in NODE_IDS}
             self.status = "running"
         elif command == "step":
             if self.status != "paused":
                 raise LabError("RACE_STATE", "일시정지 후 한 단계를 실행하세요.", 409)
+            if self.single_node is not None:
+                self.enabled = {n: n == self.single_node for n in NODE_IDS}
             self.compute(single=True)
         elif self.status == "running":
             self.compute(single=False)
@@ -93,7 +101,7 @@ class MiningRace:
             order = NODE_IDS[self.rotation :] + NODE_IDS[: self.rotation]
             self.rotation = (self.rotation + 1) % len(NODE_IDS)
             for n in order:
-                if not self.enabled[n]:
+                if not self.enabled[n] or (self.single_node is not None and n != self.single_node):
                     continue
                 job = self.jobs[n]
                 if job.status == "found":
@@ -143,6 +151,8 @@ class MiningRace:
                 return
 
     def advance(self, node, reward):
+        if self.single_node is not None and node != self.single_node:
+            raise LabError("SINGLE_MINING", "선택한 노드의 보상만 진행할 수 있습니다")
         if len({n.chain[-1].hash for n in self.lab.nodes.values()}) != 1 or self.lab.queue:
             raise LabError(
                 "NOT_SYNCED", "메시지를 모두 전달하고 체인을 동기화한 뒤 진행하세요.", 409

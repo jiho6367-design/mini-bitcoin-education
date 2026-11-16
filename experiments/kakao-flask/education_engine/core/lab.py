@@ -51,9 +51,12 @@ class Lab:
         timestamp: int | None = None,
         session_id: str | None = None,
         team_allocations: bool = False,
+        team_initial_balance: int = 100,
     ) -> None:
         if len(wallets) < 2:
             raise LabError("NOT_ENOUGH_WALLETS", "실습을 시작하려면 지갑 두 개가 필요합니다.")
+        if type(team_initial_balance) is not int or not 1 <= team_initial_balance <= 10000:
+            raise LabError("INVALID_INITIAL_BALANCE", "초기 코인은 1~10000 사이의 정수로 입력하세요")
         self.session_id = session_id or hash_text(str(uuid.uuid4()))
         self.wallets: list[Wallet] = list(wallets)
         self.genesis = create_genesis(
@@ -61,7 +64,7 @@ class Lab:
             wallets[0].address,
             difficulty,
             now_ms() if timestamp is None else timestamp,
-            tuple(TxOutput(w.address, 100) for w in wallets) if team_allocations else None,
+            tuple(TxOutput(w.address, team_initial_balance) for w in wallets) if team_allocations else None,
         )
         # 세 노드는 같은 Genesis에서 시작하지만 체인·UTXO·Mempool을 각자 따로 가진다.
         self.nodes: dict[NodeId, NodeState] = {
@@ -81,7 +84,7 @@ class Lab:
             "LAB",
             "초기화",
             (
-                "독립 노드 A·B·C 생성. 각 팀에 학습용 100 코인 배정."
+                f"독립 노드 A·B·C 생성. 각 팀에 학습용 {team_initial_balance} 코인 배정."
                 if team_allocations
                 else (
                     "독립 노드 A·B·C 생성. 동일 Genesis에서 "

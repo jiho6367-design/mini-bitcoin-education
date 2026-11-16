@@ -17,6 +17,7 @@ import { useConnectionMessage } from "./ServerConnection";
 import { TeamPracticeGuide, useGuideTransaction, type GuidePage } from "./TeamPracticeGuide";
 import { serverConnection } from "../api/serverConnection";
 import { TeamWalletBalances } from "./TeamWalletBalances";
+import { SingleNodeMining } from "./SingleNodeMining";
 import {
   ROOM_KEY,
   roomRequest,
@@ -54,6 +55,8 @@ export function ClassroomApp({
   );
   const [secret, setSecret] = useState("");
   const [difficulty, setDifficulty] = useState(1);
+  const [newPractice, setNewPractice] = useState(false);
+  const [initialBalance, setInitialBalance] = useState("100");
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState("");
   const [page, setPage] = useState("거래");
@@ -126,7 +129,8 @@ export function ClassroomApp({
     setJoinError("");
     try {
       const c = teamForm
-        ? await teamRequest<Credential>("/rooms", { name, difficulty: 1 })
+        ? await teamRequest<Credential>("/rooms", { name, difficulty: 1,
+          ...(newPractice ? { newPractice: true, initialBalance: Number(initialBalance) } : {}) })
         : await roomRequest<Credential>(
         teacherForm ? "/rooms" : `/rooms/${code.trim().toUpperCase()}/join`,
         teacherForm ? { secret, name, difficulty } : { name },
@@ -195,19 +199,25 @@ export function ClassroomApp({
       </header>
       <main id="classroom-main" tabIndex={-1}>
         {!credential ? (
-          <Panel title={teacherForm ? "교사 방 만들기" : teamForm ? "팀 실습 시작" : "공동 실습 참여"}>
+          <Panel title={teacherForm ? "교사 방 만들기" : teamForm ? newPractice ? "새 실습 만들기" : "팀 실습 시작" : "공동 실습 참여"}>
             <div className="button-row">
               <button
                 className="secondary"
-                onClick={() => { setTeacherForm(false); setTeamForm(false); }}
+                onClick={() => { setTeacherForm(false); setTeamForm(false); setNewPractice(false); }}
               >
                 공동 실습 참여
               </button>
               <button
                 className="secondary"
-                onClick={() => { setTeacherForm(false); setTeamForm(true); }}
+                onClick={() => { setTeacherForm(false); setTeamForm(true); setNewPractice(false); }}
               >
                 팀 실습 시작
+              </button>
+              <button
+                className="secondary"
+                onClick={() => { setTeacherForm(false); setTeamForm(true); setNewPractice(true); }}
+              >
+                새 실습 만들기
               </button>
               {!stableTeamCode && <button
                 className="text-button"
@@ -283,9 +293,18 @@ export function ClassroomApp({
                     공유 링크나 QR로 접속하면 자동 입력됩니다
                   </small>
                 </label>
-              ) : <p>교사 없이 팀원끼리 실습합니다 기존 팀 기록을 이어서 엽니다</p>}
+              ) : newPractice ? (
+                <>
+                  <label>
+                    팀별 초기 코인
+                    <input type="number" required min={1} max={10000} step={1}
+                      value={initialBalance} onChange={(e) => setInitialBalance(e.target.value)} />
+                  </label>
+                  <p>A·B·C에 같은 금액을 한 번 배정합니다 새 실습에는 별도 링크가 생기고 기존 링크와 기록은 유지됩니다</p>
+                </>
+              ) : <p>교사 없이 팀원끼리 실습합니다 기존 팀 기록을 이어서 엽니다 초기 배정액을 정하려면 새 실습 만들기를 선택하세요</p>}
               <button disabled={joining}>
-                {joining ? "접속 중…" : teacherForm ? "방 생성" : teamForm ? "팀 실습 시작" : "입장"}
+                {joining ? "접속 중…" : teacherForm ? "방 생성" : teamForm ? newPractice ? "새 실습 시작" : "팀 실습 시작" : "입장"}
               </button>
             </form>
             <p>
@@ -333,6 +352,19 @@ export function ClassroomApp({
                       ? `팀 ${me.team} 대표`
                       : teamMode ? "팀원" : "관찰자"}
                 </span>
+                {teamMode && (
+                  <button className="secondary" disabled={disabled}
+                    onClick={async () => {
+                      if (await room.command("leave")) {
+                        forget();
+                        setTeacherForm(false);
+                        setTeamForm(true);
+                        setNewPractice(true);
+                      }
+                    }}>
+                    새 실습 만들기
+                  </button>
+                )}
                 {teamMode && (
                   <button
                     className="secondary"
@@ -981,10 +1013,25 @@ function ClassRace({
     race = lab.race;
   const [guided, setGuided] = useState(race?.guided ?? true);
   const [mode, setMode] = useState(race?.mode ?? "learning");
+  const [miningView, setMiningView] = useState<"single" | "competition">(race?.singleNode ? "single" : "competition");
+  const [selectedNode, setSelectedNode] = useState<NodeId>(race?.singleNode || team || "A");
   const act = (action: string, payload: object = {}) =>
     void command(action, { raceId: race?.id, ...payload });
   return (
     <>
+      {state.teamMode && <Panel title="채굴 방식">
+        <div className="button-row" role="group" aria-label="채굴 방식 선택">
+          <button className={miningView === "single" ? "" : "secondary"} aria-pressed={miningView === "single"}
+            onClick={() => setMiningView("single")}>한 노드 채굴</button>
+          <button className={miningView === "competition" ? "" : "secondary"} aria-pressed={miningView === "competition"}
+            onClick={() => setMiningView("competition")}>채굴 경쟁</button>
+        </div>
+        <p>한 노드로 논스·해시 변화를 관찰하거나 세 팀이 함께 경쟁할 수 있습니다 화면을 바꿔도 실행 상태는 바뀌지 않습니다</p>
+        {race && <p role="status">현재 후보: {race.singleNode ? `노드 ${race.singleNode}만 채굴` : "세 팀 경쟁"} · {race.status === "running" ? "계산 중" : race.status === "paused" ? "일시정지" : "중지"}</p>}
+      </Panel>}
+      {state.teamMode && miningView === "single" ? <SingleNodeMining
+        race={race} selected={selectedNode} select={setSelectedNode} disabled={disabled} command={command}
+      /> : <>
       <Panel title="세 팀의 채굴 경쟁">
         <p>
           {race?.message ||
@@ -1029,21 +1076,21 @@ function ClassRace({
                 세 후보 준비
               </button>
               <button
-                disabled={disabled || !race}
+                disabled={disabled || !race || !!race.singleNode}
                 onClick={() => act("resume")}
               >
                 전체 시작 / 계속
               </button>
-              <button disabled={disabled || !race} onClick={() => act("pause")}>
+              <button disabled={disabled || !race || !!race.singleNode} onClick={() => act("pause")}>
                 전체 일시정지
               </button>
               <button
-                disabled={disabled || !race || race.status !== "paused"}
+                disabled={disabled || !race || !!race.singleNode || race.status !== "paused"}
                 onClick={() => act("step")}
               >
                 각자 한 번 계산
               </button>
-              <button disabled={disabled || !race} onClick={() => act("stop")}>
+              <button disabled={disabled || !race || !!race.singleNode} onClick={() => act("stop")}>
                 경쟁 중지
               </button>
             </div>
@@ -1053,9 +1100,11 @@ function ClassRace({
             </p>
           </fieldset>
         )}
+        {race?.singleNode && <p>경쟁하려면 세 후보 준비를 누르고 각 팀이 다시 참여하세요</p>}
       </Panel>
-      <div className="classroom-grid">
-        {NODE_IDS.map((n) => {
+      </>}
+      <div className={`classroom-grid${state.teamMode && miningView === "single" ? " single-mining-grid" : ""}`}>
+        {(state.teamMode && miningView === "single" ? [selectedNode] : NODE_IDS).map((n) => {
           const job = race?.jobs[n],
             node = lab.nodes[n];
           const reward = Object.entries(node.utxos).find(
@@ -1082,7 +1131,7 @@ function ClassRace({
                 멤풀 {node.mempool.length}건 · 보상은 자기 블록의 코인베이스로
                 청구합니다
               </p>
-              {team === n && (
+              {team === n && !race?.singleNode && !(state.teamMode && miningView === "single") && (
                 <button
                   disabled={disabled || !race || !!race.advance}
                   onClick={() =>
@@ -1160,7 +1209,7 @@ function ClassRace({
           블록에서 사용할 수 있습니다
         </p>
       </Panel>
-      {teacher && (
+      {teacher && !(state.teamMode && miningView === "single") && (
         <Panel title="심화: 같은 높이의 두 블록">
           <p>
             전파를 보류하고 각 대표가 참여합니다 같은 높이의 블록을 둘 이상

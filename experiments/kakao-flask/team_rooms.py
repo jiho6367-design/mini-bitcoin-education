@@ -2,13 +2,15 @@
 
 Only an explicitly registered room is public. Browser ownership hashes identify
 members across restarts; bearer tokens and live node claims remain in memory.
-The installation has one shared room so starting again never replaces its link.
+Ordinary start rejoins the default room. Explicit new practices have independent
+links and ledgers; creating one never replaces an earlier link.
 """
 
 import copy
 import json
 import re
 import sqlite3
+from collections import OrderedDict
 from contextlib import contextmanager
 
 from education_engine.core.errors import LabError
@@ -19,6 +21,7 @@ from education_engine.service.storage import now
 
 
 _CODE = re.compile(r"[A-HJ-NP-Z2-9]{8}\Z", re.ASCII)
+MAX_ACTIVE_TEAM_ROOMS = 4
 
 
 class TeamRooms:
@@ -30,6 +33,7 @@ class TeamRooms:
         self.rooms = self.store.backend.table("education", "team_rooms") if self.postgres else "team_rooms"
         self.members = self.store.backend.table("education", "team_members") if self.postgres else "team_members"
         self.practices = self.store.practices if self.postgres else "practices"
+        self.extra_rooms = OrderedDict()
         self._initialize()
 
     @contextmanager
@@ -186,11 +190,45 @@ class TeamRooms:
                     raise LabError("ROOM_GONE", "종료된 팀 실습입니다.", 410)
                 if current.team_mode:
                     return current
-            if current is not None and not current.closed:
+            if code in self.extra_rooms:
+                self.extra_rooms.move_to_end(code)
+                return self.extra_rooms[code]
+            if current is not None and not current.closed and not current.team_mode:
                 raise LabError("ROOM_EXISTS", "다른 실습이 진행 중입니다. 잠시 후 다시 접속하세요.", 409)
             room = self._restore(self._load(mapping["practice_id"]), code)
-            self.hub.room = room
+            if code == self.default_code():
+                self.hub.room = room
+            else:
+                self._reserve_extra_slot()
+                self.extra_rooms[code] = room
             return room
+
+    def active_rooms(self):
+        """A bounded snapshot for the runner, including a legacy primary room."""
+        with self.runtime.creation_lock, self.hub.lock:
+            return tuple(room for room in (self.hub.room, *self.extra_rooms.values())
+                         if room is not None and not room.closed)
+
+    def _reserve_extra_slot(self):
+        # Keep the default room outside this cache so a new practice cannot evict
+        # the original shared link. All callers hold creation_lock and hub.lock.
+        if len(self.extra_rooms) < MAX_ACTIVE_TEAM_ROOMS - 1:
+            return
+        for code, room in tuple(self.extra_rooms.items()):
+            with room.lock:
+                if any(person.connections for person in room.people.values()):
+                    continue
+                room.tick()  # Durable pause; no connected participant can be displaced.
+                if room.storage_error:
+                    continue
+                persist_room(room, [])
+                # Retire only this in-memory instance after its open checkpoint
+                # is saved. Any request holding an old reference must fail closed.
+                room.closed = True
+                room.store = None
+                del self.extra_rooms[code]
+                return
+        raise LabError("ACTIVE_ROOM_LIMIT", "동시에 진행 중인 실습이 많습니다 잠시 후 다시 시도하세요", 429)
 
     def _member(self, code, owner_hash, connection):
         row = self._execute(connection, f"SELECT * FROM {self.members} WHERE code=? AND owner_hash=?",
@@ -242,14 +280,19 @@ class TeamRooms:
         with self.runtime.creation_lock, self.hub.lock:
             return self._join(self.get(code), "", owner_hash, reconnect=True)
 
-    def create(self, name, difficulty, owner_hash):
+    def create(self, name, difficulty, owner_hash, *, initial_balance=100, new_practice=False):
         with self.runtime.creation_lock, self.hub.lock:
             existing = self.default_code()
-            if existing is not None:
+            if existing is not None and not new_practice:
                 return self.join(existing, name, owner_hash)
-            if self.hub.room is not None and not self.hub.room.closed:
+            if self.hub.room is not None and not self.hub.room.closed and (
+                existing is None or not self.hub.room.team_mode
+            ):
                 raise LabError("ROOM_EXISTS", "진행 중인 실습이 있습니다.", 409)
-            room = Classroom(name, difficulty, self.hub.clock, team_mode=True)
+            room = Classroom(name, difficulty, self.hub.clock, team_mode=True,
+                             initial_balance=initial_balance)
+            if existing is not None:
+                self._reserve_extra_slot()
             person = room.teacher
             room.store = self.store
             with room.lock, self._transaction(write=True) as connection:
@@ -260,7 +303,10 @@ class TeamRooms:
                     (room.code, owner_hash, person.id, person.name))
                 persist_room(room, room.pending_events)
                 room.pending_events = []
-            self.hub.room = room
+            if existing is None:
+                self.hub.room = room
+            else:
+                self.extra_rooms[room.code] = room
             return room, person
 
     def migrate_existing(self, code):

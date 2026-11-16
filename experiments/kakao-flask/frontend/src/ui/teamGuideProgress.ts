@@ -157,18 +157,21 @@ export function deriveGuideProgress(room: RoomState, selectedTxId: string | null
   } else if (nextStep === 4) {
     const race = room.lab.race;
     nextDestination = "채굴";
-    const candidates = race ? representatives.map((person) => person.team!).filter((node) => {
+    const miningNodes = race?.singleNode ? [race.singleNode] : representatives.map((person) => person.team!);
+    const candidates = race ? miningNodes.filter((node) => {
       const job = race.jobs[node];
       return job && (job.status === "running" || job.status === "paused") &&
         job.block.transactions.some((transaction) => target && fingerprint(transaction) === fingerprint(target.transaction));
     }) : [];
     if (!race || race.status === "stopped" || !candidates.length)
-      nextAction = "진행자가 채굴 화면에서 세 후보 준비를 누르세요 선택한 거래를 후보에 포함합니다";
-    else if (!candidates.some((node) => race.enabled[node]))
+      nextAction = race?.singleNode
+        ? "진행자가 선택 노드 후보 준비를 누르세요 선택한 거래를 후보에 포함합니다"
+        : "한 노드 채굴에서 후보를 준비하거나 채굴 경쟁에서 세 후보 준비를 누르세요 선택한 거래를 후보에 포함합니다";
+    else if (!race.singleNode && !candidates.some((node) => race.enabled[node]))
       nextAction = "팀 담당자가 내 채굴 참여를 켜세요";
     else if (race.status === "running")
       nextAction = "선택한 거래의 해시를 계산 중입니다 블록이 발견될 때까지 기다리세요";
-    else nextAction = "진행자가 전체 시작 / 계속을 누르세요";
+    else nextAction = race.singleNode ? `노드 ${race.singleNode}의 채굴 시작 / 계속을 누르세요` : "진행자가 전체 시작 / 계속을 누르세요";
   } else if (nextStep === 5) {
     if (sameBlock && !sameTip) {
       nextAction = "노드의 최신 블록이 다릅니다 전파와 체인 선택 결과를 확인하세요";

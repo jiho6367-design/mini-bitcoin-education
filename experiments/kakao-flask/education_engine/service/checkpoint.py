@@ -110,6 +110,7 @@ def decode(value):
             "seq",
             "rotation",
             "enabled",
+            "single_node",
             "jobs",
             "completed",
             "message",
@@ -118,8 +119,13 @@ def decode(value):
             "advance_start",
         },
     }[cls]
+    # Existing stored competitions predate the explicit single-node scope.
+    if cls is MiningRace and "single_node" not in attrs:
+        attrs["single_node"] = None
     if set(attrs) != allowed:
         raise ValueError("Invalid checkpoint fields")
+    if cls is MiningRace and attrs["single_node"] is not None and attrs["single_node"] not in types.NODE_IDS:
+        raise ValueError("Invalid single mining node")
     obj = cls.__new__(cls)
     obj.__dict__.update(attrs)
     if cls is MiningJob:

@@ -21,14 +21,20 @@ function availabilityReason(balance: WalletAvailability) {
     : "사용 가능액은 현재 노드의 검증 상태를 확인하세요";
 }
 
-/** Shared classroom wallets start with 100 each; current amounts come from each team's node. */
+/** Initial amounts come from the saved genesis, independently of current node balances. */
 export function TeamWalletBalances({ lab }: { lab: LabSnapshot }) {
+  const allocations = lab.wallets.map((wallet) => (lab.genesis.allocations || [])
+    .filter((output) => output.address === wallet.address)
+    .reduce((sum, output) => sum + output.amount, 0));
+  const equal = allocations.length > 0 && allocations.every((amount) => amount === allocations[0]);
+  const total = allocations.reduce((sum, amount) => sum + amount, 0);
   return (
     <section className="team-wallet-balances" data-testid="team-wallet-balances" aria-label="팀 지갑과 시작 코인">
       <div className="team-wallet-allocation">
         <Notice>
-          <strong>처음에는 팀마다 100코인 고정 배정</strong>
-          <p>A·B·C 팀 지갑에 각각 100코인씩 총 300코인을 처음 한 번 배정합니다 초기 배정은 채굴 보상이 아닙니다</p>
+          <strong>{equal ? `시작 코인 · 팀마다 ${allocations[0]}코인` : "팀별 시작 코인"}</strong>
+          <p>이 실습은 {equal ? `A·B·C에 각각 ${allocations[0]}코인씩` : "팀별 설정 금액으로"} 총 {total}코인을 처음 한 번 배정했습니다 초기 배정은 채굴 보상이 아닙니다</p>
+          <p>현재 잔액은 송금받으면 늘고 송금액·수수료만큼 줄어듭니다 채굴 보상은 별도 보상 지갑에 쌓입니다</p>
           <p>팀 지갑 기준입니다 참가자가 늘거나 재접속해도 추가 지급되지 않으며 저장된 잔액을 이어서 사용합니다</p>
           <details className="team-wallet-zero-help">
             <summary>잔액이 있는데 사용 가능이 0인 이유</summary>
@@ -54,7 +60,7 @@ export function TeamWalletBalances({ lab }: { lab: LabSnapshot }) {
               </dl>
               <p className={balance.reserved! > 0 ? "team-wallet-reservation" : "team-wallet-availability"}>{availabilityReason(balance)}</p>
               {balance.reserved! > 0 && <p className="team-wallet-next">새 송금 전에 기존 대기 거래의 채굴·전파 결과를 확인하세요</p>}
-              <small>자기 노드 {team} 기준 · 초기 배정 100코인</small>
+              <small>자기 노드 {team} 기준 · 초기 배정 {allocations[index]}코인</small>
             </section>
           );
         })}

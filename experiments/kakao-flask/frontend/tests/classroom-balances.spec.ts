@@ -38,7 +38,7 @@ test("모바일에서 고정 배정과 코인 예약 설명을 읽어도 장부�
   page.on("request", (request) => {
     if (request.method() === "POST" && request.url().endsWith("/commands")) commands += 1;
   });
-  await expect(balances(page).getByText("처음에는 팀마다 100코인 고정 배정", { exact: true })).toBeVisible();
+  await expect(balances(page).getByText("시작 코인 · 팀마다 100코인", { exact: true })).toBeVisible();
   for (const team of ["A", "B", "C"] as const) await numbers(page, team, 100, 100, 0);
   const explanation = balances(page).locator("details");
   await explanation.getByText("잔액이 있는데 사용 가능이 0인 이유", { exact: true }).click();

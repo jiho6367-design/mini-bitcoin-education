@@ -193,6 +193,7 @@ export interface TamperReport {
 }
 
 export interface RaceSnapshot {
+  singleNode?: NodeId | null;
   id: string;
   seq: number;
   status: "paused" | "running" | "stopped";
