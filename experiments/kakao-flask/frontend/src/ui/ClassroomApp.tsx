@@ -1114,6 +1114,8 @@ function ClassRace({
               node.chain.at(-1)!.height + 1 - (u.createdHeight || 0) < 100,
           );
           const bal = node.balances[lab.minerWallets![n].address];
+          const representativeOnline = state.participants.some((person) => person.team === n && person.connected);
+          const canAdvance = !!race && !race.advance && (race.singleNode ? race.singleNode === n : representativeOnline);
           return (
             <Panel key={n} title={`채굴자 ${n}`} className="race-card">
               <p>
@@ -1147,7 +1149,7 @@ function ClassRace({
               </p>
               {teacher && reward && (
                 <button
-                  disabled={disabled || !!race?.advance}
+                  disabled={disabled || !canAdvance}
                   onClick={() =>
                     act("advance", { nodeId: n, reward: reward[0] })
                   }
@@ -1155,6 +1157,8 @@ function ClassRace({
                   팀 {n} 보상 성숙까지 진행
                 </button>
               )}
+              {teacher && reward && !race?.singleNode && !representativeOnline && <small>이 팀 대표가 접속하면 보상 성숙을 진행할 수 있습니다</small>}
+              {teacher && reward && race?.singleNode && race.singleNode !== n && <small>현재 채굴 노드 {race.singleNode}의 보상만 진행할 수 있습니다</small>}
               <details>
                 <summary>후보·실제 계산 표본</summary>
                 <pre>

@@ -155,6 +155,47 @@ class ClassroomSingleMiningTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             restore(restored, previous)
 
+    def test_observer_can_mature_selected_reward_without_a_team_representative(self):
+        race = self.prepare("B", mode="fast")
+        lab = self.room.session.lab
+        for _ in range(10000):
+            self.send("step", {"raceId": race.id})
+            if race.completed:
+                break
+        else:
+            self.fail("실제 난이도 1 작업 증명을 찾지 못했습니다")
+        while lab.queue:
+            self.send("deliver")
+        reward = next(key for key, utxo in lab.nodes["B"].utxos.items()
+                      if utxo.address == lab.miners["B"].address and utxo.coinbase)
+        self.assertFalse(any(person.team for person in self.room.people.values()))
+        self.assert_error("SINGLE_MINING", "advance",
+                          {"raceId": race.id, "nodeId": "C", "reward": reward})
+        self.send("advance", {"raceId": race.id, "nodeId": "B", "reward": reward})
+        self.assertEqual(race.target_reward, reward)
+        self.assertEqual(race.status, "running")
+        self.assertEqual(race.enabled, {"A": False, "B": True, "C": False})
+        for _ in range(500):
+            self.room.tick()
+            if race.target_reward is None:
+                break
+        self.assertIsNone(race.target_reward)
+        self.assertEqual(race.status, "paused")
+        self.assertGreaterEqual(lab.nodes["B"].chain[-1].height, 100)
+        self.assertEqual(race.jobs["A"].attempts, 0)
+        self.assertEqual(race.jobs["C"].attempts, 0)
+        self.assertTrue(all(entry["node"] == "B" for entry in race.completed))
+        for node in lab.nodes.values():
+            self.assertEqual(node.chain[-1].hash, lab.nodes["B"].chain[-1].hash)
+            self.assertTrue(validate_chain(node.chain, lab.genesis).valid)
+        # Competition still requires the selected team's representative online.
+        self.send("prepare", {"guided": True})
+        competition = self.room.session.race
+        self.assert_error("TEAM_OFFLINE", "advance",
+                          {"raceId": competition.id, "nodeId": "B", "reward": reward})
+        self.assertEqual(competition.status, "paused")
+        self.assertIsNone(competition.target_reward)
+
 
 if __name__ == "__main__":
     unittest.main()

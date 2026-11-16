@@ -467,7 +467,9 @@ class Classroom:
                 for k, v in data.items()
                 if k in {"raceId", "guided", "mode", "nodeId", "reward"}
             }
-            if action == "advance" and not any(
+            single_advance = (self.team_mode and action == "advance" and self.session.race is not None
+                              and self.session.race.single_node is not None)
+            if action == "advance" and not single_advance and not any(
                 x.team == data.get("nodeId") and x.connections for x in self.people.values()
             ):
                 fail("TEAM_OFFLINE", "해당 팀 대표가 접속한 뒤 진행하세요.")
@@ -485,7 +487,7 @@ class Classroom:
                 self.automatic = False
             if action == "advance":
                 node = self.session.race.advance_node
-                if not any(x.team == node and x.connections for x in self.people.values()):
+                if not single_advance and not any(x.team == node and x.connections for x in self.people.values()):
                     self.session.race.command("pause")
                     fail("TEAM_OFFLINE", "해당 팀 대표가 접속한 뒤 진행하세요.")
         else:
