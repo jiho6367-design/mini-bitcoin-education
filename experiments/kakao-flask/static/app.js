@@ -476,6 +476,7 @@ function renderSaveStatus(label = "") {
 }
 function setPage(page, updateHash = true) {
   if (!pages[page]) page = "home";
+  if (page !== "home") $("#demo-video").pause();
   model.page = page;
   document.querySelectorAll(".page").forEach((el) => {
     el.hidden = el.id !== `page-${page}`;
@@ -1826,8 +1827,12 @@ window.addEventListener("hashchange", () => {
   const page = location.hash.slice(1);
   if (pages[page]) setPage(page, false);
 });
+$("#demo-video-panel").addEventListener("toggle", (event) => {
+  if (!event.currentTarget.open) $("#demo-video").pause();
+});
 window.addEventListener("pagehide", () => {
   pageActive = false;
+  $("#demo-video").pause();
   clearTimeout(recoveryTimer);
   recoveryTimer = null;
   stopMineLoop();

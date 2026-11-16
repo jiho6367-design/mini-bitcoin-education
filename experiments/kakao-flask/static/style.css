@@ -469,6 +469,35 @@ main {
   padding-top: 12px;
   border-top: 1px solid var(--line);
 }
+.demo-panel > summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+}
+.demo-panel > summary .subtle {
+  display: inline-block;
+  margin-left: 8px;
+}
+.demo-panel > .desc {
+  margin: 16px 0 12px;
+}
+.demo-panel video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 11;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #101820;
+}
+.demo-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-top: 12px;
+  font-size: 12px;
+}
 .learning-guide {
   background: var(--accent-soft);
   border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
