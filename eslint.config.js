@@ -16,7 +16,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["experiments/kakao-flask/static/**/*.js"],
+    files: ["experiments/blockchain-practice/static/**/*.js"],
     languageOptions: {
       globals: {
         window: "readonly",
@@ -36,6 +36,7 @@ export default tseslint.config(
         HTMLElement: "readonly",
         HTMLDialogElement: "readonly",
         AbortController: "readonly",
+        CustomEvent: "readonly",
         URL: "readonly",
         URLSearchParams: "readonly",
         Blob: "readonly",

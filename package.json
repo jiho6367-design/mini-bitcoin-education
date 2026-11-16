@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:flask:e2e": "playwright test --config experiments/kakao-flask/playwright.config.ts",
+    "test:blockchain:e2e": "playwright test --config experiments/blockchain-practice/playwright.config.ts",
+    "test:flask:e2e": "npm run test:blockchain:e2e",
     "check": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "dependencies": {

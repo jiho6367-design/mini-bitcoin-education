@@ -1,4 +1,6 @@
-# 블록체인 실습실 · Flask 3.0.0
+# 블록체인 실습실 · v3.0.0
+
+팀 전용 브랜치는 `blockchain-practice`, 실행 폴더는 `experiments/blockchain-practice/`입니다
 
 일반 사용자가 지갑 → 거래·서명 → 채굴 → 검증을 따라가는 **기초 실습**을 첫 화면으로 사용합니다. 함께 같은 장부를 조작하는 **공동 실습**은 별도로 유지합니다. 개인 프로젝트를 실행하거나 그 DB를 참조하지 않으며, 팀 저장소의 코드와 DB만 사용합니다.
 
@@ -64,8 +66,8 @@ $env:PORT = '5003'
 | CPU | 브라우저 Web Crypto SHA-256 |
 | GPU | 접속한 기기의 WebGPU에서 실제 병렬 SHA-256 |
 | CPU+GPU | 브라우저 CPU와 GPU가 겹치지 않는 넌스 구간을 동시에 계산 |
-| Python CPU+GPU · PC 전용 | PC에서 실행한 팀 Flask의 Python CPU·NVIDIA CUDA |
-| C CPU+GPU · PC 전용 | PC에서 실행한 팀 Flask의 C/OpenSSL 스케줄러·NVIDIA CUDA |
+| Python CPU+GPU · PC 전용 | PC에서 실행한 블록체인 실습실의 Python CPU·NVIDIA CUDA |
+| C CPU+GPU · PC 전용 | PC에서 실행한 블록체인 실습실의 C/OpenSSL 스케줄러·NVIDIA CUDA |
 
 화면에는 선택한 모드와 별개로 **실제 장치·CPU/GPU별 완료 계산 수·전환 이유**를 표시합니다 WebGPU가 없거나 장치 초기화·자체 검증·계산 중 오류가 나면 CPU로 전환합니다 GPU는 원본과 같이 UTF-8 메시지 35바이트까지 지원하며, 긴 입력은 CPU로 계산합니다 GPU 병렬 배치는 발견 이후의 추가 계산도 완료 횟수에 포함합니다 CPU+GPU는 항상 더 빠르거나 최소 넌스를 찾는다고 보장하지 않습니다 브라우저 연산은 서버의 GPU나 저장 장부를 사용하지 않으며 화면을 떠나면 종료합니다
 
@@ -159,7 +161,7 @@ npm.cmd run check
 npm.cmd run test:e2e:single
 ```
 
-기초 화면 Chrome·Edge 검사는 저장소 루트의 `npm.cmd run test:flask:e2e`입니다. 기초 검사는 5010, 이전 개인 실습·화면 이동 검사는 Chrome 4173·Edge 4176과 `work/`의 별도 DB를 사용합니다. 실행 중인 사용자 서버나 개인 DB를 재사용하지 않습니다. 실제 실행 결과와 범위는 [검증 기록](VERIFICATION.md)에 있습니다.
+기초 화면 Chrome·Edge 검사는 저장소 루트의 `npm.cmd run test:blockchain:e2e`입니다 기존 `test:flask:e2e` 명령도 호환합니다 기초 검사는 5010, 이전 개인 실습·화면 이동 검사는 Chrome 4173·Edge 4176과 `work/`의 별도 DB를 사용합니다. 실행 중인 사용자 서버나 개인 DB를 재사용하지 않습니다. 실제 실행 결과와 범위는 [검증 기록](VERIFICATION.md)에 있습니다.
 
 ## 운영 배포
 

@@ -1,6 +1,6 @@
-# 팀 Flask 배포 안내
+# 블록체인 실습실 배포 안내
 
-팀 전용 브랜치 `codex/kakao-flask-run`을 **Render Free + Neon Free**로 배포했습니다. 공개 주소는 **https://blockchain-practice.onrender.com**입니다. Flask·실시간 연결은 Render, 기초·통합·공동 기록과 소유자 정보는 Neon PostgreSQL에 저장합니다. 로컬 실행은 기존 SQLite를 사용합니다. 실제 HTTPS/WSS와 Render 재시작 뒤 복원을 확인했으며 결과는 검증 기록에 있습니다.
+팀 전용 브랜치 `blockchain-practice`을 **Render Free + Neon Free**로 배포했습니다. 공개 주소는 **https://blockchain-practice.onrender.com**입니다. Flask·실시간 연결은 Render, 기초·통합·공동 기록과 소유자 정보는 Neon PostgreSQL에 저장합니다. 로컬 실행은 기존 SQLite를 사용합니다. 실제 HTTPS/WSS와 Render 재시작 뒤 복원을 확인했으며 결과는 검증 기록에 있습니다.
 
 ## 주소 변경과 이전 기록 연결
 
@@ -46,15 +46,15 @@ docker run --name team-blockchain --rm -p 8080:8080 `
 
 ## Render 구성
 
-이 폴더의 `render.yaml`은 선택한 구성을 재현하는 Blueprint입니다. Blueprint의 사용자 지정 경로를 `experiments/kakao-flask/render.yaml`로 지정합니다. 경로는 YAML 파일 위치가 아닌 저장소 루트를 기준으로 해석합니다. 실제 서비스를 수동으로 만든 경우에는 같은 이름의 서비스를 중복 생성하지 않습니다.
+이 폴더의 `render.yaml`은 선택한 구성을 재현하는 Blueprint입니다. Blueprint의 사용자 지정 경로를 `experiments/blockchain-practice/render.yaml`로 지정합니다. 경로는 YAML 파일 위치가 아닌 저장소 루트를 기준으로 해석합니다. 실제 서비스를 수동으로 만든 경우에는 같은 이름의 서비스를 중복 생성하지 않습니다.
 
 | 항목 | 값 |
 | --- | --- |
 | 소스 | `jiho6367-design/mini-bitcoin-education` |
-| 브랜치 | `codex/kakao-flask-run` |
+| 브랜치 | `blockchain-practice` |
 | 런타임·리전 | Docker·Ohio (Neon AWS US East 2와 인접) |
-| Dockerfile | `experiments/kakao-flask/Dockerfile` |
-| Docker 빌드 컨텍스트 | `experiments/kakao-flask` |
+| Dockerfile | `experiments/blockchain-practice/Dockerfile` |
+| Docker 빌드 컨텍스트 | `experiments/blockchain-practice` |
 | Root Directory | 비워 둠 |
 | 서버 | `free` 한 인스턴스, 자동 확장 없음 |
 | 저장소 | Neon Free PostgreSQL 1GB, Render 디스크 사용 안 함 |
@@ -135,6 +135,6 @@ Flask 개발 서버를 운영에 사용하지 않는 원칙은 [Flask 공식 배
 
 상태 파일에는 소유 쿠키가 있으므로 Git이나 공개 검사 산출물에 올리지 않습니다. `--cleanup`은 검사에서 만든 통합·공동 기록만 정리하며 기초 지갑을 만든 검사 실습은 남깁니다. 실제 수업이 진행 중인 서버에서 실행하지 않습니다.
 
-공개 저장소의 `.github/workflows/team-flask-production.yml`은 표준 Ubuntu 러너에서 Docker 이미지를 빌드하고, root 소유의 빈 볼륨 → 권한 준비 → Gunicorn·실제 WebSocket → 컨테이너 삭제 → 같은 볼륨을 쓰는 새 컨테이너로 기록 복원을 확인합니다. 공개 서비스는 만들지 않으며 검사 쿠키·DB·이미지를 artifact나 캐시에 올리지 않습니다. 실행 결과가 성공하기 전에는 컨테이너 검증 완료로 간주하지 않습니다.
+공개 저장소의 `.github/workflows/blockchain-practice-production.yml`은 표준 Ubuntu 러너에서 Docker 이미지를 빌드하고, root 소유의 빈 볼륨 → 권한 준비 → Gunicorn·실제 WebSocket → 컨테이너 삭제 → 같은 볼륨을 쓰는 새 컨테이너로 기록 복원을 확인합니다. 공개 서비스는 만들지 않으며 검사 쿠키·DB·이미지를 artifact나 캐시에 올리지 않습니다. 실행 결과가 성공하기 전에는 컨테이너 검증 완료로 간주하지 않습니다.
 
 2026-11-16의 [운영 컨테이너 검사](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43741142718)가 성공했습니다. 검사 소스는 `e228206359f8a8d20ddfee2ff4698c91d1dd5549`이며, 실제 호스팅의 TLS·디스크 설정 검사를 대신하지 않습니다.

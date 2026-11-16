@@ -188,13 +188,13 @@ def register_native_hashcash(app, *, job_factory=None, clock=time.monotonic, sta
         return result
 
     def denied():
-        return reply({"error": "PC 전용 연산은 로컬 팀 Flask에서만 사용할 수 있습니다"}, 404)
+        return reply({"error": "PC 전용 연산은 PC에서 실행한 블록체인 실습실에서만 사용할 수 있습니다"}, 404)
 
     @app.get(PREFIX + "/capabilities")
     def native_hashcash_capabilities():
         available = local() and origin_allowed()
         if not available:
-            return reply({"available": False, "reason": "Python·C 모드는 PC에서 실행한 팀 Flask 전용입니다",
+            return reply({"available": False, "reason": "Python·C 모드는 PC에서 실행한 블록체인 실습실 전용입니다",
                           "cpuCount": 1, "python": True, "c": False, "cuda": False})
         from native_hashcash.hashcash_lab.native_scheduler_experiment import selected_dll
         try:

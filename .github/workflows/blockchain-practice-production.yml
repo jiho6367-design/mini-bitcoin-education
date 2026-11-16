@@ -1,18 +1,18 @@
-name: Team Flask production container
+name: Blockchain practice production container
 
 on:
   push:
-    branches: [codex/kakao-flask-run]
+    branches: [blockchain-practice]
     paths:
-      - experiments/kakao-flask/**
-      - .github/workflows/team-flask-production.yml
+      - experiments/blockchain-practice/**
+      - .github/workflows/blockchain-practice-production.yml
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: team-flask-production-${{ github.ref }}
+  group: blockchain-practice-production-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -25,9 +25,9 @@ jobs:
       run:
         shell: bash
     env:
-      IMAGE_TAG: team-flask-production:${{ github.run_id }}-${{ github.run_attempt }}
-      CONTAINER_NAME: team-flask-production-${{ github.run_id }}-${{ github.run_attempt }}
-      VOLUME_NAME: team-flask-data-${{ github.run_id }}-${{ github.run_attempt }}
+      IMAGE_TAG: blockchain-practice-production:${{ github.run_id }}-${{ github.run_attempt }}
+      CONTAINER_NAME: blockchain-practice-production-${{ github.run_id }}-${{ github.run_attempt }}
+      VOLUME_NAME: blockchain-practice-data-${{ github.run_id }}-${{ github.run_attempt }}
       PROBE_BASE_URL: http://127.0.0.1:18080
       GIT_TERMINAL_PROMPT: "0"
 
@@ -44,13 +44,13 @@ jobs:
       - name: Build production Docker image
         run: |
           set -euo pipefail
-          docker build --tag "$IMAGE_TAG" experiments/kakao-flask
+          docker build --tag "$IMAGE_TAG" experiments/blockchain-practice
 
       - name: Verify site-transfer protocol without a datastore
         run: |
           set -euo pipefail
           docker run --rm --user 10001:10001 \
-            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/app/tests,readonly" \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/blockchain-practice/tests,target=/app/tests,readonly" \
             --entrypoint python "$IMAGE_TAG" -B -m unittest discover -s tests -p 'test_site_transfer.py' -v
           docker run --rm --user 10001:10001 \
             --env TEAM_SITE_MODE=transfer \
@@ -68,7 +68,7 @@ jobs:
       - name: Verify production persistence under 256 MiB and 0.25 CPU
         run: |
           set -euo pipefail
-          private_dir="${RUNNER_TEMP}/team-production-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          private_dir="${RUNNER_TEMP}/blockchain-practice-production-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           mkdir -m 0700 "$private_dir"
           holder_name="${CONTAINER_NAME}-holder"
           holder_pid=""
@@ -101,7 +101,7 @@ jobs:
             docker run --rm --name "$holder_name" --network host \
               --user "$(id -u):$(id -g)" \
               --env TEAM_VERIFY_TEACHER_SECRET \
-              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/probes,readonly" \
+              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/blockchain-practice/tests,target=/probes,readonly" \
               --mount "type=bind,source=${private_dir},target=/probe-state" \
               --entrypoint python "$IMAGE_TAG" -B -X utf8 \
               /probes/graceful_shutdown_probe.py --base-url "$PROBE_BASE_URL" \
@@ -218,7 +218,7 @@ jobs:
             docker run --rm --network host \
               --user "$(id -u):$(id -g)" \
               --env TEAM_VERIFY_TEACHER_SECRET \
-              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/probes,readonly" \
+              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/blockchain-practice/tests,target=/probes,readonly" \
               --mount "type=bind,source=${private_dir},target=/probe-state" \
               --entrypoint python "$IMAGE_TAG" -B -X utf8 \
               /probes/persistence_probe.py "$@"
@@ -227,14 +227,14 @@ jobs:
           team_probe() {
             docker run --rm --network host \
               --user "$(id -u):$(id -g)" \
-              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/probes,readonly" \
+              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/blockchain-practice/tests,target=/probes,readonly" \
               --mount "type=bind,source=${private_dir},target=/probe-state" \
               --entrypoint python "$IMAGE_TAG" -B -X utf8 \
               /probes/team_restart_probe.py "$@"
           }
 
           docker run --rm --user 10001:10001 \
-            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/app/tests,readonly" \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/blockchain-practice/tests,target=/app/tests,readonly" \
             --entrypoint python "$IMAGE_TAG" -B -m unittest discover \
             -s tests -p 'test_team*.py' -v
 
@@ -319,10 +319,10 @@ jobs:
       run:
         shell: bash
     env:
-      IMAGE_TAG: team-flask-postgres:${{ github.run_id }}-${{ github.run_attempt }}
-      CONTAINER_NAME: team-flask-postgres-${{ github.run_id }}-${{ github.run_attempt }}
-      PG_CONTAINER_NAME: team-postgres-${{ github.run_id }}-${{ github.run_attempt }}
-      NETWORK_NAME: team-postgres-network-${{ github.run_id }}-${{ github.run_attempt }}
+      IMAGE_TAG: blockchain-practice-postgres:${{ github.run_id }}-${{ github.run_attempt }}
+      CONTAINER_NAME: blockchain-practice-postgres-${{ github.run_id }}-${{ github.run_attempt }}
+      PG_CONTAINER_NAME: blockchain-practice-database-${{ github.run_id }}-${{ github.run_attempt }}
+      NETWORK_NAME: blockchain-practice-postgres-network-${{ github.run_id }}-${{ github.run_attempt }}
       PROBE_BASE_URL: http://127.0.0.1:18081
       GIT_TERMINAL_PROMPT: "0"
 
@@ -339,12 +339,12 @@ jobs:
       - name: Build PostgreSQL production Docker image
         run: |
           set -euo pipefail
-          docker build --tag "$IMAGE_TAG" experiments/kakao-flask
+          docker build --tag "$IMAGE_TAG" experiments/blockchain-practice
 
       - name: Verify PostgreSQL stores and diskless app replacement
         run: |
           set -euo pipefail
-          private_dir="${RUNNER_TEMP}/team-postgres-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          private_dir="${RUNNER_TEMP}/blockchain-practice-postgres-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           mkdir -m 0700 "$private_dir"
           export POSTGRES_PASSWORD POSTGRES_DB TEAM_TEACHER_SECRET TEAM_DATABASE_PREFIX
           POSTGRES_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
@@ -414,7 +414,7 @@ jobs:
             docker run --rm --network host \
               --user "$(id -u):$(id -g)" \
               --env TEAM_VERIFY_TEACHER_SECRET \
-              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/probes,readonly" \
+              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/blockchain-practice/tests,target=/probes,readonly" \
               --mount "type=bind,source=${private_dir},target=/probe-state" \
               --entrypoint python "$IMAGE_TAG" -B -X utf8 \
               /probes/persistence_probe.py "$@"
@@ -423,7 +423,7 @@ jobs:
           team_probe() {
             docker run --rm --network host \
               --user "$(id -u):$(id -g)" \
-              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/probes,readonly" \
+              --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/blockchain-practice/tests,target=/probes,readonly" \
               --mount "type=bind,source=${private_dir},target=/probe-state" \
               --entrypoint python "$IMAGE_TAG" -B -X utf8 \
               /probes/team_restart_probe.py "$@"
@@ -451,15 +451,15 @@ jobs:
 
           # Unit integration tests create and clean their own schemas in this CI-only database.
           # Do not set TEAM_DATABASE_URL here: importing app must not attach the global app to PostgreSQL.
-          test -f experiments/kakao-flask/tests/test_postgres_deployment.py
+          test -f experiments/blockchain-practice/tests/test_postgres_deployment.py
           docker run --rm --network "$NETWORK_NAME" --user 10001:10001 \
             --env TEST_POSTGRES_URL \
-            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/app/tests,readonly" \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/blockchain-practice/tests,target=/app/tests,readonly" \
             --entrypoint python "$IMAGE_TAG" -B -m unittest discover \
             -s tests -p test_postgres_deployment.py -v
           docker run --rm --network "$NETWORK_NAME" --user 10001:10001 \
             --env TEST_POSTGRES_URL \
-            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/app/tests,readonly" \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/blockchain-practice/tests,target=/app/tests,readonly" \
             --entrypoint python "$IMAGE_TAG" -B -m unittest discover \
             -s tests -p 'test_team*.py' -v
 

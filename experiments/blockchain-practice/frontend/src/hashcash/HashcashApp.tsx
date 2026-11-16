@@ -54,8 +54,8 @@ const modeHints = {
   cpu: "이 기기의 CPU로 계산합니다 GPU를 준비하지 않고 바로 시작합니다",
   gpu: "이 기기의 GPU로 여러 넌스를 함께 계산합니다 GPU를 사용할 수 없으면 CPU로 전환합니다",
   hybrid: "CPU와 GPU가 서로 다른 넌스 구간을 동시에 계산합니다 GPU를 사용할 수 없으면 CPU로 전환합니다",
-  "python-native": "PC에서 실행한 팀 Flask의 Python·CUDA 엔진을 사용합니다 지원하지 않는 환경에서는 브라우저 CPU로 전환합니다",
-  "c-native": "PC에서 실행한 팀 Flask의 C·CUDA 엔진을 사용합니다 지원하지 않는 환경에서는 브라우저 CPU로 전환합니다",
+  "python-native": "PC에서 실행한 블록체인 실습실의 Python·CUDA 엔진을 사용합니다 지원하지 않는 환경에서는 브라우저 CPU로 전환합니다",
+  "c-native": "PC에서 실행한 블록체인 실습실의 C·CUDA 엔진을 사용합니다 지원하지 않는 환경에서는 브라우저 CPU로 전환합니다",
 };
 const statuses = {
   running: "넌스를 찾는 중",
@@ -366,7 +366,7 @@ export function HashcashApp() {
         </section>
         <details className="panel nonce-native-info">
           <summary>Python·C 모드</summary>
-          <p>연산 방식의 PC 고급 모드에서 선택합니다 팀 Flask를 PC에서 실행하고 CUDA·네이티브 엔진이 준비된 경우에만 Python·C 연산을 사용합니다</p>
+          <p>연산 방식의 PC 고급 모드에서 선택합니다 블록체인 실습실을 PC에서 실행하고 CUDA·네이티브 엔진이 준비된 경우에만 Python·C 연산을 사용합니다</p>
           <p>무료 온라인 주소나 지원하지 않는 기기에서는 브라우저 CPU로 자동 전환합니다 별도 설치 없이 GPU를 쓰려면 일반 GPU·CPU+GPU 모드를 선택하세요 실제 연산 장치와 전환 이유는 결과에 표시됩니다</p>
         </details>
       </main>

@@ -1,8 +1,10 @@
-# Mini Bitcoin Education Lab
+# 블록체인 실습실 · blockchain-practice
 
-> 이 브랜치의 팀 블록체인 Flask 3.0 통합판: [무료 실습실 바로 열기](https://kakao-team-flask.onrender.com) · [실행 안내](experiments/kakao-flask/README.md) · [자막 포함 시연 영상 (3분 44초)](experiments/kakao-flask/static/media/blockchain-demo-ko.mp4)
+> 팀 프로젝트: [무료 실습실 바로 열기](https://blockchain-practice.onrender.com) · [실행 안내](experiments/blockchain-practice/README.md) · [클릭 안내 자막 시연 영상 (4분 33초)](experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4)
 >
-> 개인 본체의 UTXO·경쟁·보관함·협업 기능과 화면을 팀 Flask 서버 하나로 통합했습니다. Render Free와 Neon Free로 배포했으며 서버 재시작 뒤 기록 복원을 확인했습니다. 로컬 실행은 experiments/kakao-flask/Start-Team.cmd를 사용합니다. 아래는 이 브랜치에 남아 있는 초기 React 모델의 기록입니다.
+> 팀 앱은 `blockchain-practice` 브랜치의 `experiments/blockchain-practice/`에서 관리합니다 기초 실습·공동 실습·넌스 찾기를 제공하며 Render Free와 Neon Free로 배포해 서버 재시작 뒤에도 저장한 기록을 이어갑니다 로컬 실행은 `experiments/blockchain-practice/Start-Team.cmd`를 사용합니다
+>
+> 아래는 개인 프로젝트의 초기 React 모델 기록입니다 개인 본체와 팀 앱은 독립적으로 관리합니다
 
 ## 포트폴리오 개요 및 현재 상태
 

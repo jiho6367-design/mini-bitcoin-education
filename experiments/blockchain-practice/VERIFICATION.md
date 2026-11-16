@@ -1,4 +1,6 @@
-# Flask 2.0.0 검증 기록
+# 블록체인 실습실 검증 기록
+
+현재 팀 브랜치는 `blockchain-practice`, 실행 폴더는 `experiments/blockchain-practice`입니다 이전 검증의 브랜치 이름·공개 주소·커밋은 당시의 사실로 보존합니다 폴더·브랜치 이름 변경은 DB·쿠키·브라우저 저장소 키를 바꾸지 않습니다
 
 ## 기초·공동 화면 색상과 테마 통일 (2026-11-17)
 
@@ -129,7 +131,7 @@
 
 같은 운영 코드를 Render Free에 배포한 뒤 **기존 `V5JHT522` 링크**에서 HTTPS·실제 WSS로 일반 팀원 두 명을 연결했습니다. 최초 참가자가 끊긴 뒤 다른 팀원이 역할을 맡고 공통 조작·저장을 수행했습니다. 업그레이드 전 장부와 코드·실습 ID가 그대로 유지됐습니다. 이어 Render의 Restart service를 실제 실행하고 같은 쿠키의 참가자 ID·원장 유지, 새 실행 ID·토큰 발급, 이전 토큰 거부, 다른 브라우저의 참가자 사칭 거부, 재접속 후 일반 팀원 조작을 확인했습니다. 열어 둔 실제 브라우저도 새로고침 없이 같은 링크에서 연결을 복구했으며 역할은 다시 선택하는 상태였습니다. 원래 장부의 지갑·체인·UTXO·잔액은 바꾸지 않았습니다. Render Free·Neon Free, 카드 미등록·외부 PostgreSQL 구성도 유지했습니다.
 
-검증일: 2026-11-16 (한국 시간). 대상: `codex/kakao-flask-run`의 Flask 앱. 개선 전 기준은 `01b31ad`입니다. 기존 React 앱과 Flask 앱의 버전·실행 경로는 별도로 유지합니다.
+검증일: 2026-11-16 (한국 시간). 당시 대상: `codex/kakao-flask-run`의 Flask 앱. 개선 전 기준은 `01b31ad`입니다. 기존 React 앱과 Flask 앱의 버전·실행 경로는 별도로 유지합니다.
 
 ## 재현했던 문제와 수정
 
@@ -149,7 +151,7 @@ Windows, Python 3.13, Node.js 24.19.0에서 실행했습니다. Flask 3.1.3과 e
 | 범위 | 명령 | 결과 |
 | --- | --- | --- |
 | Python 핵심 규칙·API·저장·실제 서버 재시작 | Flask 폴더에서 `.\.venv\Scripts\python.exe -B -m unittest discover -s tests -v` | 68개 통과 |
-| UI 초안·요청 순서·작업 상태·표본·입력 검사 | 루트에서 `node --test experiments/kakao-flask/tests/ui_state.test.mjs` | 10개 통과 |
+| UI 초안·요청 순서·작업 상태·표본·입력 검사 | 루트에서 `node --test experiments/blockchain-practice/tests/ui_state.test.mjs` | 10개 통과 |
 | 실제 Chrome·Edge 조작 | 루트에서 `npm.cmd run test:flask:e2e` | 브라우저별 12개, 총 24개 통과 |
 | 기존 React 앱 영향 확인 | 루트에서 `npm.cmd run check` | 타입·린트·41개 테스트·빌드 통과 |
 | 변경 파일 형식 | 루트에서 `git diff --check` | 통과 |
