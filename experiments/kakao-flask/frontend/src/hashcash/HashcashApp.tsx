@@ -285,7 +285,7 @@ export function HashcashApp() {
     <div className="classroom-shell nonce-shell">
       <a className="skip-link" href="#nonce-main">넌스 찾기 본문으로 바로가기</a>
       <header className="classroom-header">
-        <div><strong>팀 블록체인 · 넌스 찾기</strong><p>숫자를 바꾸며 작업 증명 이해하기</p></div>
+        <div><strong>블록체인 실습실 · 넌스 찾기</strong><p>숫자를 바꾸며 작업 증명 이해하기</p></div>
         <TeamNavigation hashcash />
         <label>화면 테마<select aria-label="화면 테마" value={preference} onChange={(event) => selectTheme(event.target.value as ThemePreference)}>
           <option value="system">시스템</option><option value="light">라이트</option><option value="dark">다크</option>

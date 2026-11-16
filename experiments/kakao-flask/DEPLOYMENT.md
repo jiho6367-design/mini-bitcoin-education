@@ -1,6 +1,20 @@
 # 팀 Flask 배포 안내
 
-팀 전용 브랜치 `codex/kakao-flask-run`을 **Render Free + Neon Free**로 배포했습니다. 공개 주소는 **https://kakao-team-flask.onrender.com**입니다. Flask·실시간 연결은 Render, 기초·통합·공동 기록과 소유자 정보는 Neon PostgreSQL에 저장합니다. 로컬 실행은 기존 SQLite를 사용합니다. 실제 HTTPS/WSS와 Render 재시작 뒤 복원을 확인했으며 결과는 검증 기록에 있습니다.
+팀 전용 브랜치 `codex/kakao-flask-run`을 **Render Free + Neon Free**로 배포했습니다. 공개 주소는 **https://blockchain-practice.onrender.com**입니다. Flask·실시간 연결은 Render, 기초·통합·공동 기록과 소유자 정보는 Neon PostgreSQL에 저장합니다. 로컬 실행은 기존 SQLite를 사용합니다. 실제 HTTPS/WSS와 Render 재시작 뒤 복원을 확인했으며 결과는 검증 기록에 있습니다.
+
+## 주소 변경과 이전 기록 연결
+
+사이트명은 **블록체인 실습실**, 새 서비스명은 `blockchain-practice`입니다 기존 `kakao-team-flask.onrender.com` 호스트는 `blockchain-practice-legacy` 무료 서비스에서 접속 정보를 이전하는 용도로 유지합니다 서비스 이름만 바꿔서는 기존 Render 기본 호스트가 바뀌지 않으므로 새 무료 서비스를 사용합니다
+
+새 서비스만 기존 Neon 데이터베이스·`team` 스키마·소유 쿠키 서명 키·공동 방 코드 `V5JHT522`를 이어 사용합니다 이전 서비스는 `TEAM_SITE_MODE=transfer`로 실행하며 Flask 저장소·실습 실행기·PostgreSQL 쓰기 소유권을 생성하지 않습니다 같은 DB를 두 실습 서버가 동시에 쓰지 않습니다
+
+두 서비스에 동일한 `TEAM_SITE_TRANSFER_KEY`(Fernet 키), `TEAM_SITE_PREVIOUS_ORIGIN=https://kakao-team-flask.onrender.com`, `TEAM_SITE_CANONICAL_ORIGIN=https://blockchain-practice.onrender.com`을 설정합니다 새 서비스는 `TEAM_SITE_MODE=primary`, `TEAM_PUBLIC_URL=https://blockchain-practice.onrender.com`을 사용합니다 키는 비공개 환경 변수에만 저장하고 서로 다른 키로 다시 생성하지 않습니다
+
+첫 접속에서 새 호스트가 180초 유효한 브라우저 nonce를 만든 뒤 이전 호스트를 최상위 화면으로 엽니다 이전 호스트의 HttpOnly 실습·소유 쿠키는 원래 값을 URL에 넣지 않고 암호화된 POST 본문으로 보냅니다 새 호스트는 출처·대상·유효 시간·브라우저 nonce와 한 번만 사용 가능한 요청인지 확인한 뒤 쿠키를 재설정합니다 허용된 이 앱의 localStorage·sessionStorage만 복사하며 새 호스트에 이미 있는 값은 보존합니다
+
+이전 도중의 페이지는 캐시하지 않고 다른 사이트의 프레임에 표시할 수 없습니다 새 호스트에 기존 실습 쿠키가 있으면 자동 이전으로 덮어쓰지 않습니다 예전 주소에 이미 열어 둔 탭의 API는 이전 안내와 410을 반환하며 명령을 재전송하지 않습니다 탭을 새로고침하면 새 주소에서 이어갑니다
+
+두 서비스 모두 Free 플랜이고 유료 디스크를 사용하지 않습니다 두 무료 웹 서비스는 Render 작업공간의 무료 인스턴스 시간 한도를 함께 사용합니다 이전 호스트가 비활성 상태였다면 최초 기록 연결에 추가 준비 시간이 걸릴 수 있습니다 브라우저 연결 정보 이전이 끝나기 전에 이전 호스트를 삭제하지 않습니다
 
 ## 실행 구조
 
@@ -67,6 +81,10 @@ PostgreSQL은 `team_basic`, `team_education`, `team_control` 스키마로 두 �
 | `TEAM_SHARED_ROOM_CODE` | 기존 교실을 팀 실습으로 한 번 연결할 정확한 코드, 현재 `V5JHT522` |
 | `TEAM_PUBLIC_URL` | 참가 링크·QR에 사용할 외부 HTTPS 주소, 미설정 시 `RENDER_EXTERNAL_URL` |
 | `TEAM_TRUST_PROXY` | 신뢰하는 단일 인입 프록시 뒤에서만 `1`로 설정 |
+| `TEAM_SITE_MODE` | 새 실습 서버는 `primary`, 이전 호스트의 DB 없는 연결 서버는 `transfer` |
+| `TEAM_SITE_TRANSFER_KEY` | 두 호스트가 함께 사용하는 비공개 Fernet 이전 키 |
+| `TEAM_SITE_PREVIOUS_ORIGIN` | 이전 호스트의 정확한 HTTPS 출처 |
+| `TEAM_SITE_CANONICAL_ORIGIN` | 새 호스트의 정확한 HTTPS 출처 |
 | `TEAM_DATA_DIR` | 컨테이너 영속 디스크 루트, 기본 `/data` |
 | `TEAM_BACKUP_DIR` | 진입점이 준비하는 비공개 백업 디렉터리, 기본 `/data/backups` |
 

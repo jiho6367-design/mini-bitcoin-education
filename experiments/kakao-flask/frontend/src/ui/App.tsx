@@ -122,7 +122,7 @@ export function App({ entry }: { entry?: ReactNode } = {}) {
         >
           <span className="brand-mark">₿</span>
           <span>
-            팀 블록체인<small>통합 실습실</small>
+            블록체인 실습실<small>통합 실습실</small>
           </span>
         </a>
         <div className="sidebar-label">실습 워크스페이스</div>
@@ -152,7 +152,7 @@ export function App({ entry }: { entry?: ReactNode } = {}) {
           <p>모의 노드 3개 · 실제 자산 연결 없음</p>
         </div>
         <div className="sidebar-footer">
-          <span data-testid="app-version">팀 블록체인 v{version}</span>
+          <span data-testid="app-version">블록체인 실습실 v{version}</span>
           <small>학습용 블록체인</small>
         </div>
       </aside>
@@ -545,7 +545,7 @@ export function App({ entry }: { entry?: ReactNode } = {}) {
           )}
           <Differences />
           <footer className="page-footer">
-            <span>팀 블록체인 실습실</span>
+            <span>블록체인 실습실</span>
             <span>교육용 모의 환경</span>
           </footer>
         </main>

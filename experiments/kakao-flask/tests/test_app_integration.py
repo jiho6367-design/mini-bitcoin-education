@@ -54,6 +54,20 @@ class AppIntegrationTests(unittest.TestCase):
                 self.assertEqual(token, owner)
         self.assertFalse((self.root / "basic.sqlite3").exists())
 
+    def test_site_move_redirect_does_not_create_an_owner_before_identity_import(self):
+        from cryptography.fernet import Fernet
+        self.app.config.update(
+            TEAM_SITE_TRANSFER_KEY=Fernet.generate_key().decode(),
+            TEAM_SITE_PREVIOUS_ORIGIN="https://old.example",
+            TEAM_SITE_CANONICAL_ORIGIN="https://new.example",
+        )
+        for path in ("/", "/advanced", "/?classroom=join&room=V5JHT522"):
+            with self.subTest(path=path), self.client.get(path, base_url="https://new.example") as response:
+                self.assertEqual(response.status_code, 302)
+                self.assertTrue(response.location.startswith("/_site-transfer/begin?"))
+                self.assertNotIn("team_education_owner", " ".join(response.headers.getlist("Set-Cookie")))
+        self.assertIsNone(self.client.get_cookie("team_education_owner", domain="new.example"))
+
     def test_basic_main_still_loads_when_the_react_build_is_missing(self):
         self.app.config["EDUCATION_FRONTEND"] = str(self.root / "missing-build")
         for path in ("/", "/basic"):

@@ -435,7 +435,7 @@ test("버전은 package.json·잠금 파일·화면이 일치하고 하단 문�
   });
   await page.goto("/advanced");
   await expect(page.getByTestId("app-version")).toHaveText(
-    `팀 블록체인 v${manifest.version}`,
+    `블록체인 실습실 v${manifest.version}`,
   );
   await expect(page.locator(".sidebar-footer small")).toHaveText(
     "학습용 블록체인",

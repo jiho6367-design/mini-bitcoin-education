@@ -39,4 +39,6 @@ def worker_exit(_server, worker):
     runtime = app.extensions.get("education")
     if runtime is not None:
         runtime.close()
-    app.extensions["practice_store"].close()
+    store = app.extensions.get("practice_store")
+    if store is not None:
+        store.close()

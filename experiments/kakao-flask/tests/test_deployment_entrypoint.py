@@ -126,6 +126,7 @@ class GunicornShutdownTests(unittest.TestCase):
         self.assertEqual(installed_signal, signal.SIGTERM)
         handler(signal.SIGTERM, None)
         previous.assert_called_once_with(signal.SIGTERM, None)
+
         worker.handle_exit.assert_not_called()
         runtime.close.assert_not_called()
         basic.close.assert_not_called()
@@ -141,6 +142,8 @@ class GunicornShutdownTests(unittest.TestCase):
             handler = install.call_args.args[1]
         handler(signal.SIGTERM, None)
         previous.assert_called_once_with(signal.SIGTERM, None)
+        # The old host only transfers cookies and never opens a practice store.
+        self.config.worker_exit(None, worker)
 
     def test_failed_worker_boot_does_not_import_or_construct_another_app(self):
         self.config.worker_exit(None, SimpleNamespace())

@@ -2,7 +2,7 @@
 # Docker paths below are relative to the repository root, not this YAML file.
 services:
   - type: web
-    name: kakao-team-flask
+    name: blockchain-practice
     runtime: docker
     branch: codex/kakao-flask-run
     region: ohio
@@ -25,5 +25,15 @@ services:
         generateValue: true
       - key: TEAM_TRUST_PROXY
         value: "1"
+      - key: TEAM_PUBLIC_URL
+        value: https://blockchain-practice.onrender.com
+      - key: TEAM_SITE_MODE
+        value: primary
+      - key: TEAM_SITE_TRANSFER_KEY
+        sync: false
+      - key: TEAM_SITE_PREVIOUS_ORIGIN
+        value: https://kakao-team-flask.onrender.com
+      - key: TEAM_SITE_CANONICAL_ORIGIN
+        value: https://blockchain-practice.onrender.com
 # TEAM_PUBLIC_URL can be added after a custom domain is configured.
 # With no override, the browser builds participant links from its HTTPS origin.

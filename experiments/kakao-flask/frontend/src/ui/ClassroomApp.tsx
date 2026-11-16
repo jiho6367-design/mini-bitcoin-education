@@ -186,7 +186,7 @@ export function ClassroomApp({
       </a>
       <header className="classroom-header">
         <div>
-          <strong>팀 블록체인 · 공동 실습</strong>
+          <strong>블록체인 실습실 · 공동 실습</strong>
           <p>{teacherForm || teacher ? "교사·대표·관찰자 실습" : "같은 링크에서 함께 이어가는 실습"}</p>
         </div>
         <TeamNavigation classroom />

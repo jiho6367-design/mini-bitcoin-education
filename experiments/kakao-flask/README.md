@@ -1,8 +1,10 @@
-# 팀 블록체인 실습실 · Flask 3.0.0
+# 블록체인 실습실 · Flask 3.0.0
 
 일반 사용자가 지갑 → 거래·서명 → 채굴 → 검증을 따라가는 **기초 실습**을 첫 화면으로 사용합니다. 함께 같은 장부를 조작하는 **공동 실습**은 별도로 유지합니다. 개인 프로젝트를 실행하거나 그 DB를 참조하지 않으며, 팀 저장소의 코드와 DB만 사용합니다.
 
-**[무료 온라인 실습실 열기](https://kakao-team-flask.onrender.com)** · **[팀 공동 실습 참여](https://kakao-team-flask.onrender.com/?classroom=join&room=V5JHT522)**
+**[무료 온라인 실습실 열기](https://blockchain-practice.onrender.com)** · **[팀 공동 실습 참여](https://blockchain-practice.onrender.com/?classroom=join&room=V5JHT522)**
+
+이전 `kakao-team-flask.onrender.com` 주소는 접속 정보를 연결한 뒤 새 주소로 이동합니다 같은 브라우저의 기초 실습·공동 실습 소유 쿠키와 허용된 테마·넌스 기록·참여 정보를 한 번 이전하며, 새 주소에 이미 사용 중인 접속 정보는 덮어쓰지 않습니다 두 주소는 같은 Neon 저장 기록을 사용하고 이전 주소의 서버는 장부를 읽거나 수정하지 않습니다
 
 Render Free와 Neon Free를 사용하며 결제 카드를 등록하지 않았습니다. 온라인 기록은 PostgreSQL에 저장해 서버 재시작 뒤에도 유지합니다. 한동안 쓰지 않았을 때 첫 접속은 약 1분이 걸릴 수 있습니다. 팀 실습은 교사 접속 없이 이름으로 참여하고 A/B/C 역할을 직접 맡습니다. 처음 시작한 사람이 나가거나 서버가 재시작돼도 같은 참여 링크에서 저장한 장부를 이어갑니다.
 

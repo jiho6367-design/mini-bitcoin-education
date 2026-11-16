@@ -46,6 +46,25 @@ jobs:
           set -euo pipefail
           docker build --tag "$IMAGE_TAG" experiments/kakao-flask
 
+      - name: Verify site-transfer protocol without a datastore
+        run: |
+          set -euo pipefail
+          docker run --rm --user 10001:10001 \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/experiments/kakao-flask/tests,target=/app/tests,readonly" \
+            --entrypoint python "$IMAGE_TAG" -B -m unittest discover -s tests -p 'test_site_transfer.py' -v
+          docker run --rm --user 10001:10001 \
+            --env TEAM_SITE_MODE=transfer \
+            --env TEAM_DATABASE_URL=postgresql://unreachable.invalid/unused \
+            --entrypoint python "$IMAGE_TAG" -B -c '
+          import app
+          assert "practice_store" not in app.app.extensions
+          assert "education" not in app.app.extensions
+          with app.app.test_client() as client:
+              response = client.get("/api/education/health")
+              assert response.status_code == 200 and response.json == {"status": "ok", "mode": "transfer"}
+          print("Legacy host imports without a datastore or writer lease")
+          '
+
       - name: Verify production persistence under 256 MiB and 0.25 CPU
         run: |
           set -euo pipefail

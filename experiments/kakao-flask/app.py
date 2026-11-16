@@ -651,13 +651,20 @@ def create_app(config=None, *, database_path=None):
     from native_hashcash_api import register_native_hashcash
     register_native_hashcash(app)
 
+    from site_transfer import register_site_transfer
+    register_site_transfer(app)
+
     return app
 
 
 # Spawned native CPU workers import the main module on Windows. They must not
 # create another Flask runtime or claim a database writer while hashing.
 if __name__ != "__mp_main__":
-    app = create_app()
+    if os.environ.get("TEAM_SITE_MODE") == "transfer":
+        from site_transfer import create_transfer_app
+        app = create_transfer_app()
+    else:
+        app = create_app()
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 5000)), debug=False, threaded=True)

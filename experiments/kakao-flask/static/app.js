@@ -1077,7 +1077,7 @@ function renderAll() {
   $("#difficulty").min = model.state?.min_difficulty ?? 1;
   $("#difficulty").max = model.state?.max_difficulty ?? 5;
   $("#version-label").textContent =
-    `Flask Learning Lab · ${model.state?.version ? `v${model.state.version}` : "교육용 모델"}`;
+    `블록체인 실습실 · ${model.state?.version ? `v${model.state.version}` : "교육용 모델"}`;
 }
 
 async function createWallet() {
