@@ -4,6 +4,21 @@
 
 **[실습실 열기](https://blockchain-practice.onrender.com)** · **[최종보고서](docs/final-report.md)** · **[사용 안내](docs/user-guide.md)** · **[문서 목차](docs/README.md)**
 
+## 강지호의 개인 수행 내역
+
+**강지호는 기존 기초 실습 초안을 최종 온라인 서비스인 ‘블록체인 실습실’로 발전시키는 전반적인 고도화부터 검증·배포·최종 제출 자료 제작까지 모두 담당했습니다 아래 항목은 강지호가 수행한 개인 기여 내역입니다**
+
+| 담당 범위 | 강지호가 수행한 내용 |
+| --- | --- |
+| 개인 개발 결과물 제공·통합 | 사전에 개인적으로 개발한 블록체인 교육 엔진과 React 화면을 팀 Flask 앱에 독립 사본으로 통합하고 UTXO·전자서명·수수료·거스름돈·보상 성숙 기능 연결 |
+| 기초 실습·UI/UX 고도화 | 기존 초안의 화면·설명·조작 흐름을 보완하고 기초 6단계 안내를 구성 복잡한 통합 화면은 공개 메뉴에서 제외하고 필요한 기능을 기초 실습으로 선별·이식하며 테마·용어·상태 안내 정리 |
+| 공동 실습·채굴·넌스 기능 확장 | 별명·역할·혼자 진행·실제 상태 기반 완료 가이드, 한 노드·세 모의 노드 채굴 비교, CPU·GPU·CPU+GPU 넌스 탐색과 CPU 전환, 선택형 로컬 Python·C 연산 연결 |
+| 무료 서버 배포·기록 보존 | Render·Neon PostgreSQL 운영 환경 구축, 서버 재시작 후 저장 장부·공동 링크 보존, 서버 준비 안내와 자동 재연결 개선 |
+| 검증·기술 설명 정리 | 코드·검사 기록·실제 조작 결과를 대조해 거래·서명·채굴·저장·복원 동작과 설명 오류를 점검하고 구현 범위·검증 한계 정리 |
+| 최종 제출 자료 제작 | 최신 구현을 반영한 최종보고서·사용 안내·기술 문서 작성 및 정리, 실제 마우스 조작과 한국어 자막을 담은 4분 33초 시연 영상 제작·앱 반영, GitHub 소스·문서 관리 |
+
+관련 산출물: [통합·저장 설계](docs/architecture.md) · [교육 엔진 이식 기록](experiments/blockchain-practice/education_engine/PROVENANCE.json) · [검증 기록](docs/test-results.md) · [최신 시연 영상](experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4)
+
 ## 현재 상태
 
 2026-11-17 기준 팀 앱은 `blockchain-practice` 브랜치의 `experiments/blockchain-practice/`에서 관리합니다 Render Free와 Neon Free PostgreSQL로 배포되어 PC를 꺼도 링크로 접속할 수 있습니다 휴대폰에서도 기본 웹 실습을 사용할 수 있으며, 서버가 준비 중이면 안내 후 자동으로 연결합니다
