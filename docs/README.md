@@ -11,7 +11,8 @@
 | [설계](architecture.md) | Flask·기초 장부·UTXO·공동 실습·브라우저 연산·저장 구조 |
 | [Bitcoin과의 차이](bitcoin-differences.md) | 기초·공동·넌스 모델의 규칙과 실제 네트워크 대비 한계 |
 | [검증 기록](test-results.md) | 확인한 커밋, 실제 검사 결과와 재현 명령 |
-| [결과보고서 초안](final-report.md) | 팀 프로젝트 목적·구현·운영·검증·한계 |
+| [최종보고서 · 팀 확인본](final-report.md) | 과제 요약·기여·6단계 학습·정상/거부 검증·결과·한계 |
+| [최종보고서 검토 반영](final-report-review.md) | 독립 추가 검토의 지적·반영 위치와 확인 범위 |
 | [제출용 시연 대본](demo-script.md) | 최신 세 화면을 보여주는 5분 이내 구성 |
 | [개발 기록](development-log.md) | 팀 앱으로 이어진 실제 커밋과 설계 결정 |
 | [변경 이력](../CHANGELOG.md) | 팀 앱 최신 업데이트와 과거 기록 구분 |
