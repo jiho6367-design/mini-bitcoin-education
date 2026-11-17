@@ -2,7 +2,7 @@
 
 지갑 만들기부터 송금·서명·채굴·노드 검증까지 직접 조작하며 배우는 팀 프로젝트
 
-**[실습실 열기](https://blockchain-practice.onrender.com)** · **[팀 공동 실습 참여](https://blockchain-practice.onrender.com/?classroom=join&room=V5JHT522)** · **[사용 안내](docs/user-guide.md)** · **[문서 목차](docs/README.md)**
+**[실습실 열기](https://blockchain-practice.onrender.com)** · **[최종보고서](docs/final-report.md)** · **[사용 안내](docs/user-guide.md)** · **[문서 목차](docs/README.md)**
 
 ## 현재 상태
 
