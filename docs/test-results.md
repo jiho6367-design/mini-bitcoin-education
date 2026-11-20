@@ -47,6 +47,8 @@ DB 연결값·접속 키·실제 쿠키·개별 장부·개인 상태 파일은 
 
 현재 브랜치의 [한국어 음성 포함 시연 영상](../experiments/blockchain-practice/static/media/blockchain-practice-demo-narrated.mp4)은 273.033초, 2880×1980, 30fps입니다 오디오를 합친 뒤 원본과 동일한 영상 패킷과 한국어 AAC 발화를 확인했습니다 SHA-256은 `F9A1960F96FECC87D204A56DE65969195CB679F71176D91D07B2CC1D05B69442`입니다
 
+구성도 저장 설명을 보완한 `eb3bb20`에서 Chrome·Edge 구성도 재검사 2건을 통과했습니다 운영 배포가 Live에 도달한 뒤 기존 주소에서 구성도 문구와 영상의 HTTP 206 응답을 확인했습니다 같은 커밋의 두 컨테이너 재시작 검사도 통과했습니다 [GitHub Actions 검사 결과](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/44697244368)
+
 ## 2026-11-17 배포 당시의 영상과 화면
 
 당시 배포한 시연 영상은 **273.033초(4분 33초)**, **2880×1980**, **30fps**이며 실제 마우스 조작과 한국어 클릭 자막을 담았습니다 기초 실습·세 노드 채굴 비교·공동 실습·넌스 찾기를 보여줍니다

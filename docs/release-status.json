@@ -1,5 +1,5 @@
 {
-  "verified_on": "2026-11-17",
+  "verified_on": "2026-11-20",
   "timezone": "Asia/Seoul",
   "product": "블록체인 실습실",
   "branch": "blockchain-practice",
@@ -7,7 +7,7 @@
   "app_version": "3.0.0",
   "education_engine_version": "3.2.0",
   "legacy_root_react_version": "1.1.0",
-  "deployed_app_commit": "9fca79179e4f93cfbde089dfb24d043aa9a8b952",
+  "deployed_app_commit": "eb3bb20242e0b7ab2fac9cc1de204c7a3eb8bba4",
   "public_url": "https://blockchain-practice.onrender.com",
   "hosting": {
     "primary_service": "blockchain-practice",
@@ -24,18 +24,33 @@
   "persistence": {
     "basic_and_classroom": "server_postgresql",
     "nonce_history": "browser_local_storage_latest_50",
-    "saved_records_preserved_after_deployment": true,
-    "access_keys_unchanged": true
+    "last_full_production_data_comparison": "2026-11-17",
+    "saved_records_preserved_in_that_comparison": true,
+    "access_keys_unchanged_in_that_comparison": true,
+    "storage_and_access_settings_changed_in_2026_11_20_release": false
   },
   "demo": {
-    "asset": "experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4",
+    "asset": "experiments/blockchain-practice/static/media/blockchain-practice-demo-narrated.mp4",
     "seconds": 273.033333,
     "width": 2880,
     "height": 1980,
     "fps": 30,
-    "sha256": "1A2FFD7F97FABEC118394A9D9CE1C4AB571725425716E77CC4F1325A84AD3E62"
+    "narration": "ko",
+    "sha256": "F9A1960F96FECC87D204A56DE65969195CB679F71176D91D07B2CC1D05B69442"
   },
   "verification": {
+    "source_commit": "eb3bb20242e0b7ab2fac9cc1de204c7a3eb8bba4",
+    "frontend_unit_passed": 147,
+    "frontend_check": "passed",
+    "focused_browser_cases_passed": 16,
+    "architecture_browser_cases_rerun_after_copy_edit": 2,
+    "production_restart": "success",
+    "postgres_restart": "success",
+    "live_architecture_verified": true,
+    "live_video_range_status": 206,
+    "ci_url": "https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/44697244368"
+  },
+  "rename_release_verification": {
     "source_commit": "9fca79179e4f93cfbde089dfb24d043aa9a8b952",
     "python_total": 235,
     "python_passed": 218,
@@ -49,7 +64,7 @@
     "postgres_restart": "success",
     "ci_url": "https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43961448887"
   },
-  "documentation_audit": {
+  "rename_release_documentation_audit": {
     "current_markdown_files": 18,
     "archived_markdown_files": 13,
     "relative_links_checked": 164,

@@ -21,7 +21,7 @@
 
 ## 현재 상태
 
-2026-11-17 기준 팀 앱은 `blockchain-practice` 브랜치의 `experiments/blockchain-practice/`에서 관리합니다 Render Free와 Neon Free PostgreSQL로 배포되어 PC를 꺼도 링크로 접속할 수 있습니다 휴대폰에서도 기본 웹 실습을 사용할 수 있으며, 서버가 준비 중이면 안내 후 자동으로 연결합니다
+2026-11-20 기준 팀 앱은 `blockchain-practice` 브랜치의 `experiments/blockchain-practice/`에서 관리합니다 Render Free와 Neon Free PostgreSQL로 배포되어 PC를 꺼도 링크로 접속할 수 있습니다 휴대폰에서도 기본 웹 실습을 사용할 수 있으며, 서버가 준비 중이면 안내 후 자동으로 연결합니다
 
 기초·공동 실습의 기록은 서버에 저장되며 서버 재시작 뒤에도 같은 접속 정보와 참여 링크로 이어갑니다 넌스 찾기 결과는 해당 브라우저에 최근 50개까지 저장합니다 브라우저 데이터를 지우거나 다른 기기를 사용하면 개인 실습의 접근 정보와 넌스 기록은 자동으로 따라오지 않습니다
 
@@ -43,7 +43,7 @@ GPU 지원 여부는 접속한 기기와 브라우저에 따라 달라집니다 
 
 **[시연 영상 파일](experiments/blockchain-practice/static/media/blockchain-practice-demo-narrated.mp4)** · **[5분 이내 시연 대본](docs/demo-script.md)**
 
-![현재 블록체인 실습실 시작 화면](docs/screenshots/current-live-home.jpg)
+![2026-11-17 블록체인 실습실 시작 화면](docs/screenshots/current-live-home.jpg)
 
 2026-11-17 운영 화면 캡처 · 앱 코드 `9fca791`
 
@@ -75,6 +75,8 @@ cd experiments/blockchain-practice
 
 ## 확인한 범위
 
-운영 코드 `9fca791`에서 Python 검사 총 235개 중 218개 통과·17개 조건부 건너뜀, 팀 화면 단위 검사 147개와 타입·린트·빌드를 확인했습니다 Linux 운영 컨테이너의 재시작·PostgreSQL 기록 복원 검사도 [CI에서 통과](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43961448887)했습니다 저장된 실습·공동 링크·참여 정보는 배포 전후 동일함을 대조했습니다
+2026-11-20 배포 코드 `eb3bb20`에서 글자 크기와 한국어 설명 음성을 보완했습니다 팀 화면 단위 검사 147개, 브라우저 검사 16건과 구성도 문구 보완 후 재검사 2건을 통과했습니다 운영 컨테이너 재시작·PostgreSQL 기록 복원도 확인했습니다 [GitHub Actions 검사 결과](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/44697244368)
+
+2026-11-17 `9fca791` 배포 당시에는 Python 검사 235개 중 218개 통과·17개 조건부 건너뜀을 확인했고 저장된 실습·공동 링크·참여 정보를 배포 전후 대조했습니다 [검증 기록](docs/test-results.md)
 
 실제 자산이나 Bitcoin 네트워크에 연결하지 않는 교육용 모델입니다 모의 노드 비교를 실제 P2P 네트워크의 완전한 합의로 해석하지 않습니다 세부 차이와 검증 한계는 [모델 비교](docs/bitcoin-differences.md)와 [테스트 기록](docs/test-results.md)에 정리했습니다
