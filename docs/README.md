@@ -1,8 +1,8 @@
 # 블록체인 실습실 문서
 
-현재 팀 앱 기준일: **2026-11-17** · 브랜치 `blockchain-practice` · 실행 폴더 `experiments/blockchain-practice/`
+현재 팀 앱 기준일 **2026-11-20** · 브랜치 `blockchain-practice` · 실행 폴더 `experiments/blockchain-practice/`
 
-**[온라인 실습실](https://blockchain-practice.onrender.com)** · **[공동 실습 참여](https://blockchain-practice.onrender.com/?classroom=join&room=V5JHT522)**
+**[온라인 실습실](https://blockchain-practice.onrender.com)** · **[최종보고서](final-report.md)**
 
 | 문서 | 확인할 내용 |
 | --- | --- |
@@ -11,7 +11,7 @@
 | [설계](architecture.md) | Flask·기초 장부·UTXO·공동 실습·브라우저 연산·저장 구조 |
 | [Bitcoin과의 차이](bitcoin-differences.md) | 기초·공동·넌스 모델의 규칙과 실제 네트워크 대비 한계 |
 | [검증 기록](test-results.md) | 확인한 커밋, 실제 검사 결과와 재현 명령 |
-| [최종보고서 · 팀 확인본](final-report.md) | 과제 요약·기여·6단계 학습·정상/거부 검증·결과·한계 |
+| [최종보고서 · 팀 확인본](final-report.md) | 과제 요약·기여·6단계 학습·제출용 코드 발췌·검증 결과 |
 | [최종보고서 검토 반영](final-report-review.md) | 독립 추가 검토의 지적·반영 위치와 확인 범위 |
 | [제출용 시연 대본](demo-script.md) | 최신 세 화면을 보여주는 5분 이내 구성 |
 | [개발 기록](development-log.md) | 팀 앱으로 이어진 실제 커밋과 설계 결정 |

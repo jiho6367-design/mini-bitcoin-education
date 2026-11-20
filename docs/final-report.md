@@ -14,6 +14,8 @@
 
 **개인 수행 내역 갱신일**: 2026-11-18
 
+**코드·보고서 검토 반영일**: 2026-11-20
+
 **서비스**: [블록체인 실습실](https://blockchain-practice.onrender.com)
 
 **저장소 브랜치·실행 소스**: `blockchain-practice` · `experiments/blockchain-practice/`
@@ -23,6 +25,7 @@
 | 문서 작성의 기준 소스 | `63abc169a10ecc7e09554cf570f82bbd666d8cd1` |
 | 2026-11-17 배포·장부 대조 기록의 코드 | `9fca79179e4f93cfbde089dfb24d043aa9a8b952` |
 | 2026-11-20 가독성·시연 보완 배포 | `eb3bb20242e0b7ab2fac9cc1de204c7a3eb8bba4` · [검증 기록](test-results.md#2026-11-20-가독성과-음성-보완-확인) |
+| 제출용 ZIP과 대조한 기초 코어 | `b4d7408c5b0a13485b1de7f77111002c12ae4c5c` · [원문 발췌](#54-제출용-기초-실습-코드) |
 | 버전 | 팀 앱 3.0.0 · 이식한 교육 엔진 3.2.0 |
 | 문서 상태 | 최신 구현과 강지호의 개인 수행 내역을 반영한 제출 전 팀 확인본 — 그 밖의 개인별 담당·기간·기여 비율과 학교 양식·제출일은 부록에서 확인 |
 
@@ -166,19 +169,99 @@ Flask 하나가 기초 화면과 빌드한 React 화면·API를 제공한다 Nod
 
 SHA-256은 입력으로부터 256비트 요약값을 계산한다 변경 탐지는 신뢰할 기준값과의 비교가 전제이며 입력 후보가 적으면 후보를 해시해 비교할 수 있으므로 해시 자체가 비밀성을 보장하지 않는다 [FIPS 180-4](https://csrc.nist.gov/pubs/fips/180-4/upd1/final)
 
-기초 블록은 거래 ID를 묶은 Merkle root를 헤더에 포함하고, 홀수 개일 때 마지막 값을 복사해 쌍을 만든다 교육 엔진은 거래 필드 목록의 정규화 해시를 사용하므로 이 부분을 기초의 Merkle tree와 혼동하지 않는다 두 모델의 교육용 헤더·단일 SHA-256은 Bitcoin의 바이너리 헤더·이중 SHA-256과 호환되지 않는다 [기초 블록](../experiments/blockchain-practice/block.py)·[모델 비교](bitcoin-differences.md)
+기초 블록은 거래 ID를 묶은 머클 루트를 헤더에 포함한다 계산 중 값이 홀수 개이면 마지막 값을 복사해 쌍을 만든다 거래가 바뀌면 재계산한 머클 루트가 저장값과 달라지고, 바뀐 머클 루트를 헤더에 반영하면 블록 해시도 달라진다 공동 교육 엔진은 거래 필드 목록을 정규화해 요약값을 만든다 두 교육 모델은 단일 SHA-256을 사용한다 [기초 블록](../experiments/blockchain-practice/block.py) · [Bitcoin과의 차이](bitcoin-differences.md)
 
 채굴은 Nonce를 바꾸며 실제 해시를 계산한다 이 앱의 선행 16진수 0 개수 `d`에 대한 이상화된 성공 확률은 한 시도당 `16^-d`이고 기대 시도 수는 `16^d`이다 난이도 한 단계 증가 시 기대 계산량이 16배가 되지만 한 번의 성공 시간이나 시도 수를 보장하지 않는다 유효 PoW는 정확히 몇 번 계산했는지나 금전적 가치를 증명하지 않는다 [Bitcoin 백서 4절](https://bitcoin.org/bitcoin.pdf)·[교육용 난이도 정의](bitcoin-differences.md)
 
-변조 실험은 내용만 변경하기, Merkle·블록 해시 재계산, 후속 블록 재채굴을 구분한다 해시를 다시 계산하거나 PoW를 만족해도 잘못된 서명까지 유효해지는 것은 아니다 검증은 Genesis·해시·Merkle·PoW·이전 연결·거래 규칙을 확인한다 [체인 검증 구현](../experiments/blockchain-practice/blockchain.py)
+변조 실험은 내용 변경, 머클 루트·블록 해시 재계산, 후속 블록 재채굴을 단계별로 보여 준다 잘못된 거래 서명은 작업증명을 다시 만족한 뒤에도 유효하지 않다 `validate_chain()`은 첫 블록을 `check_genesis()`, 후속 블록을 `check_block()`으로 검사한다 후속 블록은 해시·머클 루트·작업증명·이전 블록과의 연결·거래 규칙을 모두 통과해야 한다 [체인 검증 구현](../experiments/blockchain-practice/blockchain.py)
 
 ### 5.3 한 노드 채굴·세 노드 비교·체인 채택
+
+웹 기초 실습의 `Node.start_mining()`은 `miner.build_candidate()`를 호출해 채굴 보상과 적용 가능한 대기 거래를 담은 후보를 만든다 `Node.mine_step()`은 다음 넌스부터 정해진 횟수만큼 SHA-256을 계산해 진행 상태를 반환한다 목표 해시가 나오면 블록 추가 검사를 거치고, 승인되면 대기열을 갱신한 뒤 다른 모의 노드에 전달한다 `miner.mine()`은 데모와 검사에서 쓰는 순차 채굴 함수다 [후보 생성·순차 채굴](../experiments/blockchain-practice/miner.py) · [웹 노드 채굴](../experiments/blockchain-practice/node.py)
 
 기초 실습은 한 노드 채굴을 기본으로 제공하고 단계 실행·연속 실행·일시정지·재개·중지를 지원한다 세 노드 비교는 온라인이며 유효한 같은 끝 블록을 가진 A/B/C가 각각 후보를 만들고 순서를 번갈아 실제 해시를 계산한다 첫 발견 후 나머지 후보의 계산을 중지하고 발견 블록을 전달한다 노드별 계산 수·Nonce·해시·발견 결과를 표시한다 [비교 회귀 정의](../experiments/blockchain-practice/tests/test_basic_mining_comparison.py)
 
 채굴 노드는 유효 블록을 자기 체인에 먼저 반영한다 전달받은 다른 노드는 독립 검증과 자신의 체인 채택 조건을 충족하면 반영한다 채굴 성공과 모든 노드의 같은 블록 수락은 별도 상태다 동기화는 유효성과 누적 작업량을 비교하며 동률이면 현재 유효 체인을 유지한다 Genesis는 체인의 첫 블록이고 이 앱은 고정된 교육용 Genesis를 사용한다 [노드·동기화 구현](../experiments/blockchain-practice/node.py)
 
 이 비교는 같은 서버 스케줄러의 교육용 계산이다 세 PC나 세 GPU의 병렬 성능·실제 P2P 합의의 안전성을 측정한 결과로 사용하지 않는다
+
+### 5.4 제출용 기초 실습 코드
+
+아래 네 예시는 제출용 ZIP과 일치하는 기초 계정 모델의 원문에서 발췌하였다 각 링크에서 앞뒤 처리와 전체 함수를 확인할 수 있다
+
+#### 5.4.1 전자서명 생성과 검증
+
+거래 내용의 해시로 서명한다 검증은 송신 공개키로 같은 거래 해시에 대응하는 서명인지 확인한다 서명값은 서명 대상 데이터와 별도로 보관한다
+
+```python
+def sign(self, wallet) -> None:
+    self.signature = wallet.sign(self.signing_hash())
+
+def verify_signature(self) -> bool:
+    if not self.signature or not self.sender_public_key:
+        return False
+    try:
+        vk = ecdsa.VerifyingKey.from_string(binascii.unhexlify(self.sender_public_key),
+                                            curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+        return bool(vk.verify(binascii.unhexlify(self.signature),
+                              self.signing_hash().encode(), hashfunc=hashlib.sha256))
+    except Exception:   # 형식이 깨진 공개키/서명도 예외 없이 False
+        return False
+```
+
+[transaction.py 63~75행](https://github.com/jiho6367-design/mini-bitcoin-education/blob/b4d7408c5b0a13485b1de7f77111002c12ae4c5c/experiments/blockchain-practice/transaction.py#L63-L75)
+
+#### 5.4.2 웹 기초 실습의 넌스 탐색
+
+각 계산 묶음에서 다음 넌스부터 시작한다 목표 해시가 나오면 반복을 끝내고 이후 블록 추가 검사를 진행한다
+
+```python
+for _ in range(batch):
+    block.nonce = job["next_nonce"]
+    block.hash = hashlib.sha256((prefix + str(block.nonce)).encode()).hexdigest()
+    job["next_nonce"] += 1
+    job["attempts"] += 1
+    found = block.hash.startswith(target)
+    job["samples"].append({"nonce": block.nonce, "hash": block.hash, "passed": found})
+    job["samples"] = job["samples"][-12:]
+    if found:
+        break
+```
+
+[node.py 148~157행](https://github.com/jiho6367-design/mini-bitcoin-education/blob/b4d7408c5b0a13485b1de7f77111002c12ae4c5c/experiments/blockchain-practice/node.py#L148-L157)
+
+#### 5.4.3 머클 루트 계산
+
+거래 ID를 쌍으로 묶어 해시하고, 값 하나가 남을 때까지 반복한다 값이 홀수 개이면 마지막 값을 복제한다
+
+```python
+def calculate_merkle_root(self):
+    layer = [tx.txid() for tx in self.transactions] or [sha256("")]
+    while len(layer) > 1:
+        if len(layer) % 2:
+            layer.append(layer[-1])
+        layer = [sha256(layer[i] + layer[i + 1]) for i in range(0, len(layer), 2)]
+    return layer[0]
+```
+
+[block.py 46~52행](https://github.com/jiho6367-design/mini-bitcoin-education/blob/b4d7408c5b0a13485b1de7f77111002c12ae4c5c/experiments/blockchain-practice/block.py#L46-L52)
+
+#### 5.4.4 블록 검증 기준
+
+작업증명은 해시 조건과 해당 높이의 최소 난이도를 함께 확인한다 연결 검사는 이전 블록의 형식과 해시, 연속 높이, 생성 시각을 확인한다 뒤이어 첫 거래의 Coinbase 규칙, 거래 수 한도, 중복 여부와 서명·잔액·순번 규칙을 검사하고 모든 검사를 통과한 경우에만 상태 사본을 반영한다
+
+```python
+checks.update({
+    "hash": block.hash == block.calculate_hash(),
+    "merkle": block.merkle_root == block.calculate_merkle_root(),
+    "pow": block.meets_difficulty() and block.difficulty >= self.difficulty_for_height(block.index),
+    "link": (isinstance(prev, Block) and block.previous_hash == prev.hash
+             and block.index == prev.index + 1 and block.timestamp >= prev.timestamp),
+    "txs": True,
+})
+```
+
+[blockchain.py 152~159행](https://github.com/jiho6367-design/mini-bitcoin-education/blob/b4d7408c5b0a13485b1de7f77111002c12ae4c5c/experiments/blockchain-practice/blockchain.py#L152-L159)
 
 ## 6. 공동 실습과 학습 안내
 
@@ -316,9 +399,9 @@ for nonce in range(3056):
 
 ![그림 2 · 블록체인 실습실 기초 시작 화면](screenshots/current-live-home.jpg)
 
-그림 2. 2026-11-17 운영 기록의 실제 시작 화면 — 앱 코드 `9fca791`, 기초 여섯 단계와 접힌 시연 영상 영역 현재 화면을 설명하는 자료이며 옛 개인 React 캡처와 구분
+그림 2. 2026-11-17 운영 화면 캡처 — 앱 코드 `9fca791`의 기초 여섯 단계와 접힌 시연 영상 영역
 
-[최신 실제 조작 영상](../experiments/blockchain-practice/static/media/blockchain-practice-demo-narrated.mp4)은 273.033초(4분 33초), 2880×1980, 30fps이다 앱 화면 2880×1800 아래에 자막 공간을 두고 실제 클릭·화면 변화를 연속 녹화하였다 정지 대기 구간을 정리하고 한국어 설명 음성을 추가하였다 [시연 대본](demo-script.md)
+[최신 실제 조작 영상](../experiments/blockchain-practice/static/media/blockchain-practice-demo-narrated.mp4)은 273.033초(4분 33초), 2880×1980, 30fps이다 2026-11-17에 녹화한 조작 화면과 자막에 2026-11-20 한국어 설명 음성을 더했다 녹화 이후 운영 웹의 구성도 본문과 용어 풀이는 16px, 용어 제목은 17px로 확대하였다 [시연 대본](demo-script.md) · [가독성 검증 기록](test-results.md#2026-11-20-가독성과-음성-보완-확인)
 
 ```text
 영상 SHA-256:
@@ -387,7 +470,7 @@ F9A1960F96FECC87D204A56DE65969195CB679F71176D91D07B2CC1D05B69442
 
 - 표지의 최종 제출일·서명·학번 등 학교 요구 정보 — 공개 저장소에는 학번과 서명을 추가하지 않음
 - 강지호의 고도화·통합·검증·배포·제출 자료 제작 역할은 3.3절과 README에 명시 — 그 밖의 개인별 담당·세부 기간·기여 비율은 실제 팀 기록으로 별도 확정
-- 원보고서 참여도 ‘전원 100%’의 의미 — 담당 업무 수행률과 전체 기여 비율을 구분하고 학교 양식에 맞춰 확정
+- 한글 팀 검토본의 참여도 칸은 모두 공란이다 팀 합의 후 학교 제출본에 구성원별 비율을 적고 합계를 100%로 맞춘다
 - 원보고서의 월별 수행 실적과 당시 수동 거부 실험 자료 — 확인되지 않은 날짜·오류 화면·실적을 생성하지 않음
 - 제출 당일 서버 준비 상태·무료 사용량·발표 PC·공동 링크·예비 영상과 확인 담당
 
