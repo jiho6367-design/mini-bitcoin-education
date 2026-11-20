@@ -2434,3 +2434,72 @@ details p {
   padding: 16px 20px;
   pointer-events: auto;
 }
+
+/* Learning copy should remain legible without browser zoom. */
+.classroom-shell {
+  font-size: 16px;
+  line-height: 1.75;
+}
+.classroom-shell label,
+.classroom-shell .muted,
+.classroom-shell .action-hint,
+.classroom-shell .team-entry-intro,
+.classroom-shell .team-entry-footnote,
+.classroom-shell .team-easy-heading span,
+.classroom-shell .team-easy-footnote,
+.classroom-shell .team-guide-position,
+.classroom-shell .team-guide-intro,
+.classroom-shell .team-guide-target-help,
+.classroom-shell .team-guide-evidence,
+.classroom-shell .team-guide-check,
+.classroom-shell .team-guide-state,
+.classroom-shell .team-guide-node-status,
+.classroom-shell .team-guide-nav .team-guide-step-button,
+.classroom-shell .team-wallet-reservation,
+.classroom-shell .team-wallet-availability,
+.classroom-shell .team-wallet-next,
+.classroom-shell .team-wallet-balance-card > small {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.classroom-shell input,
+.classroom-shell select,
+.classroom-shell button,
+.classroom-shell .team-wallet-allocation p {
+  font-size: 15px;
+}
+.classroom-shell .team-guide-step-button small {
+  font-size: 12px;
+}
+.classroom-shell .lesson-guide h2 {
+  font-size: 18px;
+}
+.mining-console .nonce-label,
+.mining-console .label,
+.mining-console .console-hint,
+.mining-mode-note {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.classroom-shell input,
+.classroom-shell select {
+  font-size: 16px;
+}
+.classroom-shell.nonce-shell .nonce-settings small,
+.classroom-shell.nonce-shell .nonce-hint,
+.classroom-shell.nonce-shell .nonce-engine-heading > span,
+.classroom-shell.nonce-shell .nonce-engine p,
+.classroom-shell.nonce-shell .nonce-device-counts,
+.classroom-shell.nonce-shell .nonce-metrics dt,
+.classroom-shell.nonce-shell .nonce-proof > span,
+.classroom-shell.nonce-shell .nonce-storage-message,
+.classroom-shell.nonce-shell .nonce-record-engine,
+.classroom-shell.nonce-shell .nonce-native-info p {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.classroom-shell.nonce-shell .nonce-metrics dd small,
+.classroom-shell.nonce-shell .nonce-record-heading time,
+.classroom-shell.nonce-shell .nonce-history li > code {
+  font-size: 13px;
+}

@@ -15,9 +15,9 @@
 | 공동 실습·채굴·넌스 기능 확장 | 별명·역할·혼자 진행·실제 상태 기반 완료 가이드, 한 노드·세 모의 노드 채굴 비교, CPU·GPU·CPU+GPU 넌스 탐색과 CPU 전환, 선택형 로컬 Python·C 연산 연결 |
 | 무료 서버 배포·기록 보존 | Render·Neon PostgreSQL 운영 환경 구축, 서버 재시작 후 저장 장부·공동 링크 보존, 서버 준비 안내와 자동 재연결 개선 |
 | 검증·기술 설명 정리 | 코드·검사 기록·실제 조작 결과를 대조해 거래·서명·채굴·저장·복원 동작과 설명 오류를 점검하고 구현 범위·검증 한계 정리 |
-| 최종 제출 자료 제작 | 최신 구현을 반영한 최종보고서·사용 안내·기술 문서 작성 및 정리, 실제 마우스 조작과 한국어 자막을 담은 4분 33초 시연 영상 제작·앱 반영, GitHub 소스·문서 관리 |
+| 최종 제출 자료 제작 | 최신 구현을 반영한 최종보고서·사용 안내·기술 문서 작성 및 정리, 실제 마우스 조작과 한국어 설명 음성과 자막을 담은 4분 33초 시연 영상 제작·앱 반영, GitHub 소스·문서 관리 |
 
-관련 산출물: [통합·저장 설계](docs/architecture.md) · [교육 엔진 이식 기록](experiments/blockchain-practice/education_engine/PROVENANCE.json) · [검증 기록](docs/test-results.md) · [최신 시연 영상](experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4)
+관련 산출물: [통합·저장 설계](docs/architecture.md) · [교육 엔진 이식 기록](experiments/blockchain-practice/education_engine/PROVENANCE.json) · [검증 기록](docs/test-results.md) · [최신 시연 영상](experiments/blockchain-practice/static/media/blockchain-practice-demo-narrated.mp4)
 
 ## 현재 상태
 
@@ -39,9 +39,9 @@ GPU 지원 여부는 접속한 기기와 브라우저에 따라 달라집니다 
 
 온라인 실습에는 설치가 필요하지 않습니다 [실습실](https://blockchain-practice.onrender.com)에서 기초 실습의 **전체 실습 안내** 6단계를 따라가세요 공동 실습은 참여 링크에서 별명을 입력하고, 혼자라면 **팀 A로 시작**한 뒤 **쉬운 실습** 안내를 따라갑니다
 
-시작하기의 **시연 영상 보기**를 펼치면 최신 화면을 실제 조작한 **4분 33초** 자막 영상을 볼 수 있습니다
+시작하기의 **시연 영상 보기**를 펼치면 최신 화면을 실제 조작한 **4분 33초** 한국어 설명 음성과 자막이 담긴 영상을 볼 수 있습니다
 
-**[시연 영상 파일](experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4)** · **[5분 이내 시연 대본](docs/demo-script.md)**
+**[시연 영상 파일](experiments/blockchain-practice/static/media/blockchain-practice-demo-narrated.mp4)** · **[5분 이내 시연 대본](docs/demo-script.md)**
 
 ![현재 블록체인 실습실 시작 화면](docs/screenshots/current-live-home.jpg)
 

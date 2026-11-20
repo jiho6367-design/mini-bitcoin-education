@@ -14,7 +14,8 @@ for (const viewport of [
     const modes = page.getByRole("navigation", { name: "실습 모드", exact: true });
     await expect(modes.getByRole("link")).toHaveText(["기초 실습", "공동 실습", "넌스 찾기"]);
     await expect(modes.getByRole("link", { name: "기초 실습", exact: true })).toHaveAttribute("aria-current", "page");
-    await expect(page.locator("#demo-video")).toHaveCount(0);
+    await expect(page.locator("#demo-video-panel")).toHaveJSProperty("open", false);
+    await expect(page.locator("#demo-video")).toBeHidden();
     const overview = page.getByRole("article", { name: "전체 실습 안내", exact: true });
     await expect(overview).toBeVisible();
     await expect(overview.getByRole("listitem")).toHaveCount(6);

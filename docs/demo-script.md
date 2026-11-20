@@ -2,13 +2,13 @@
 
 현재 팀 앱 기준 · 2026-11-17
 
-[공개 실습실](https://blockchain-practice.onrender.com) · [최신 시연 영상 4분 33초](../experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4)
+[공개 실습실](https://blockchain-practice.onrender.com) · [최신 시연 영상 4분 33초](../experiments/blockchain-practice/static/media/blockchain-practice-demo-narrated.mp4)
 
 브랜치는 `blockchain-practice`, 실행 폴더는 `experiments/blockchain-practice/`입니다 이전 개인 React의 5~7분 대본은 [보관 문서](archive/personal-react/docs/demo-script.md)에 있습니다
 
 ## 제공 영상과 발표 준비
 
-최신 영상은 기초 → 세 노드 채굴 비교 → 공동 → 넌스 찾기를 실제 마우스·키보드로 조작한 녹화입니다 한국어 클릭 안내 자막을 포함하며 2880×1980·30fps로 제공합니다 앱 화면 아래 별도 자막 공간을 사용하고 정지 대기 구간만 정리했습니다 사진 연결·확대·배속 영상이 아닙니다
+최신 영상은 기초 → 세 노드 채굴 비교 → 공동 → 넌스 찾기를 실제 마우스·키보드로 조작한 녹화입니다 화면 조작과 동작 원리를 설명하는 한국어 내레이션과 클릭 안내 자막을 포함하며 2880×1980·30fps로 제공합니다 앱 화면 아래 별도 자막 공간을 사용하고 정지 대기 구간만 정리했습니다 사진 연결·확대·배속 영상이 아닙니다
 
 앱의 **시작하기 → 시연 영상 보기**에서도 재생할 수 있습니다 영상은 자동 재생되지 않으며 재생이 어려우면 **영상 파일 열기**나 **MP4 다운로드**를 사용합니다 이 대본의 시간은 완성 영상 기준이며, 다시 실습하면 계산·네트워크 시간은 달라집니다
 

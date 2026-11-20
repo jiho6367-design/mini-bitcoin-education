@@ -8,7 +8,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font:
-    14px/1.65 system-ui,
+    16px/1.75 system-ui,
     -apple-system,
     "Segoe UI",
     "Malgun Gothic",
@@ -110,13 +110,13 @@ h1 {
   margin-bottom: 6px;
 }
 h2 {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.5;
   letter-spacing: -0.35px;
   margin-bottom: 10px;
 }
 h3 {
-  font-size: 14px;
+  font-size: 16px;
   margin-bottom: 10px;
 }
 p {
@@ -1734,3 +1734,39 @@ h3 {
 .mode-switch a { padding: 5px 12px; border-radius: 7px; text-decoration: none; font-size: 12px; }
 .mode-switch a[aria-current="page"] { background: var(--accent-soft); font-weight: 700; }
 @media (max-width: 640px) { .mode-switch { padding: 8px 12px; } }
+
+/* Keep learning instructions readable on desktop and narrow screens. */
+.desc,
+.guide-grid p,
+.model-note p,
+.practice-overview p {
+  font-size: 15px;
+  line-height: 1.8;
+}
+.learning-guide .guide-heading h2 {
+  font-size: 18px;
+}
+label,
+.field-hint,
+.field-description,
+.field-description p,
+.guide-grid strong,
+.learning-guide .secondary,
+.mining-actions button,
+.console-heading > strong,
+.nonce-heading > span,
+.hash-label,
+.console-result,
+.comparison-card dt,
+.comparison-card .hash-label,
+.comparison-card .comparison-chain {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.sample-hash,
+.comparison-card code {
+  font-size: 13px;
+}
+.sample-row {
+  font-size: 13px;
+}

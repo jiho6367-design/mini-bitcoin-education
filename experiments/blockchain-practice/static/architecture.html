@@ -9,7 +9,9 @@
     <script src="/static/glossary.js" defer></script>
     <style>
       .architecture {
-        max-width: 1100px;
+        max-width: 1200px;
+        font-size: 16px;
+        line-height: 1.8;
       }
       .architecture .page-heading {
         margin-bottom: 30px;
@@ -27,7 +29,7 @@
       }
       .architecture-layer h3 {
         margin: 0 0 12px;
-        font-size: 14px;
+        font-size: 18px;
       }
       .module-row {
         display: flex;
@@ -36,20 +38,21 @@
       }
       .module {
         flex: 1;
-        min-width: 155px;
+        min-width: 190px;
+        overflow-wrap: anywhere;
         padding: 12px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        font-size: 12px;
+        font-size: 16px;
         background: var(--bg);
       }
       .module small {
         display: block;
         margin-top: 5px;
-        font-size: 10px;
+        font-size: 14px;
       }
       .architecture-arrow {
-        font-size: 11px;
+        font-size: 14px;
         text-align: center;
         color: var(--muted);
         margin: 2px;
@@ -59,7 +62,7 @@
         grid-template-columns: 150px 1fr;
         gap: 14px;
         margin: 0;
-        font-size: 12px;
+        font-size: 16px;
       }
       .architecture dt {
         font-weight: 650;
@@ -69,7 +72,13 @@
         color: var(--muted);
       }
       .architecture code {
-        font-size: 11px;
+        font-size: 14px;
+      }
+      .architecture .desc,
+      .architecture .page-heading p,
+      .architecture .readable-list {
+        font-size: 16px;
+        line-height: 1.8;
       }
       .architecture .page {
         margin-bottom: 20px;
@@ -83,7 +92,7 @@
           margin-bottom: 13px;
         }
         .module {
-          min-width: 130px;
+          min-width: min(190px, 100%);
         }
         .architecture-layer {
           padding: 17px;

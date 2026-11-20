@@ -281,11 +281,11 @@ export function App({ entry }: { entry?: ReactNode } = {}) {
               <video controls playsInline preload="none" data-testid="team-demo-video"
                 aria-label="블록체인 실습실 시연 영상"
                 poster="/static/media/blockchain-practice-demo-20261117-poster.jpg">
-                <source src="/static/media/blockchain-practice-demo-20261117.mp4" type="video/mp4" />
-                <a href="/static/media/blockchain-practice-demo-20261117.mp4" download>영상 다운로드</a>
+                <source src="/static/media/blockchain-practice-demo-narrated.mp4" type="video/mp4" />
+                <a href="/static/media/blockchain-practice-demo-narrated.mp4" download>영상 다운로드</a>
               </video>
               <div className="team-demo-caption">
-                <span>기초 실습·세 노드 채굴 비교·공동 실습·넌스 찾기 · 4분 33초 · 클릭 안내 자막</span>
+                <span>기초 실습·세 노드 채굴 비교·공동 실습·넌스 찾기 · 4분 33초 · 한국어 설명 음성·자막</span>
                 <a href="/basic">기초 실습 열기</a>
               </div>
             </Panel>

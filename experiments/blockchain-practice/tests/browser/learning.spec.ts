@@ -65,26 +65,46 @@ async function mine(page: Page, height: number) {
   await expect(page.getByTestId("mining-fast")).toBeEnabled();
 }
 
-test("home plays the original captioned video and fits a narrow viewport", async ({
+test("home opens the narrated demo, plays and replays it, and fits a narrow viewport", async ({
   page,
 }, testInfo) => {
   await openPractice(page);
-  const video = page.locator("video");
+  const demo = page.locator("#demo-video-panel");
+  const video = page.locator("#demo-video");
+  await expect(demo).toHaveJSProperty("open", false);
+  await expect(video).toBeHidden();
+  await demo.locator("summary").click();
   await expect(video).toBeVisible();
+  await video.evaluate((v: HTMLVideoElement) => v.play());
   await expect
     .poll(() => video.evaluate((v: HTMLVideoElement) => v.videoWidth))
     .toBe(2880);
   expect(await video.evaluate((v: HTMLVideoElement) => v.videoHeight)).toBe(
-    1800,
+    1980,
   );
   expect(await video.evaluate((v: HTMLVideoElement) => v.duration)).toBeCloseTo(
-    224.2,
-    0,
+    273.033,
+    1,
   );
-  await video.evaluate((v: HTMLVideoElement) => v.play());
+  expect(await video.evaluate((v: HTMLVideoElement) => new URL(v.currentSrc).pathname)).toBe(
+    "/static/media/blockchain-practice-demo-narrated.mp4",
+  );
   await expect
     .poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime))
     .toBeGreaterThan(0.5);
+  await video.evaluate((v: HTMLVideoElement) => v.pause());
+  const ranged = await page.request.get("/static/media/blockchain-practice-demo-narrated.mp4", {
+    headers: { Range: "bytes=0-1023" },
+  });
+  expect(ranged.status()).toBe(206);
+  expect(ranged.headers()["content-range"]).toMatch(/^bytes 0-1023\/\d+$/);
+  expect((await ranged.body()).length).toBe(1024);
+  await video.evaluate((v: HTMLVideoElement) => { v.currentTime = v.duration - 0.3; });
+  await video.evaluate((v: HTMLVideoElement) => v.play());
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.ended)).toBe(true);
+  await video.evaluate((v: HTMLVideoElement) => v.play());
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeLessThan(3);
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(0.3);
   await video.evaluate((v: HTMLVideoElement) => v.pause());
   await page.screenshot({
     path: testInfo.outputPath("home-desktop.png"),
@@ -95,10 +115,18 @@ test("home plays the original captioned video and fits a narrow viewport", async
   expect(bounds).not.toBeNull();
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
   expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(391);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({
     path: testInfo.outputPath("home-mobile.png"),
     fullPage: true,
   });
+  await video.evaluate((v: HTMLVideoElement) => v.play());
+  await demo.locator("summary").click();
+  await expect(video).toHaveJSProperty("paused", true);
+  await demo.locator("summary").click();
+  await video.evaluate((v: HTMLVideoElement) => v.play());
+  await navigate(page, "wallet");
+  await expect(video).toHaveJSProperty("paused", true);
 });
 
 test("wallet → invalidate changed draft → sign → mine updates all nodes", async ({

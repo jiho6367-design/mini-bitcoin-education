@@ -77,13 +77,14 @@ test("the architecture page describes current behavior and inherits the chosen t
   expect(errors).toEqual([]);
 });
 
-test("the six-step overview navigates without a video and the guide follows each learning page", async ({
+test("the six-step overview navigates with the demo collapsed and the guide follows each learning page", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await openPractice(page);
-  await expect(page.locator("#demo-video")).toHaveCount(0);
+  await expect(page.locator("#demo-video-panel")).toHaveJSProperty("open", false);
+  await expect(page.locator("#demo-video")).toBeHidden();
   const overview = page.getByRole("article", { name: "전체 실습 안내", exact: true });
   await expect(overview).toBeVisible();
   const steps = overview.getByRole("link");

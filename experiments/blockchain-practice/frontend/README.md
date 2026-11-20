@@ -48,7 +48,7 @@ Vite의 `/education-assets/` 화면은 `/api/education` HTTP·WebSocket을 위 F
 
 ## 시연 영상과 검증 기준
 
-기초 시작하기의 **시연 영상 보기**와 이전 개인 실습의 홈은 같은 `/static/media/blockchain-practice-demo-20261117.mp4`를 사용합니다 최신 화면의 기초 실습·세 노드 채굴 비교·공동 실습·넌스 찾기를 실제 조작한 4분 33초 영상이며 클릭 설명 자막을 포함합니다 자동 재생 없이 `preload="none"`으로 제공합니다
+기초 시작하기의 **시연 영상 보기**와 이전 개인 실습의 홈은 같은 `/static/media/blockchain-practice-demo-narrated.mp4`를 사용합니다 최신 화면의 기초 실습·세 노드 채굴 비교·공동 실습·넌스 찾기를 실제 조작한 4분 33초 영상이며 한국어 설명 음성과 클릭 설명 자막을 포함합니다 자동 재생 없이 `preload="none"`으로 제공합니다
 
 2026-11-17 운영 기준 `9fca791`에서 프런트 단위 147개·타입·린트·빌드가 통과했습니다 별도 Linux 운영 컨테이너·PostgreSQL 재시작 [CI 43961448887](https://github.com/jiho6367-design/mini-bitcoin-education/actions/runs/43961448887)도 성공했습니다 이는 당시 실행 기록이며 이번 문서 정리에서 전체 브라우저 검사를 재실행한 것은 아닙니다
 

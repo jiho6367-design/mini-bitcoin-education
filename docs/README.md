@@ -22,7 +22,7 @@
 | [운영 안내](../experiments/blockchain-practice/DEPLOYMENT.md) | 기존 Render·Neon 서비스의 유지보수와 재배포 |
 | [상세 검증 이력](../experiments/blockchain-practice/VERIFICATION.md) | 이전 검증 당시의 결과와 최신 검증 요약 |
 
-실제 마우스 조작과 한국어 클릭 자막을 담은 **4분 33초 시연 영상**은 앱의 **시작하기 → 시연 영상 보기**와 [MP4 파일](../experiments/blockchain-practice/static/media/blockchain-practice-demo-20261117.mp4)에서 확인합니다
+실제 마우스 조작과 한국어 설명 음성과 클릭 자막을 담은 **4분 33초 시연 영상**은 앱의 **시작하기 → 시연 영상 보기**와 [MP4 파일](../experiments/blockchain-practice/static/media/blockchain-practice-demo-narrated.mp4)에서 확인합니다
 
 개인 React 모델의 옛 문서와 캡처는 [과거 자료](archive/personal-react/README.md)에 따로 보관했습니다 그 자료의 ‘백엔드 없음’, ‘상태 미저장’ 등은 당시 개인 모델 설명입니다 현재 팀 앱 안내는 이 목차의 문서를 사용합니다 제공된 `졸업논문_수행계획서.pdf`는 수정하지 않은 배경자료입니다
 

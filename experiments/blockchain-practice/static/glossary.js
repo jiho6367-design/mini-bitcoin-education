@@ -191,16 +191,16 @@
   const css = document.createElement("style");
   css.textContent = `
   .gl{border-bottom:1.5px dotted var(--accent,#176e60);cursor:help}
-  #gtip{position:fixed;z-index:1000;display:none;max-width:320px;background:#13272e;color:#eaf5ef;border-radius:9px;padding:12px 14px;font:12px/1.7 system-ui,"Malgun Gothic",sans-serif;box-shadow:0 6px 24px #0004;pointer-events:none}
+  #gtip{position:fixed;z-index:1000;display:none;max-width:min(360px,calc(100vw - 16px));background:#13272e;color:#eaf5ef;border-radius:9px;padding:12px 14px;font:14px/1.8 system-ui,"Malgun Gothic",sans-serif;box-shadow:0 6px 24px #0004;pointer-events:none}
   #gtip b{color:#a2e1c8}
-  #dict{border:1px solid var(--line,#dde5e9);border-radius:14px;width:min(760px,94vw);max-height:84vh;padding:0;box-shadow:0 12px 40px #0004;font:14px/1.65 system-ui,"Malgun Gothic",sans-serif;color:var(--ink,#1a2c34);background:var(--surface,#fff)}
+  #dict{border:1px solid var(--line,#dde5e9);border-radius:14px;width:min(760px,94vw);max-height:84vh;padding:0;box-shadow:0 12px 40px #0004;font:16px/1.8 system-ui,"Malgun Gothic",sans-serif;color:var(--ink,#1a2c34);background:var(--surface,#fff)}
   #dict::backdrop{background:rgba(16,22,38,.55)}
   #dict .dh{position:sticky;top:0;background:var(--surface,#fff);padding:18px;border-bottom:1px solid var(--line,#dde5e9);display:flex;gap:10px;align-items:center}
   #dict .dh input{flex:1;min-width:0;padding:9px 12px;border:1px solid var(--line,#dde5e9);color:var(--ink,#1a2c34);background:var(--bg,#f4f6f8);border-radius:8px;font:inherit}
   #dict .dh button{border:1px solid var(--line,#dde5e9);background:var(--surface,#fff);color:var(--accent,#176e60);border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
   #dict .db{padding:4px 16px 16px;overflow:auto;max-height:calc(84vh - 66px)}
-  #dict h4{margin:20px 0 10px;color:var(--accent,#176e60);font-size:12px;letter-spacing:.4px}
-  #dict .de{padding:10px 0;border-bottom:1px solid var(--line,#dde5e9)}#dict .de b{display:block;font-size:13px}#dict .de div{color:var(--muted,#64767e);font-size:12px;margin-top:4px}`;
+  #dict h4{margin:20px 0 10px;color:var(--accent,#176e60);font-size:15px;letter-spacing:.4px}
+  #dict .de{padding:10px 0;border-bottom:1px solid var(--line,#dde5e9)}#dict .de b{display:block;font-size:17px}#dict .de div{color:var(--muted,#64767e);font-size:16px;margin-top:6px;overflow-wrap:anywhere}`;
   document.head.appendChild(css);
   const tip = document.createElement("div");
   tip.id = "gtip";
