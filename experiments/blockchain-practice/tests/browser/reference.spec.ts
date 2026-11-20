@@ -48,7 +48,7 @@ test("the architecture page describes current behavior and inherits the chosen t
     "실습실의 네 계층",
   );
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByText("SQLite 실습 저장")).toBeVisible();
+  await expect(page.getByText("운영 PostgreSQL · 로컬 SQLite")).toBeVisible();
   await expect(
     page.getByRole("heading", {
       name: "저장과 재시작",
